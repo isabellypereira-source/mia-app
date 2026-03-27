@@ -132,23 +132,6 @@ export default function FormulacoesPage() {
           </Link>
         </div>
 
-        {/* Filtros */}
-        <div className="flex gap-1.5 mb-3 flex-wrap">
-          {['todos', 'sucesso', 'em_teste', 'falha'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFiltro(f)}
-              className={`text-xs px-2.5 py-1 rounded-full border transition-colors capitalize ${
-                filtro === f
-                  ? 'bg-morphe-orange/20 border-morphe-orange/40 text-morphe-orange'
-                  : 'border-border text-muted-foreground hover:border-border/80'
-              }`}
-            >
-              {f === 'todos' ? 'Todas' : f.replace('_', ' ')}
-            </button>
-          ))}
-        </div>
-
         {loading ? (
           <div className="text-center py-8 text-muted-foreground text-xs">Carregando...</div>
         ) : filtradas.length === 0 ? (
