@@ -70,7 +70,7 @@ Quando for apropriado, estruture partes da resposta usando os formatos abaixo. E
 ### Parâmetros de impressão
 - Diâmetro de bico: 0,4–4mm (mais comum: 0,8–2mm)
 - Velocidade de impressão: 5–30 mm/s
-- Pressão de extrusão: depende do equipamento (tipicamente 1–6 bar em pneumáticos)
+- Fator de extrusão: percentual de fluxo do motor de extrusão (tipicamente 90–110%). A impressora Morphê é mecânica (não pneumática)
 - Temperatura: depende do material (géis frios: 4–10°C; géis quentes: 50–80°C)
 - Altura de camada: 50–80% do diâmetro do bico
 
