@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   // Gemini por padrão (gratuito). Claude como fallback opcional se ANTHROPIC_API_KEY existir.
   const model = process.env.ANTHROPIC_API_KEY
     ? anthropic('claude-haiku-4-5-20251001')
-    : google('gemini-2.0-flash') // gratuito — free tier generoso
+    : google('gemini-flash-latest') // free tier — gemini-flash-latest resolve automaticamente para o modelo mais recente disponível
 
   const result = await streamText({
     model,
