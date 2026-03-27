@@ -11,7 +11,7 @@ export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   const { messages, userContext, noTools } = await req.json()
-  console.log('[MIA] route hit | model:', process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gemini-2.0-flash', '| noTools:', noTools, '| msgs:', messages?.length)
+  console.log('[MIA] route hit | model:', process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gemini-flash-latest', '| noTools:', noTools, '| msgs:', messages?.length)
 
   const lastMessage = messages[messages.length - 1]?.content ?? ''
   const ragContext = await retrieveContext(lastMessage)
