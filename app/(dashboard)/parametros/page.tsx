@@ -134,8 +134,9 @@ export default function ParametrosPage() {
         body: JSON.stringify({
           messages: [{
             role: 'user',
-            content: `Sugira parâmetros de impressão 3D de alimentos para: ${ingredientesStr}. Ponteira: ${ponteira}mm, altura de camada: ${altCamada}mm (${resLabel}), formato: ${formato}. Responda APENAS JSON: {"velocidade_extrusao":"val","velocidade_impressao":"val","temperatura":"val","pressao":"val","altura_camada":"${altCamada}mm","retraction":"val","flow_rate":"val","observacoes":"texto"}`,
+            content: `Sugira parâmetros de impressão 3D de alimentos para: ${ingredientesStr}. Ponteira: ${ponteira}mm, altura de camada: ${altCamada}mm (${resLabel}), formato: ${formato}. A impressora é mecânica (não pneumática). Responda APENAS JSON: {"velocidade_extrusao":"val","velocidade_impressao":"val","temperatura":"val","pressao":"val (fator de extrusão em %, ex: 100%)","altura_camada":"${altCamada}mm","retraction":"val","flow_rate":"val","observacoes":"texto"}`,
           }],
+          noTools: true,
         }),
       })
       const reader = res.body?.getReader()
