@@ -81,7 +81,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }] }),
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], noTools: true }),
       })
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
