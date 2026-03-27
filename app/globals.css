@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Morphê brand — dark mode only */
+    --background: 163 87% 15%;      /* #054A37 Respiro */
+    --foreground: 150 20% 93%;
+    --card: 167 55% 22%;            /* #196454 Ancestral */
+    --card-foreground: 150 20% 93%;
+    --popover: 167 55% 22%;
+    --popover-foreground: 150 20% 93%;
+    --primary: 13 95% 57%;          /* #FA5528 Orange */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 164 50% 28%;
+    --secondary-foreground: 150 20% 85%;
+    --muted: 165 45% 20%;
+    --muted-foreground: 150 15% 60%;
+    --accent: 74 63% 51%;           /* #ABD032 Viva lime */
+    --accent-foreground: 163 87% 10%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 165 35% 27%;
+    --input: 165 35% 27%;
+    --ring: 13 95% 57%;             /* Orange focus ring */
+    --radius: 0.6rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-muted; }
+  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+}
+
+/* Chat streaming cursor */
+.streaming-cursor::after {
+  content: '▋';
+  @apply animate-cursor-blink ml-0.5;
+}
+
+/* Card de formulação, diagnóstico etc */
+.mia-card {
+  @apply rounded-lg border border-border bg-morphe-dark-2 p-4 my-3 text-sm;
+}
+
+/* Tabela dentro de markdown */
+.prose table {
+  @apply w-full text-sm border-collapse;
+}
+.prose th {
+  @apply bg-muted text-muted-foreground font-medium text-left px-3 py-2 border-b border-border;
+}
+.prose td {
+  @apply px-3 py-2 border-b border-border/50;
+}
