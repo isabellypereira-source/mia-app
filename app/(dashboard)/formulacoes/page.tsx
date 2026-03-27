@@ -144,37 +144,25 @@ export default function FormulacoesPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {filtradas.map(f => {
-              const res = resultadoConfig[f.resultado ?? 'null']
-              const Icon = res.icon
+            {formulacoes.map(f => {
               const isActive = selecionada?.id === f.id
               return (
-                <button
-                  key={f.id}
-                  onClick={() => { setSelecionada(isActive ? null : f); setAbaDetalhe('nutri') }}
-                  className={`w-full text-left bg-morphe-dark-2 border rounded-xl p-3.5 transition-colors ${
-                    isActive ? 'border-morphe-orange/40 bg-morphe-orange/5' : 'border-border hover:border-border/80'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium truncate flex-1 mr-2">{f.nome}</span>
-                    <div className={`flex items-center gap-1 text-xs flex-shrink-0 ${res.color}`}>
-                      <Icon size={11} />
-                      <span className={selecionada ? 'hidden' : ''}>{res.label}</span>
+                <div key={f.id} className={`bg-morphe-dark-2 border rounded-xl p-3.5 transition-colors ${isActive ? 'border-morphe-orange/40 bg-morphe-orange/5' : 'border-border'}`}>
+                  <button className="w-full text-left" onClick={() => { setSelecionada(isActive ? null : f); setAbaDetalhe('nutri') }}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium truncate flex-1 mr-2">{f.nome}</span>
                     </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {f.ingredientes?.length ?? 0} ingredientes
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(f.created_at), 'dd MMM yyyy', { locale: ptBR })}
-                  </p>
-                  {!selecionada && (
-                    <div className="flex items-center gap-1 text-morphe-orange text-xs mt-2">
-                      Ver análise <ChevronRight size={11} />
-                    </div>
-                  )}
-                </button>
+                    <p className="text-xs text-muted-foreground mt-1">{f.ingredientes?.length ?? 0} ingredientes</p>
+                    <p className="text-xs text-muted-foreground">{format(new Date(f.created_at), 'dd MMM yyyy', { locale: ptBR })}</p>
+                    {!selecionada && (
+                      <div className="flex items-center gap-1 text-morphe-orange text-xs mt-2">Ver análise <ChevronRight size={11} /></div>
+                    )}
+                  </button>
+                  <button onClick={() => excluirFormulacao(f.id)} disabled={excluindo === f.id}
+                    className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 disabled:opacity-40 transition-colors">
+                    <Trash2 size={11} /> {excluindo === f.id ? 'Excluindo...' : 'Excluir'}
+                  </button>
+                </div>
               )
             })}
           </div>
