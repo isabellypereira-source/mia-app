@@ -154,7 +154,7 @@ export default function ParametrosPage() {
       const jsonMatch = texto.match(/\{[\s\S]*\}/)
       const parsed: Parametros = jsonMatch ? JSON.parse(jsonMatch[0]) : {
         velocidade_extrusao: '600–900 mm/min', velocidade_impressao: '1000–1500 mm/min',
-        temperatura: '20–25 °C', pressao: '2–4 bar', altura_camada: `${altCamada} mm`,
+        temperatura: '20–25 °C', pressao: '95–105%', altura_camada: `${altCamada} mm`,
         retraction: '0.5–1 mm', flow_rate: '95–105%', observacoes: '',
       }
       setParametros(parsed)
