@@ -10,9 +10,11 @@ export async function createClient() {
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet: Parameters<typeof cookieStore.setAll>[0]) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           try {
-            cookieStore.setAll(cookiesToSet)
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
+            )
           } catch {}
         },
       },
