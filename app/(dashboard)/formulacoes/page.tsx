@@ -31,13 +31,6 @@ interface NutriInfo {
   umidade: string
 }
 
-const resultadoConfig = {
-  sucesso:   { icon: CheckCircle, color: 'text-green-400',           label: 'Sucesso' },
-  falha:     { icon: XCircle,     color: 'text-red-400',             label: 'Falha' },
-  em_teste:  { icon: Clock,       color: 'text-yellow-400',          label: 'Em teste' },
-  null:      { icon: Clock,       color: 'text-muted-foreground',    label: 'Não avaliado' },
-}
-
 const ANVISA_ORIENTACOES = [
   { titulo: 'RDC 727/2022 — Rotulagem nutricional', texto: 'Produtos alimentícios embalados devem conter tabela nutricional com porção, VD% e todos os nutrientes obrigatórios. Aplicável a produtos comercializados.' },
   { titulo: 'IN 75/2020 — Padrões de identidade e qualidade', texto: 'Define os critérios mínimos de composição, características sensoriais e parâmetros microbiológicos para categorias de alimentos.' },
