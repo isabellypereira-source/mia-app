@@ -1,4 +1,4 @@
-import type { NextConfig } from 'next' // configuração MIA
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   experimental: {
