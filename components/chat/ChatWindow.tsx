@@ -91,6 +91,17 @@ export function ChatWindow() {
         onSubmit={handleSubmit}
         isLoading={isLoading}
       />
+
+      {/* Guia */}
+      <div className="px-6 py-4 border-t border-border bg-morphe-dark-2/50">
+        <h3 className="text-sm font-semibold mb-2">Guia de Uso da MIA</h3>
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>• <strong>Formulações:</strong> Descreva o objetivo (ex: "pasta para cookies veganos") e deixe a MIA sugerir ingredientes e %.</p>
+          <p>• <strong>Diagnóstico:</strong> Conte o que aconteceu (ex: "não extrusou, ponteira 0.8mm") para análise técnica.</p>
+          <p>• <strong>Parâmetros:</strong> Forneça formulação, ponteira e formato para calcular velocidade, temperatura, etc.</p>
+          <p>• <strong>Protocolos:</strong> Peça passos detalhados (ex: "protocolo de gelatinização de amido de batata").</p>
+        </div>
+      </div>
     </div>
   )
 }

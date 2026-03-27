@@ -238,7 +238,7 @@ export default function FormulacoesPage() {
                 Tabela Nutricional Estimada (por 100 g)
               </h3>
               <p className="text-xs text-muted-foreground mb-3 italic">
-                Estimativa baseada na composição declarada. Para valores precisos, realizar análise laboratorial.
+                Estimativa baseada na composição declarada e dados da Tabela Brasileira de Composição de Alimentos (TACO). Para valores precisos, realizar análise laboratorial.
               </p>
               {(() => {
                 const nutri = calcularNutri(selecionada.ingredientes || [])

@@ -11,7 +11,7 @@ interface Ingrediente {
   funcao: string
 }
 
-const FUNCOES = ['Estruturante', 'Hidrocolóide', 'Plastificante', 'Emulsificante', 'Aromatizante', 'Corante', 'Conservante', 'Proteína', 'Lipídio', 'Outro']
+const FUNCOES = ['Estruturante', 'Hidrocolóide', 'Plastificante', 'Emulsificante', 'Aromatizante', 'Corante', 'Conservante', 'Proteína', 'Lipídio', 'Carboidrato', 'Base Líquida', 'Outro']
 
 const APLICACOES = [
   { id: 'snacks', nome: 'Snacks e Conveniência', desc: 'Snacks crocantes, biscoitos recheados e barras funcionais.', emoji: '🍪' },

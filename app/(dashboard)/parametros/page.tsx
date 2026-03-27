@@ -25,21 +25,21 @@ const PONTEIRAS = [
   { value: '1.2', label: '1,2 mm', cor: 'bg-gray-400', corLabel: 'Cinza', desc: 'Boa resolução — pastas lisas com baixa granulometria', luerlock: true },
   { value: '1.6', label: '1,6 mm', cor: 'bg-green-500', corLabel: 'Verde', desc: 'Uso geral — pastas lisas com granulometria média', luerlock: true },
   { value: '3.0', label: '3,0 mm', cor: 'bg-green-300', corLabel: 'Verde claro', desc: 'Pastas densas, fibrosas e muito granuladas', luerlock: true },
-  { value: '3.2', label: '3,2 mm', cor: 'bg-amber-200', corLabel: 'Bege', desc: 'Seringa sem luerlock — pastas densas, similar à 3 mm', luerlock: false },
+  { value: '3.2', label: '3,2 mm', cor: '', corLabel: '', desc: 'Ideal para pastas densas e fibrosas sem luerlock, similar à 3 mm', luerlock: false },
 ]
 
 const RESOLUCOES = [
-  { value: 'alta', label: 'Alta Definição', desc: 'Camadas muito finas, máximo detalhe. Impressão mais lenta.', fator: 0.4 },
-  { value: 'otimizado', label: 'Otimizado', desc: 'Equilíbrio entre detalhe e velocidade. Recomendado para maioria dos casos.', fator: 0.5 },
-  { value: 'expresso', label: 'Expresso', desc: 'Camadas mais grossas, impressão rápida. Menos detalhe visual.', fator: 0.65 },
+  { value: 'alta', label: 'Alta Definição', desc: 'Máximo detalhe e impressão mais lenta.', fator: 0.4 },
+  { value: 'balanceado', label: 'Balanceado', desc: 'Equilíbrio entre detalhe e velocidade, recomendado para maioria.', fator: 0.5 },
+  { value: 'otimizado', label: 'Otimizado', desc: 'Alta velocidade, menor definição.', fator: 0.65 },
 ]
 
 const FORMATOS = [
-  { value: 'cilindro', label: 'Cilindro', emoji: '🟤', desc: 'Formato padrão para testes de extrusão', pago: false },
-  { value: 'cubo', label: 'Cubo', emoji: '🟫', desc: 'Ideal para avaliar estabilidade estrutural', pago: false },
-  { value: 'capivara', label: 'Capivara (Cookie)', emoji: '🦫', desc: 'Formato temático premium para cookies', pago: true },
-  { value: 'tilapia', label: 'Filé de Tilápia', emoji: '🐟', desc: 'Análogo de peixe com textura estruturada', pago: true },
-  { value: 'coelho', label: 'Coelho', emoji: '🐰', desc: 'Formato festivo para produtos especiais', pago: true },
+  { value: 'cilindro', label: 'Cilindro', emoji: '🟤', desc: 'Formato padrão para testes de extrusão', pago: false, imagem: '/formatos/cilindro.png' },
+  { value: 'cubo', label: 'Cubo', emoji: '🟫', desc: 'Ideal para avaliar estabilidade estrutural', pago: false, imagem: '/formatos/cubo.png' },
+  { value: 'capivara', label: 'Capivara (Cookie)', emoji: '🦫', desc: 'Formato temático premium para cookies', pago: true, preco: 'R$ 9,90', imagem: '/formatos/capivara.png' },
+  { value: 'tilapia', label: 'Filé de Tilápia', emoji: '🐟', desc: 'Análogo de peixe com textura estruturada', pago: true, preco: 'R$ 14,90', imagem: '/formatos/tilapia.png' },
+  { value: 'coelho', label: 'Coelho', emoji: '🐰', desc: 'Formato festivo para produtos especiais', pago: true, preco: 'R$ 12,90', imagem: '/formatos/coelho.png' },
 ]
 
 function calcularAlturaCamada(ponteira: string, resolucao: string): string {
@@ -216,7 +216,7 @@ max_print_speed = 150
     const blob = new Blob([config], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `mia_prusaslicer_${Date.now()}.ini`; a.click()
+    a.href = url; a.download = `config_${formulacoes.find(f => f.id === formulacaoId)?.nome?.replace(/\s+/g, '_') ?? 'formulacao'}_${formato}.ini`; a.click()
     URL.revokeObjectURL(url)
   }
 
@@ -296,17 +296,29 @@ max_print_speed = 150
           <label className="text-sm font-medium block mb-2">Formato</label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {FORMATOS.map(f => (
-              <button key={f.value} onClick={() => !f.pago && setFormato(f.value)} disabled={f.pago}
-                className={`relative p-3 rounded-xl border text-left transition-colors ${
-                  f.pago ? 'border-border bg-morphe-dark-2 opacity-50 cursor-not-allowed' :
-                  formato === f.value ? 'border-morphe-orange/60 bg-morphe-orange/10' : 'border-border bg-morphe-dark-2 hover:border-morphe-orange/30'
-                }`}>
-                {f.pago && <Lock size={11} className="absolute top-2 right-2 text-muted-foreground" />}
-                <span className="text-xl mb-1 block">{f.emoji}</span>
-                <p className="text-sm font-medium">{f.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
-                {f.pago && <p className="text-xs text-morphe-orange mt-1">Premium — em breve</p>}
-              </button>
+              <div key={f.value} className="relative">
+                {f.pago ? (
+                  <a href={`/pagamento?formato=${f.value}`} target="_blank" rel="noopener noreferrer"
+                    className="block p-3 rounded-xl border border-border bg-morphe-dark-2 opacity-50 cursor-pointer hover:opacity-70 transition-opacity">
+                    <Lock size={11} className="absolute top-2 right-2 text-muted-foreground" />
+                    {f.imagem && <img src={f.imagem} alt={f.label} className="w-full h-16 object-cover rounded mb-2" />}
+                    <span className="text-xl mb-1 block">{f.emoji}</span>
+                    <p className="text-sm font-medium">{f.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
+                    <p className="text-xs text-morphe-orange mt-1">{f.preco}</p>
+                  </a>
+                ) : (
+                  <button onClick={() => setFormato(f.value)}
+                    className={`w-full p-3 rounded-xl border text-left transition-colors ${
+                      formato === f.value ? 'border-morphe-orange/60 bg-morphe-orange/10' : 'border-border bg-morphe-dark-2 hover:border-morphe-orange/30'
+                    }`}>
+                    {f.imagem && <img src={f.imagem} alt={f.label} className="w-full h-16 object-cover rounded mb-2" />}
+                    <span className="text-xl mb-1 block">{f.emoji}</span>
+                    <p className="text-sm font-medium">{f.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>
@@ -329,7 +341,7 @@ max_print_speed = 150
                   'Vel. extrusão': 'velocidade_extrusao',
                   'Vel. impressão': 'velocidade_impressao',
                   'Temperatura': 'temperatura',
-                  'Pressão': 'pressao',
+                  'Fator de extrusão': 'pressao',
                   'Altura camada': 'altura_camada',
                   'Retraction': 'retraction',
                   'Flow rate': 'flow_rate',
@@ -345,7 +357,7 @@ max_print_speed = 150
               <div className="flex gap-2 mt-4">
                 <button onClick={exportarPrusaSlicer}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-md transition-colors">
-                  <Download size={11} /> Exportar PrusaSlicer (.ini)
+                  <Download size={11} /> Abrir no PrusaSlicer (.ini)
                 </button>
               </div>
             </div>

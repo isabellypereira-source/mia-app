@@ -14,6 +14,7 @@ interface Experimento {
   resultado: 'sucesso' | 'falha' | 'parcial'
   descricao: string
   diagnostico?: string
+  gcode?: string
 }
 
 type Resultado = 'sucesso' | 'falha' | 'parcial'
@@ -40,7 +41,7 @@ export default function ExperimentosPage() {
   const [experimentos, setExperimentos] = useState<Experimento[]>([])
   const [novoAberto, setNovoAberto] = useState(false)
   const [expandido, setExpandido] = useState<string | null>(null)
-  const [abaExp, setAbaExp] = useState<Record<string, 'observacao' | 'diagnostico'>>({})
+  const [abaExp, setAbaExp] = useState<Record<string, 'observacao' | 'diagnostico' | 'gcode'>>({})
   const [gerandoDiag, setGerandoDiag] = useState<string | null>(null)
 
   // Formulário
@@ -51,6 +52,7 @@ export default function ExperimentosPage() {
   const [problemaSelecionado, setProblemaSelecionado] = useState('')
   const [diagnosticando, setDiagnosticando] = useState(false)
   const [diagnostico, setDiagnostico] = useState('')
+  const [gcode, setGcode] = useState('')
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -152,16 +154,17 @@ export default function ExperimentosPage() {
       resultado,
       descricao: problemaSelecionado ? `${problemaSelecionado}${descricao ? ' — ' + descricao : ''}` : descricao,
       diagnostico: diagnostico || undefined,
+      gcode: gcode || undefined,
     }
     const lista = [novo, ...experimentos]
     setExperimentos(lista)
     salvarLocal(lista)
     setFormulacaoId(''); setData(new Date().toISOString().split('T')[0]); setResultado('sucesso')
-    setDescricao(''); setProblemaSelecionado(''); setDiagnostico(''); setNovoAberto(false); setSalvando(false)
+    setDescricao(''); setProblemaSelecionado(''); setDiagnostico(''); setGcode(''); setNovoAberto(false); setSalvando(false)
   }
 
-  function getAba(id: string): 'observacao' | 'diagnostico' { return abaExp[id] ?? 'observacao' }
-  function setAba(id: string, aba: 'observacao' | 'diagnostico') { setAbaExp(prev => ({ ...prev, [id]: aba })) }
+  function getAba(id: string): 'observacao' | 'diagnostico' | 'gcode' { return abaExp[id] ?? 'observacao' }
+  function setAba(id: string, aba: 'observacao' | 'diagnostico' | 'gcode') { setAbaExp(prev => ({ ...prev, [id]: aba })) }
 
   const precisaDiagnostico = resultado === 'falha' || resultado === 'parcial'
 
@@ -257,6 +260,12 @@ export default function ExperimentosPage() {
               </div>
             )}
 
+            <div className="mb-4">
+              <label className="text-xs text-muted-foreground block mb-1.5">G-code usado (opcional)</label>
+              <textarea value={gcode} onChange={e => setGcode(e.target.value)} placeholder="Cole o G-code gerado ou usado na impressão..." rows={4}
+                className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50 resize-none font-mono text-xs" />
+            </div>
+
             {resultado === 'sucesso' && (
               <div className="mb-4">
                 <label className="text-xs text-muted-foreground block mb-1.5">Observações (opcional)</label>
@@ -315,6 +324,7 @@ export default function ExperimentosPage() {
                         {[
                           { id: 'observacao' as const, label: 'Observação' },
                           { id: 'diagnostico' as const, label: 'Diagnóstico MIA' },
+                          ...(exp.gcode ? [{ id: 'gcode' as const, label: 'G-code' }] : []),
                         ].map(a => (
                           <button key={a.id} onClick={() => setAba(exp.id, a.id)}
                             className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${aba === a.id ? 'border-morphe-orange text-morphe-orange' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
@@ -347,6 +357,25 @@ export default function ExperimentosPage() {
                                 </button>
                               </div>
                             )}
+                          </div>
+                        )}
+
+                        {aba === 'gcode' && exp.gcode && (
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-xs text-muted-foreground">G-code usado neste experimento</p>
+                              <button onClick={() => {
+                                const blob = new Blob([exp.gcode!], { type: 'text/plain' })
+                                const url = URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url; a.download = `experimento_${exp.id}.gcode`; a.click()
+                                URL.revokeObjectURL(url)
+                              }}
+                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border px-2 py-1 rounded-md transition-colors">
+                                <Download size={11} /> Baixar .gcode
+                              </button>
+                            </div>
+                            <pre className="text-xs text-muted-foreground bg-morphe-dark rounded-lg p-4 overflow-x-auto leading-relaxed font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">{exp.gcode}</pre>
                           </div>
                         )}
                       </div>
