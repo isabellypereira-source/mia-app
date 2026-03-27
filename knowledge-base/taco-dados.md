@@ -2,24 +2,14 @@
 
 Esta é uma base de dados com valores nutricionais aproximados de ingredientes comuns em formulações de alimentos impressos em 3D.
 
-## Amidos e Carboidratos
-- **Amido de milho**: Energia 361 kcal/100g, Carboidratos 85g, Proteínas 8g, Gorduras 0.5g
-- **Amido de batata**: Energia 357 kcal/100g, Carboidratos 84g, Proteínas 7g, Gorduras 0.1g
-- **Farinha de trigo**: Energia 361 kcal/100g, Carboidratos 76g, Proteínas 12g, Gorduras 1g
-- **Açúcar refinado**: Energia 387 kcal/100g, Carboidratos 100g, Proteínas 0g, Gorduras 0g
+## Importação completa da TACO 4ª edição
+- Toda a tabela TACO foi extraída do PDF em `C:\Users\isabe\Downloads\taco_4_edicao_ampliada_e_revisada.pdf`.
+- Os dados completos foram gerados em `knowledge-base/taco-dados-completo.md`.
 
-## Proteínas
-- **Proteína de soja isolada**: Energia 375 kcal/100g, Carboidratos 3g, Proteínas 90g, Gorduras 3g
-- **Proteína de ervilha**: Energia 388 kcal/100g, Carboidratos 5g, Proteínas 85g, Gorduras 2g
-- **Gelatina em pó**: Energia 343 kcal/100g, Carboidratos 0g, Proteínas 87g, Gorduras 0g
+## Conteúdo resumido embutido
+- Os dados originais desta página foram mantidos como resumo para uso rápido.
 
-## Hidrocolóides
-- **Xantana**: Energia 0 kcal/100g (depende da concentração)
-- **Carragena**: Energia 0 kcal/100g
-- **Goma guar**: Energia 0 kcal/100g
+## Referência
+- Veja `knowledge-base/taco-dados-completo.md` para todos os alimentos e valores de composição centesimal, minerais e vitaminas da tabela TACO.
 
-## Outros
-- **Água**: Energia 0 kcal/100g
-- **Óleo vegetal**: Energia 884 kcal/100g, Carboidratos 0g, Proteínas 0g, Gorduras 100g
-
-Nota: Estes são valores aproximados. Para cálculos precisos, consulte a tabela TACO completa.
+> Nota: os valores no resumo são aproximados; use o arquivo completo para cálculos precisos.
