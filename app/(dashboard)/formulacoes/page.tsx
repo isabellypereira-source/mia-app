@@ -22,6 +22,7 @@ interface Formulacao {
 }
 
 interface NutriInfo {
+
   calorias: string
   carboidratos: string
   proteinas: string
