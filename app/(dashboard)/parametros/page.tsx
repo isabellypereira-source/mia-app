@@ -20,11 +20,11 @@ interface Parametros {
 }
 
 const PONTEIRAS = [
-  { value: '0.6', label: '0,6 mm', cor: 'bg-pink-400', corLabel: 'Rosa', desc: 'Alta resolução — pastas lisas sem granulometria', luerlock: true },
-  { value: '0.8', label: '0,8 mm', cor: 'bg-emerald-400', corLabel: 'Verde esmeralda', desc: 'Alta resolução — pasta lisa sem granulometria', luerlock: true },
-  { value: '1.2', label: '1,2 mm', cor: 'bg-gray-400', corLabel: 'Cinza', desc: 'Boa resolução — pastas lisas com baixa granulometria', luerlock: true },
-  { value: '1.6', label: '1,6 mm', cor: 'bg-green-500', corLabel: 'Verde', desc: 'Uso geral — pastas lisas com granulometria média', luerlock: true },
-  { value: '3.0', label: '3,0 mm', cor: 'bg-green-300', corLabel: 'Verde claro', desc: 'Pastas densas, fibrosas e muito granuladas', luerlock: true },
+  { value: '0.6', label: '0,6 mm', cor: 'bg-pink-400', corLabel: 'Rosa', desc: 'Alta resolução, ideal para pastas lisas sem granulometria', luerlock: true },
+  { value: '0.8', label: '0,8 mm', cor: 'bg-emerald-400', corLabel: 'Verde esmeralda', desc: 'Alta resolução, ideal para pasta lisa sem granulometria', luerlock: true },
+  { value: '1.2', label: '1,2 mm', cor: 'bg-gray-400', corLabel: 'Cinza', desc: 'Boa resolução, ideal para pastas lisas com baixa granulometria', luerlock: true },
+  { value: '1.6', label: '1,6 mm', cor: 'bg-green-500', corLabel: 'Verde', desc: 'Uso geral, ideal para pastas lisas com granulometria média', luerlock: true },
+  { value: '3.0', label: '3,0 mm', cor: 'bg-green-300', corLabel: 'Verde claro', desc: 'Ideal para pastas densas, fibrosas e muito granuladas', luerlock: true },
   { value: '3.2', label: '3,2 mm', cor: '', corLabel: '', desc: 'Ideal para pastas densas e fibrosas sem luerlock, similar à 3 mm', luerlock: false },
 ]
 
