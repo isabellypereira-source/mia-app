@@ -134,7 +134,7 @@ export default function FormulacoesPage() {
 
         {loading ? (
           <div className="text-center py-8 text-muted-foreground text-xs">Carregando...</div>
-        ) : filtradas.length === 0 ? (
+        ) : formulacoes.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <FlaskConical size={28} className="mx-auto mb-2 opacity-30" />
             <p className="text-xs">Nenhuma formulação.</p>
