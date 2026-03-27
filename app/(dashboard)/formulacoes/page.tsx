@@ -81,9 +81,9 @@ function calcularNutri(ingredientes: Ingrediente[]): NutriInfo {
 export default function FormulacoesPage() {
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [loading, setLoading] = useState(true)
-  const [filtro, setFiltro] = useState<string>('todos')
   const [selecionada, setSelecionada] = useState<Formulacao | null>(null)
   const [abaDetalhe, setAbaDetalhe] = useState<'nutri' | 'anvisa'>('nutri')
+  const [excluindo, setExcluindo] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/formulacoes')
@@ -91,7 +91,14 @@ export default function FormulacoesPage() {
       .then(data => { setFormulacoes(data || []); setLoading(false) })
   }, [])
 
-  const filtradas = filtro === 'todos' ? formulacoes : formulacoes.filter(f => f.resultado === filtro)
+  async function excluirFormulacao(id: string) {
+    if (!confirm('Excluir esta formulação?')) return
+    setExcluindo(id)
+    await fetch(`/api/formulacoes?id=${id}`, { method: 'DELETE' })
+    setFormulacoes(prev => prev.filter(f => f.id !== id))
+    if (selecionada?.id === id) setSelecionada(null)
+    setExcluindo(null)
+  }
 
   async function baixarRelatorio(f: Formulacao) {
     const res = await fetch('/api/export', {
