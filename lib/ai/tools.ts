@@ -1,22 +1,72 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 
-// Tabela nutricional de ingredientes comuns (por 100g)
+// Tabela nutricional de ingredientes comuns (por 100g) — baseado em TACO 4ª edição (UNICAMP)
 const TABELA_NUTRI: Record<string, { kcal: number; prot: number; carb: number; gor: number; fib: number; sod: number }> = {
+  // Vegetais e tubérculos
   'batata-doce': { kcal: 86, prot: 1.6, carb: 20.1, gor: 0.1, fib: 3.0, sod: 55 },
   'mandioca': { kcal: 157, prot: 1.4, carb: 38.1, gor: 0.3, fib: 1.9, sod: 14 },
-  'milho': { kcal: 362, prot: 8.1, carb: 78.7, gor: 0.8, fib: 2.3, sod: 2 },
-  'ervilha': { kcal: 81, prot: 5.4, carb: 14.4, gor: 0.4, fib: 5.7, sod: 5 },
+  'batata': { kcal: 82, prot: 1.7, carb: 18.9, gor: 0.1, fib: 1.8, sod: 7 },
   'cenoura': { kcal: 41, prot: 0.9, carb: 9.6, gor: 0.2, fib: 2.8, sod: 69 },
   'espinafre': { kcal: 23, prot: 2.9, carb: 3.6, gor: 0.4, fib: 2.2, sod: 79 },
-  'proteina de soja': { kcal: 338, prot: 80, carb: 5.0, gor: 0.5, fib: 3.5, sod: 900 },
+  'beterraba': { kcal: 39, prot: 1.5, carb: 8.8, gor: 0.1, fib: 2.0, sod: 58 },
+  'abobrinha': { kcal: 21, prot: 1.3, carb: 4.4, gor: 0.1, fib: 1.3, sod: 2 },
+  'ervilha': { kcal: 81, prot: 5.4, carb: 14.4, gor: 0.4, fib: 5.7, sod: 5 },
+  'tomate': { kcal: 15, prot: 0.9, carb: 3.1, gor: 0.2, fib: 1.2, sod: 4 },
+
+  // Cereais e farinhas
+  'arroz': { kcal: 358, prot: 7.2, carb: 78.8, gor: 0.3, fib: 1.6, sod: 4 },
+  'farinha de arroz': { kcal: 361, prot: 6.5, carb: 80.2, gor: 0.5, fib: 1.7, sod: 1 },
+  'farinha de trigo': { kcal: 360, prot: 9.8, carb: 75.1, gor: 1.4, fib: 2.3, sod: 2 },
+  'farinha de mandioca': { kcal: 363, prot: 1.8, carb: 88.0, gor: 0.3, fib: 6.4, sod: 5 },
+  'milho': { kcal: 362, prot: 8.1, carb: 78.7, gor: 0.8, fib: 2.3, sod: 2 },
+  'aveia': { kcal: 394, prot: 13.9, carb: 66.6, gor: 8.5, fib: 9.1, sod: 5 },
+  'quinoa': { kcal: 374, prot: 13.8, carb: 64.2, gor: 6.1, fib: 7.0, sod: 5 },
+
+  // Amidos
   'amido de milho': { kcal: 381, prot: 0.3, carb: 91.3, gor: 0.1, fib: 0.9, sod: 8 },
   'amido de mandioca': { kcal: 350, prot: 0.2, carb: 86.4, gor: 0.2, fib: 0.4, sod: 3 },
-  'xantana': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
-  'sal': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 38758 },
+  'amido de batata': { kcal: 334, prot: 0.1, carb: 83.0, gor: 0.1, fib: 0.2, sod: 7 },
+  'tapioca': { kcal: 350, prot: 0.2, carb: 86.4, gor: 0.2, fib: 0.4, sod: 3 },
+
+  // Proteínas vegetais
+  'proteina de soja': { kcal: 338, prot: 80.0, carb: 5.0, gor: 0.5, fib: 3.5, sod: 900 },
+  'proteina de ervilha': { kcal: 352, prot: 78.0, carb: 6.0, gor: 2.5, fib: 3.0, sod: 280 },
+  'tofu': { kcal: 76, prot: 8.1, carb: 1.9, gor: 4.2, fib: 0.3, sod: 7 },
+  'soja': { kcal: 338, prot: 36.5, carb: 19.9, gor: 18.9, fib: 20.2, sod: 3 },
+
+  // Proteínas animais
+  'frango': { kcal: 159, prot: 32.0, carb: 0, gor: 2.5, fib: 0, sod: 77 },
+  'atum': { kcal: 119, prot: 26.0, carb: 0, gor: 1.1, fib: 0, sod: 376 },
+  'gelatina': { kcal: 335, prot: 85.6, carb: 0, gor: 0.1, fib: 0, sod: 196 },
+  'leite': { kcal: 61, prot: 3.2, carb: 4.5, gor: 3.4, fib: 0, sod: 45 },
+  'proteina do leite': { kcal: 385, prot: 88.0, carb: 4.0, gor: 1.5, fib: 0, sod: 350 },
+
+  // Lipídios
   'oleo vegetal': { kcal: 884, prot: 0, carb: 0, gor: 100, fib: 0, sod: 0 },
+  'azeite': { kcal: 884, prot: 0, carb: 0, gor: 100, fib: 0, sod: 0 },
+  'oleo de coco': { kcal: 862, prot: 0, carb: 0, gor: 100, fib: 0, sod: 0 },
+  'lecitina': { kcal: 763, prot: 0.3, carb: 0, gor: 94.0, fib: 0, sod: 0 },
+
+  // Hidrocolóides e aditivos funcionais (contribuição nutricional negligenciável)
+  'xantana': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'goma guar': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'metilcelulose': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'hpmc': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'alginato': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'carragena': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'pectina': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
+  'glicerol': { kcal: 312, prot: 0, carb: 87.0, gor: 0, fib: 0, sod: 0 },
+
+  // Outros
+  'sal': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 38758 },
+  'acucar': { kcal: 387, prot: 0, carb: 99.5, gor: 0, fib: 0, sod: 1 },
+  'açúcar': { kcal: 387, prot: 0, carb: 99.5, gor: 0, fib: 0, sod: 1 },
   'agua': { kcal: 0, prot: 0, carb: 0, gor: 0, fib: 0, sod: 0 },
   'chocolate em po': { kcal: 312, prot: 17.6, carb: 57.9, gor: 13.7, fib: 26.9, sod: 57 },
+  'spirulina': { kcal: 290, prot: 57.5, carb: 23.9, gor: 7.7, fib: 3.6, sod: 1048 },
+  'curcuma': { kcal: 354, prot: 7.8, carb: 64.9, gor: 9.9, fib: 21.1, sod: 38 },
+  'cúrcuma': { kcal: 354, prot: 7.8, carb: 64.9, gor: 9.9, fib: 21.1, sod: 38 },
 }
 
 export const miaTools = {
