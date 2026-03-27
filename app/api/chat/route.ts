@@ -30,8 +30,8 @@ export async function POST(req: NextRequest) {
     model,
     system: systemWithRag,
     messages,
-    tools: miaTools,
-    maxSteps: 5,
+    tools: noTools ? undefined : miaTools,
+    maxSteps: noTools ? 1 : 5,
     temperature: 0.3,
   })
 
