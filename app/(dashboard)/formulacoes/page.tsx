@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { FlaskConical, CheckCircle, XCircle, Clock, ChevronRight, X, Download, ShieldCheck, BarChart3 } from 'lucide-react'
+import { FlaskConical, ChevronRight, X, Download, ShieldCheck, BarChart3, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
