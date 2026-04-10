@@ -194,10 +194,10 @@ export default function CaracterizacaoPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-morphe-dark">
-      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6 mb-6">
         <h1 className="text-2xl font-bold">Caracterização</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-[#58413c] mt-1">
           Insira dados das análises para calcular índices e obter protocolos.
         </p>
       </div>
@@ -209,45 +209,45 @@ export default function CaracterizacaoPage() {
             const aberta = secaoAberta === secao.id
             const temResultado = !!resultados[secao.id]
             return (
-              <div key={secao.id} className="card-depth overflow-hidden">
+              <div key={secao.id} className="bg-white rounded-2xl shadow-tonal overflow-hidden">
                 <button
                   onClick={() => setSecaoAberta(aberta ? null : secao.id)}
-                  className="w-full flex items-center justify-between p-4 text-left hover:bg-morphe-dark-3 transition-colors"
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-[#f9edd4] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Microscope size={15} className={temResultado ? 'text-morphe-orange' : 'text-muted-foreground'} />
+                    <Microscope size={15} className={temResultado ? 'text-[#003223]' : 'text-[#58413c]'} />
                     <span className="text-sm font-medium">{secao.titulo}</span>
                     {temResultado && (
-                      <span className="text-[10px] bg-morphe-orange/20 text-morphe-orange px-2 py-0.5 rounded-full">calculado</span>
+                      <span className="text-[10px] bg-[rgba(0,50,35,0.1)] text-[#003223] px-2 py-0.5 rounded-full">calculado</span>
                     )}
                   </div>
-                  <ChevronRight size={14} className={`text-muted-foreground transition-transform ${aberta ? 'rotate-90' : ''}`} />
+                  <ChevronRight size={14} className={`text-[#58413c] transition-transform ${aberta ? 'rotate-90' : ''}`} />
                 </button>
 
                 {aberta && (
-                  <div className="px-4 pb-4 border-t border-border/50 pt-4">
-                    <p className="text-xs text-muted-foreground mb-4">{secao.descricao}</p>
+                  <div className="px-4 pb-4 border-t border-[#e5d9c1] pt-4">
+                    <p className="text-xs text-[#58413c] mb-4">{secao.descricao}</p>
 
                     {/* Protocolo */}
-                    <div className="bg-morphe-dark border border-border rounded-lg p-3 mb-4">
+                    <div className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-3 mb-4">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-medium text-morphe-orange">Protocolo de medição</p>
+                        <p className="text-xs font-medium text-[#003223]">Protocolo de medição</p>
                         <button
                           onClick={() => baixarProtocolo(secao)}
-                          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-morphe-orange transition-colors"
+                          className="flex items-center gap-1 text-[10px] text-[#58413c] hover:text-[#003223] transition-colors"
                         >
                           <Download size={10} /> Baixar
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{secao.protocolo}</p>
+                      <p className="text-xs text-[#58413c] leading-relaxed">{secao.protocolo}</p>
                     </div>
 
                     {/* Campos */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                       {secao.campos.map(campo => (
                         <div key={campo.id}>
-                          <label className="text-xs text-muted-foreground block mb-1">
-                            {campo.label} <span className="text-morphe-orange/70">({campo.unidade})</span>
+                          <label className="text-xs text-[#58413c] block mb-1">
+                            {campo.label} <span className="text-[#003223]/70">({campo.unidade})</span>
                           </label>
                           <input
                             type="number"
@@ -255,7 +255,7 @@ export default function CaracterizacaoPage() {
                             value={valores[secao.id]?.[campo.id] ?? ''}
                             onChange={e => updateValor(secao.id, campo.id, e.target.value)}
                             placeholder={campo.placeholder}
-                            className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50"
+                            className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30"
                           />
                         </div>
                       ))}
@@ -263,15 +263,15 @@ export default function CaracterizacaoPage() {
 
                     <button
                       onClick={() => calcular(secao.id)}
-                      className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover text-white text-sm font-medium px-4 py-2 rounded-md transition-colors mb-3"
+                      className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] text-white text-sm font-medium px-4 py-2 rounded-md transition-colors mb-3"
                     >
                       <Sparkles size={13} /> Calcular
                     </button>
 
                     {resultados[secao.id] && (
-                      <div className="bg-morphe-dark border border-morphe-orange/20 rounded-lg p-3">
-                        <p className="text-xs font-medium text-morphe-orange mb-1">Resultado</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{resultados[secao.id]}</p>
+                      <div className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-3">
+                        <p className="text-xs font-medium text-[#003223] mb-1">Resultado</p>
+                        <p className="text-sm text-[#58413c] leading-relaxed">{resultados[secao.id]}</p>
                       </div>
                     )}
                   </div>

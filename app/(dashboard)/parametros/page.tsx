@@ -225,10 +225,10 @@ max_print_speed = 150
   const altCamada = calcularAlturaCamada(ponteira, resolucao)
 
   return (
-    <div className="h-full overflow-y-auto bg-morphe-dark">
-      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6 mb-6">
         <h1 className="text-2xl font-bold">Parâmetros de Impressão</h1>
-        <p className="text-sm text-muted-foreground mt-1">Configure sua impressão e receba parâmetros e G-code otimizados.</p>
+        <p className="text-sm text-[#58413c] mt-1">Configure sua impressão e receba parâmetros e G-code otimizados.</p>
       </div>
       <div className="max-w-3xl mx-auto px-8">
         <div className="mb-6">
@@ -237,12 +237,12 @@ max_print_speed = 150
         <div className="mb-5">
           <label className="text-sm font-medium block mb-1.5">Formulação</label>
           <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}
-            className="w-full card-depth px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50">
+            className="w-full bg-white rounded-2xl shadow-tonal px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30">
             <option value="">Selecione uma formulação</option>
             {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
           </select>
           {formulacoes.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">Nenhuma formulação salva. <a href="/formular" className="text-morphe-orange hover:underline">Criar agora</a></p>
+            <p className="text-xs text-[#58413c] mt-1">Nenhuma formulação salva. <a href="/formular" className="text-[#003223] hover:underline">Criar agora</a></p>
           )}
           {avisoGranulo && (
             <div className="mt-2 flex gap-2 bg-yellow-400/10 border border-yellow-400/20 rounded-lg p-3">
@@ -254,21 +254,21 @@ max_print_speed = 150
 
         {/* Ponteiras */}
         <div className="mb-5">
-          <label className="text-sm font-medium block mb-2">Ponteira (nozzle) <span className="text-xs text-muted-foreground font-normal ml-1">— guia de cores para seringa c/luerlock</span></label>
+          <label className="text-sm font-medium block mb-2">Ponteira (nozzle) <span className="text-xs text-[#58413c] font-normal ml-1">— guia de cores para seringa c/luerlock</span></label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {PONTEIRAS.map(p => (
               <button key={p.value} onClick={() => setPonteira(p.value)}
-                className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${ponteira === p.value ? 'border-morphe-orange/60 bg-morphe-orange/10' : 'border-border bg-morphe-dark-2 hover:border-morphe-orange/30'}`}>
+                className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${ponteira === p.value ? 'border-[#e5d9c1] bg-[rgba(0,50,35,0.08)]' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#e5d9c1]'}`}>
                 <div className={`w-4 h-4 rounded-full flex-shrink-0 ${p.cor}`} title={p.corLabel} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{p.label} <span className="text-xs text-muted-foreground font-normal">· {p.corLabel}</span></p>
-                  <p className="text-xs text-muted-foreground truncate">{p.desc}</p>
-                  {!p.luerlock && <p className="text-xs text-morphe-orange">Sem luerlock</p>}
+                  <p className="text-sm font-medium">{p.label} <span className="text-xs text-[#58413c] font-normal">· {p.corLabel}</span></p>
+                  <p className="text-xs text-[#58413c] truncate">{p.desc}</p>
+                  {!p.luerlock && <p className="text-xs text-[#003223]">Sem luerlock</p>}
                 </div>
               </button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground mt-2 flex items-start gap-1.5">
+          <p className="text-xs text-[#58413c] mt-2 flex items-start gap-1.5">
             <Info size={11} className="flex-shrink-0 mt-0.5" />
             A granulometria depende dos ingredientes E do protocolo de solubilização. Com boa solubilização, a pasta fica lisa e permite usar ponteiras menores.
           </p>
@@ -276,18 +276,18 @@ max_print_speed = 150
 
         {/* Resolução */}
         <div className="mb-5">
-          <label className="text-sm font-medium block mb-2">Resolução <span className="text-xs text-muted-foreground font-normal ml-1">— altura de camada calculada automaticamente</span></label>
+          <label className="text-sm font-medium block mb-2">Resolução <span className="text-xs text-[#58413c] font-normal ml-1">— altura de camada calculada automaticamente</span></label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {RESOLUCOES.map(r => (
               <button key={r.value} onClick={() => setResolucao(r.value)}
-                className={`p-3 rounded-xl border text-left transition-colors ${resolucao === r.value ? 'border-morphe-orange/60 bg-morphe-orange/10' : 'border-border bg-morphe-dark-2 hover:border-morphe-orange/30'}`}>
+                className={`p-3 rounded-xl border text-left transition-colors ${resolucao === r.value ? 'border-[#e5d9c1] bg-[rgba(0,50,35,0.08)]' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#e5d9c1]'}`}>
                 <p className="text-sm font-medium">{r.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{r.desc}</p>
+                <p className="text-xs text-[#58413c] mt-0.5">{r.desc}</p>
               </button>
             ))}
           </div>
           {ponteiraSelecionada && (
-            <p className="text-xs text-morphe-orange mt-2">
+            <p className="text-xs text-[#003223] mt-2">
               Altura de camada sugerida: <strong>{altCamada} mm</strong> (metade do diâmetro da ponteira {ponteiraSelecionada.label} × {RESOLUCOES.find(r => r.value === resolucao)?.fator})
             </p>
           )}
@@ -301,23 +301,23 @@ max_print_speed = 150
               <div key={f.value} className="relative">
                 {f.pago ? (
                   <a href={`/pagamento?formato=${f.value}`} target="_blank" rel="noopener noreferrer"
-                    className="block p-3 rounded-xl border border-border bg-morphe-dark-2 opacity-50 cursor-pointer hover:opacity-70 transition-opacity">
-                    <Lock size={11} className="absolute top-2 right-2 text-muted-foreground" />
+                    className="block p-3 rounded-xl border border-[#e5d9c1] bg-[#fff2da] opacity-50 cursor-pointer hover:opacity-70 transition-opacity">
+                    <Lock size={11} className="absolute top-2 right-2 text-[#58413c]" />
                     {f.imagem && <img src={f.imagem} alt={f.label} className="w-full h-16 object-cover rounded mb-2" />}
                     <span className="text-xl mb-1 block">{f.emoji}</span>
                     <p className="text-sm font-medium">{f.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
-                    <p className="text-xs text-morphe-orange mt-1">{f.preco}</p>
+                    <p className="text-xs text-[#58413c] mt-0.5">{f.desc}</p>
+                    <p className="text-xs text-[#003223] mt-1">{f.preco}</p>
                   </a>
                 ) : (
                   <button onClick={() => setFormato(f.value)}
                     className={`w-full p-3 rounded-xl border text-left transition-colors ${
-                      formato === f.value ? 'border-morphe-orange/60 bg-morphe-orange/10' : 'border-border bg-morphe-dark-2 hover:border-morphe-orange/30'
+                      formato === f.value ? 'border-[#e5d9c1] bg-[rgba(0,50,35,0.08)]' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#e5d9c1]'
                     }`}>
                     {f.imagem && <img src={f.imagem} alt={f.label} className="w-full h-16 object-cover rounded mb-2" />}
                     <span className="text-xl mb-1 block">{f.emoji}</span>
                     <p className="text-sm font-medium">{f.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
+                    <p className="text-xs text-[#58413c] mt-0.5">{f.desc}</p>
                   </button>
                 )}
               </div>
@@ -326,17 +326,17 @@ max_print_speed = 150
         </div>
 
         <button onClick={calcularParametros} disabled={calculando}
-          className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors mb-6">
+          className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors mb-6">
           <Sparkles size={14} /> {calculando ? 'Calculando...' : 'Calcular parâmetros'}
         </button>
 
         {/* Resultados */}
         {params && (
           <div className="space-y-4">
-            <div className="card-depth p-5">
+            <div className="bg-white rounded-2xl shadow-tonal p-5">
               <div className="flex items-center gap-2 mb-4">
-                <SlidersHorizontal size={15} className="text-morphe-orange" />
-                <h2 className="text-sm font-medium">Parâmetros recomendados <span className="text-xs text-muted-foreground font-normal ml-1">(editáveis)</span></h2>
+                <SlidersHorizontal size={15} className="text-[#003223]" />
+                <h2 className="text-sm font-medium">Parâmetros recomendados <span className="text-xs text-[#58413c] font-normal ml-1">(editáveis)</span></h2>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {(Object.entries({
@@ -348,39 +348,39 @@ max_print_speed = 150
                   'Retraction': 'retraction',
                   'Flow rate': 'flow_rate',
                 }) as [string, keyof Parametros][]).map(([label, key]) => (
-                  <div key={key} className="bg-morphe-dark border border-border rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                  <div key={key} className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-3">
+                    <p className="text-xs text-[#58413c] mb-1">{label}</p>
                     <input value={params[key] ?? ''} onChange={e => updateParam(key, e.target.value)}
-                      className="w-full text-sm font-semibold text-morphe-orange bg-transparent focus:outline-none focus:border-b focus:border-morphe-orange/50" />
+                      className="w-full text-sm font-semibold text-[#003223] bg-transparent focus:outline-none focus:border-b focus:border-[#e5d9c1]" />
                   </div>
                 ))}
               </div>
-              {params.observacoes && <p className="text-xs text-muted-foreground mt-3 leading-relaxed">{params.observacoes}</p>}
+              {params.observacoes && <p className="text-xs text-[#58413c] mt-3 leading-relaxed">{params.observacoes}</p>}
               <div className="flex gap-2 mt-4">
                 <button onClick={exportarPrusaSlicer}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-1.5 rounded-md transition-colors">
+                  className="flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-3 py-1.5 rounded-md transition-colors">
                   <Download size={11} /> Abrir no PrusaSlicer (.ini)
                 </button>
               </div>
             </div>
 
             {gcode && (
-              <div className="card-depth p-5">
+              <div className="bg-white rounded-2xl shadow-tonal p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-medium">G-code</h2>
                   <div className="flex gap-2">
                     <button onClick={copiarGcode}
-                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border px-2.5 py-1.5 rounded-md transition-colors">
+                      className="flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-2.5 py-1.5 rounded-md transition-colors">
                       {copiado ? <CheckCheck size={12} className="text-green-400" /> : <Copy size={12} />}
                       {copiado ? 'Copiado' : 'Copiar'}
                     </button>
                     <button onClick={baixarGcode}
-                      className="flex items-center gap-1.5 text-xs bg-morphe-orange hover:bg-morphe-orange-hover text-white px-2.5 py-1.5 rounded-md transition-colors">
+                      className="flex items-center gap-1.5 text-xs bg-[#003223] hover:bg-[#004d35] text-white px-2.5 py-1.5 rounded-md transition-colors">
                       <Download size={12} /> Baixar .gcode
                     </button>
                   </div>
                 </div>
-                <pre className="text-xs text-muted-foreground bg-morphe-dark rounded-lg p-4 overflow-x-auto leading-relaxed font-mono">{gcode}</pre>
+                <pre className="text-xs text-[#58413c] bg-[#fff8f1] rounded-lg p-4 overflow-x-auto leading-relaxed font-mono">{gcode}</pre>
               </div>
             )}
           </div>

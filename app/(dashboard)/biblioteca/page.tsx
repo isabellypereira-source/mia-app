@@ -208,27 +208,27 @@ export default function BibliotecaPage() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Header */}
-      <div className="section-alt border-b border-border/60 px-8 py-6">
+      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-4">
-            <Library size={16} className="text-morphe-orange" />
+            <Library size={16} className="text-[#003223]" />
             <h1 className="text-2xl font-bold">Biblioteca</h1>
           </div>
           <div className="relative max-w-md">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#58413c]" />
             <input
               type="text"
               placeholder="Buscar ingrediente, parâmetro ou problema..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-morphe-dark border border-border/70 rounded-lg focus:outline-none focus:border-morphe-orange/50 focus:ring-2 focus:ring-morphe-orange/10 text-foreground placeholder:text-muted-foreground/60 transition-all"
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-[#fff8f1] border border-[#e5d9c1] rounded-lg focus:outline-none focus:border-[#e5d9c1] focus:ring-2 focus:ring-[#003223]/10 text-[#211b0c] placeholder:text-[#bfc9c2] transition-all"
             />
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="section-alt border-b border-border/60 px-8">
+      <div className="section-alt border-b border-[#e5d9c1] px-8">
         <div className="max-w-5xl mx-auto flex gap-1 overflow-x-auto py-2">
           {ABAS.map(({ id, label, icon: Icon }) => (
             <button
@@ -250,12 +250,12 @@ export default function BibliotecaPage() {
         {abaAtiva === 'hidrocoloides' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {hidroFiltered.map(h => (
-              <div key={h.nome} className="card-depth p-5 hover:border-morphe-orange/20 transition-colors">
+              <div key={h.nome} className="bg-white rounded-2xl shadow-tonal p-5 hover:border-[#e5d9c1] transition-colors">
                 <div className="flex items-start gap-3 mb-3">
                   <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1 ${h.cor}`} />
                   <div>
                     <h3 className="font-semibold text-sm">{h.nome}</h3>
-                    <span className="text-xs text-morphe-orange font-mono">{h.concentracao}</span>
+                    <span className="text-xs text-[#003223] font-mono">{h.concentracao}</span>
                   </div>
                   <span className={`ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full border ${
                     h.imprimibilidade === 'Muito alta' ? 'border-green-400/30 text-green-400 bg-green-400/10' :
@@ -265,14 +265,14 @@ export default function BibliotecaPage() {
                     {h.imprimibilidade}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed mb-2">{h.mecanismo}</p>
-                <p className="text-xs text-foreground/70 leading-relaxed mb-2"><span className="text-morphe-orange/70 font-medium">Uso:</span> {h.uso}</p>
-                <p className="text-xs text-morphe-orange/60"><span className="font-medium">Temp:</span> {h.temperatura}</p>
-                {h.obs && <p className="text-[11px] text-muted-foreground/60 mt-2 border-t border-border/50 pt-2">{h.obs}</p>}
+                <p className="text-xs text-[#58413c] leading-relaxed mb-2">{h.mecanismo}</p>
+                <p className="text-xs text-[#211b0c]/70 leading-relaxed mb-2"><span className="text-[#003223]/70 font-medium">Uso:</span> {h.uso}</p>
+                <p className="text-xs text-[#003223]/60"><span className="font-medium">Temp:</span> {h.temperatura}</p>
+                {h.obs && <p className="text-[11px] text-[#bfc9c2] mt-2 border-t border-[#e5d9c1] pt-2">{h.obs}</p>}
               </div>
             ))}
             {hidroFiltered.length === 0 && (
-              <p className="col-span-2 text-center text-sm text-muted-foreground py-12">Nenhum resultado para &quot;{busca}&quot;</p>
+              <p className="col-span-2 text-center text-sm text-[#58413c] py-12">Nenhum resultado para &quot;{busca}&quot;</p>
             )}
           </div>
         )}
@@ -280,10 +280,10 @@ export default function BibliotecaPage() {
         {/* REOLOGIA */}
         {abaAtiva === 'reologia' && (
           <div className="space-y-4">
-            <div className="card-depth p-6">
+            <div className="bg-white rounded-2xl shadow-tonal p-6">
               <h2 className="font-semibold mb-1">Modelo de Herschel-Bulkley</h2>
-              <p className="text-xs text-muted-foreground mb-3">Modelo mais completo para fluidos alimentares com yield stress:</p>
-              <div className="bg-morphe-dark rounded-xl p-4 font-mono text-sm text-morphe-orange mb-4 text-center">
+              <p className="text-xs text-[#58413c] mb-3">Modelo mais completo para fluidos alimentares com yield stress:</p>
+              <div className="bg-[#fff8f1] rounded-xl p-4 font-mono text-sm text-[#003223] mb-4 text-center">
                 τ = τ₀ + K · γ̇ⁿ
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -292,10 +292,10 @@ export default function BibliotecaPage() {
                   { simbolo: 'K', nome: 'Índice de consistência', desc: 'Resistência ao escoamento após yield. Quanto maior, mais viscoso.' },
                   { simbolo: 'n', nome: 'Índice de fluxo', desc: 'n < 1: shear-thinning (ideal). n = 1: newtoniano. n > 1: shear-thickening.' },
                 ].map(({ simbolo, nome, desc }) => (
-                  <div key={simbolo} className="bg-morphe-dark border border-border rounded-lg p-3">
-                    <span className="text-morphe-orange font-mono font-bold text-lg">{simbolo}</span>
+                  <div key={simbolo} className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-3">
+                    <span className="text-[#003223] font-mono font-bold text-lg">{simbolo}</span>
                     <p className="text-xs font-medium mt-1">{nome}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{desc}</p>
+                    <p className="text-xs text-[#58413c] mt-0.5 leading-relaxed">{desc}</p>
                   </div>
                 ))}
               </div>
@@ -307,9 +307,9 @@ export default function BibliotecaPage() {
                 { titulo: 'Tixotropia', conteudo: `Recuperação temporal da estrutura após remoção do cisalhamento. Importante para:\n- Colapso pós-impressão (recuperação lenta = colapso)\n- Tempo de estabilização antes da impressão\n\nXantana e géis de amido são tixotrópicos.` },
                 { titulo: 'Yield Stress na prática', conteudo: `Como medir sem reômetro:\n1. Teste de placa: colocar pasta entre placas e observar espalhamento\n2. Teste de penetração: usar agulha calibrada\n3. Empiricamente: pasta que mantém sulco = τ₀ > 50 Pa\n\nCorrelação visual: pasta que não cai do garfo invertido ≈ 100–300 Pa.` },
               ].map(({ titulo, conteudo }) => (
-                <div key={titulo} className="card-depth p-5">
+                <div key={titulo} className="bg-white rounded-2xl shadow-tonal p-5">
                   <h3 className="font-semibold text-sm mb-2">{titulo}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{conteudo}</p>
+                  <p className="text-xs text-[#58413c] leading-relaxed whitespace-pre-line">{conteudo}</p>
                 </div>
               ))}
             </div>
@@ -318,21 +318,21 @@ export default function BibliotecaPage() {
 
         {/* PARÂMETROS */}
         {abaAtiva === 'parametros' && (
-          <div className="card-depth overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-tonal overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-morphe-dark">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Parâmetro</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-morphe-orange">Faixa / Valor</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground hidden sm:table-cell">Observação</th>
+                <tr className="border-b border-[#e5d9c1] bg-[#fff8f1]">
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#58413c]">Parâmetro</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#003223]">Faixa / Valor</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-[#58413c] hidden sm:table-cell">Observação</th>
                 </tr>
               </thead>
               <tbody>
                 {PARAMETROS_REFERENCIA.map((p, i) => (
-                  <tr key={p.parametro} className={`border-b border-border/50 ${i % 2 === 0 ? '' : 'bg-morphe-dark/30'}`}>
+                  <tr key={p.parametro} className={`border-b border-[#e5d9c1] ${i % 2 === 0 ? '' : 'bg-[#003223]/5'}`}>
                     <td className="px-5 py-3 text-xs font-medium">{p.parametro}</td>
-                    <td className="px-5 py-3 text-xs font-mono text-morphe-orange">{p.valor}</td>
-                    <td className="px-5 py-3 text-xs text-muted-foreground hidden sm:table-cell">{p.observacao}</td>
+                    <td className="px-5 py-3 text-xs font-mono text-[#003223]">{p.valor}</td>
+                    <td className="px-5 py-3 text-xs text-[#58413c] hidden sm:table-cell">{p.observacao}</td>
                   </tr>
                 ))}
               </tbody>
@@ -343,14 +343,14 @@ export default function BibliotecaPage() {
         {/* TACO */}
         {abaAtiva === 'taco' && (
           <div>
-            <p className="text-xs text-muted-foreground mb-4">Fonte: TACO — Tabela Brasileira de Composição de Alimentos, 4ª edição (UNICAMP). Valores por 100g de parte comestível.</p>
-            <div className="card-depth overflow-hidden">
+            <p className="text-xs text-[#58413c] mb-4">Fonte: TACO — Tabela Brasileira de Composição de Alimentos, 4ª edição (UNICAMP). Valores por 100g de parte comestível.</p>
+            <div className="bg-white rounded-2xl shadow-tonal overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-border bg-morphe-dark">
-                      <th className="text-left px-4 py-3 font-semibold text-muted-foreground min-w-[180px]">Alimento</th>
-                      <th className="text-right px-3 py-3 font-semibold text-morphe-orange">Kcal</th>
+                    <tr className="border-b border-[#e5d9c1] bg-[#fff8f1]">
+                      <th className="text-left px-4 py-3 font-semibold text-[#58413c] min-w-[180px]">Alimento</th>
+                      <th className="text-right px-3 py-3 font-semibold text-[#003223]">Kcal</th>
                       <th className="text-right px-3 py-3 font-semibold text-blue-400">Prot (g)</th>
                       <th className="text-right px-3 py-3 font-semibold text-yellow-400">Carb (g)</th>
                       <th className="text-right px-3 py-3 font-semibold text-orange-400">Gor (g)</th>
@@ -360,9 +360,9 @@ export default function BibliotecaPage() {
                   </thead>
                   <tbody>
                     {tacoFiltered.map((t, i) => (
-                      <tr key={t.nome} className={`border-b border-border/40 ${i % 2 === 0 ? '' : 'bg-morphe-dark/30'}`}>
+                      <tr key={t.nome} className={`border-b border-[#e5d9c1] ${i % 2 === 0 ? '' : 'bg-[#003223]/5'}`}>
                         <td className="px-4 py-2.5 font-medium">{t.nome}</td>
-                        <td className="px-3 py-2.5 text-right text-morphe-orange font-mono">{t.kcal}</td>
+                        <td className="px-3 py-2.5 text-right text-[#003223] font-mono">{t.kcal}</td>
                         <td className="px-3 py-2.5 text-right text-blue-400 font-mono">{t.prot}</td>
                         <td className="px-3 py-2.5 text-right text-yellow-400 font-mono">{t.carb}</td>
                         <td className="px-3 py-2.5 text-right text-orange-400 font-mono">{t.gor}</td>
@@ -374,7 +374,7 @@ export default function BibliotecaPage() {
                 </table>
               </div>
               {tacoFiltered.length === 0 && (
-                <p className="text-center text-sm text-muted-foreground py-8">Nenhum resultado para &quot;{busca}&quot;</p>
+                <p className="text-center text-sm text-[#58413c] py-8">Nenhum resultado para &quot;{busca}&quot;</p>
               )}
             </div>
           </div>
@@ -384,7 +384,7 @@ export default function BibliotecaPage() {
         {abaAtiva === 'troubleshooting' && (
           <div className="space-y-4">
             {troubleFiltered.map(t => (
-              <div key={t.problema} className="card-depth p-5 hover:border-red-400/20 transition-colors">
+              <div key={t.problema} className="bg-white rounded-2xl shadow-tonal p-5 hover:border-red-400/20 transition-colors">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">{t.icone}</span>
                   <h3 className="font-semibold text-sm">{t.problema}</h3>
@@ -394,7 +394,7 @@ export default function BibliotecaPage() {
                     <p className="text-[11px] font-semibold text-red-400 uppercase tracking-wider mb-2">Possíveis causas</p>
                     <ul className="space-y-1">
                       {t.causas.map((c, i) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <li key={i} className="text-xs text-[#58413c] flex items-start gap-2">
                           <span className="text-red-400/60 flex-shrink-0 mt-0.5">•</span>
                           {c}
                         </li>
@@ -405,7 +405,7 @@ export default function BibliotecaPage() {
                     <p className="text-[11px] font-semibold text-green-400 uppercase tracking-wider mb-2">Soluções sugeridas</p>
                     <ul className="space-y-1">
                       {t.solucoes.map((s, i) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                        <li key={i} className="text-xs text-[#58413c] flex items-start gap-2">
                           <span className="text-green-400/60 flex-shrink-0 mt-0.5">{i + 1}.</span>
                           {s}
                         </li>
@@ -416,7 +416,7 @@ export default function BibliotecaPage() {
               </div>
             ))}
             {troubleFiltered.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-12">Nenhum resultado para &quot;{busca}&quot;</p>
+              <p className="text-center text-sm text-[#58413c] py-12">Nenhum resultado para &quot;{busca}&quot;</p>
             )}
           </div>
         )}
@@ -425,14 +425,14 @@ export default function BibliotecaPage() {
         {abaAtiva === 'amidos' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {AMIDOS.map(a => (
-              <div key={a.nome} className="card-depth p-5 hover:border-morphe-orange/20 transition-colors">
+              <div key={a.nome} className="bg-white rounded-2xl shadow-tonal p-5 hover:border-[#e5d9c1] transition-colors">
                 <h3 className="font-semibold text-sm mb-1">{a.nome}</h3>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] font-mono bg-morphe-orange/10 text-morphe-orange px-2 py-0.5 rounded-full border border-morphe-orange/20">
+                  <span className="text-[10px] font-mono bg-[rgba(0,50,35,0.08)] text-[#003223] px-2 py-0.5 rounded-full border border-[#e5d9c1]">
                     Gelatinização: {a.gelatinizacao}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{a.caracteristica}</p>
+                <p className="text-xs text-[#58413c] leading-relaxed">{a.caracteristica}</p>
               </div>
             ))}
           </div>

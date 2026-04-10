@@ -32,10 +32,10 @@ const DICAS_MIA = [
 ]
 
 const ACOES_RAPIDAS = [
-  { href: '/formular',     icon: FlaskConical,      label: 'Nova Formulação',     desc: 'Crie ou gere com a MIA',          cor: 'text-morphe-orange', bg: 'bg-morphe-orange/10 border-morphe-orange/25' },
-  { href: '/parametros',   icon: SlidersHorizontal, label: 'Calcular Parâmetros', desc: 'G-code e parâmetros otimizados',  cor: 'text-blue-400',      bg: 'bg-blue-400/10 border-blue-400/20' },
-  { href: '/experimentos', icon: TestTube2,          label: 'Novo Experimento',    desc: 'Log de impressão + diagnóstico', cor: 'text-green-400',     bg: 'bg-green-400/10 border-green-400/20' },
-  { href: '/chat',         icon: MessageSquare,     label: 'Chat com MIA',        desc: 'Consulta direta à IA',           cor: 'text-purple-400',    bg: 'bg-purple-400/10 border-purple-400/20' },
+  { href: '/formular',     icon: FlaskConical,      label: 'Nova Formulação',     desc: 'Crie ou gere com a MIA',         iconBg: '#003223', iconFg: 'white' },
+  { href: '/parametros',   icon: SlidersHorizontal, label: 'Calcular Parâmetros', desc: 'G-code e parâmetros otimizados', iconBg: '#516600', iconFg: 'white' },
+  { href: '/experimentos', icon: TestTube2,          label: 'Novo Experimento',    desc: 'Log de impressão + diagnóstico', iconBg: '#c8ee4f', iconFg: '#003223' },
+  { href: '/chat',         icon: MessageSquare,     label: 'Chat com MIA',        desc: 'Consulta direta à IA',           iconBg: '#571000', iconFg: 'white' },
 ]
 
 const WORKFLOW_STEPS = [
@@ -80,27 +80,28 @@ export default function DashboardPage() {
   const recentes = formulacoes.slice(0, 4)
 
   return (
-    <div className="h-full overflow-y-auto bg-morphe-dark">
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
 
       {/* Banner de boas-vindas */}
-      <div className="relative section-alt border-b border-border/60 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-10 right-8 w-56 h-56 bg-morphe-orange/5 rounded-full blur-[70px]" />
-        </div>
+      <div className="relative overflow-hidden" style={{ background: '#fff2da', borderBottom: '1px solid #e5d9c1' }}>
+        <div className="absolute top-[-20%] right-8 w-56 h-56 rounded-full pointer-events-none"
+          style={{ background: 'rgba(200,238,79,0.12)' }} />
         <div className="relative px-8 py-7 max-w-5xl mx-auto flex items-start justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={13} className="text-morphe-orange" />
-              <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Morphê Foods</span>
+              <Sparkles size={13} style={{ color: '#516600' }} />
+              <span className="text-xs font-display font-semibold uppercase tracking-widest" style={{ color: '#707974' }}>Morphê Foods</span>
             </div>
-            <h1 className="text-2xl font-bold text-foreground mb-1.5">Olá! A MIA está pronta.</h1>
-            <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
+            <h1 className="font-display font-bold text-2xl mb-1.5" style={{ color: '#003223', letterSpacing: '-0.02em' }}>
+              Olá! A MIA está pronta.
+            </h1>
+            <p className="text-sm font-sans max-w-md leading-relaxed" style={{ color: '#58413c' }}>
               Sua assistente de impressão 3D de alimentos. Formule, calcule parâmetros, diagnostique e exporte.
             </p>
           </div>
-          <div className="flex-shrink-0 flex items-center gap-2 bg-morphe-dark border border-border/60 rounded-xl px-4 py-2.5">
+          <div className="flex-shrink-0 flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 shadow-tonal-sm">
             <span className="status-online" />
-            <span className="text-xs text-green-400 font-medium">MIA Online</span>
+            <span className="text-xs font-display font-semibold" style={{ color: '#516600' }}>MIA Online</span>
           </div>
         </div>
       </div>
@@ -110,17 +111,18 @@ export default function DashboardPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Formulações',  valor: carregando ? '—' : String(formulacoes.length), icon: FlaskConical,      cor: 'text-morphe-orange', glow: 'bg-morphe-orange/10 border-morphe-orange/20' },
-            { label: 'Experimentos', valor: String(qtdExperimentos),                       icon: TestTube2,          cor: 'text-green-400',     glow: 'bg-green-400/10 border-green-400/20' },
-            { label: 'Biblioteca',   valor: '6 tópicos',                                   icon: Library,            cor: 'text-blue-400',      glow: 'bg-blue-400/10 border-blue-400/20' },
-            { label: 'Modelo IA',    valor: 'Gemini 2.0',                                  icon: Sparkles,           cor: 'text-purple-400',    glow: 'bg-purple-400/10 border-purple-400/20' },
-          ].map(({ label, valor, icon: Icon, cor, glow }) => (
-            <div key={label} className="card-depth p-4">
-              <div className={`w-8 h-8 rounded-lg border flex items-center justify-center mb-3 ${glow}`}>
-                <Icon size={14} className={cor} />
+            { label: 'Formulações',  valor: carregando ? '—' : String(formulacoes.length), icon: FlaskConical, iconBg: '#003223', iconFg: 'white' },
+            { label: 'Experimentos', valor: String(qtdExperimentos),                       icon: TestTube2,    iconBg: '#516600', iconFg: 'white' },
+            { label: 'Biblioteca',   valor: '6 tópicos',                                   icon: Library,      iconBg: '#c8ee4f', iconFg: '#003223' },
+            { label: 'Modelo IA',    valor: 'Gemini 2.0',                                  icon: Sparkles,     iconBg: '#571000', iconFg: 'white' },
+          ].map(({ label, valor, icon: Icon, iconBg, iconFg }) => (
+            <div key={label} className="bg-white p-4 rounded-2xl shadow-tonal">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3"
+                style={{ background: iconBg }}>
+                <Icon size={14} style={{ color: iconFg }} />
               </div>
-              <p className={`text-2xl font-bold ${cor}`}>{valor}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+              <p className="font-display font-bold text-2xl" style={{ color: '#003223' }}>{valor}</p>
+              <p className="text-xs font-sans mt-0.5" style={{ color: '#707974' }}>{label}</p>
             </div>
           ))}
         </div>
@@ -128,61 +130,64 @@ export default function DashboardPage() {
         {/* Ações rápidas + Formulações recentes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-          <div className="card-depth p-5">
-            <h2 className="text-base font-semibold mb-4">Ações rápidas</h2>
+          <div className="bg-white p-5 rounded-2xl shadow-tonal">
+            <h2 className="font-display font-bold text-base mb-4" style={{ color: '#003223' }}>Ações rápidas</h2>
             <div className="grid grid-cols-2 gap-2">
-              {ACOES_RAPIDAS.map(({ href, icon: Icon, label, desc, cor, bg }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex flex-col gap-2.5 p-4 rounded-xl border transition-all duration-200 hover:scale-[1.02] hover:shadow-card ${bg}`}
-                >
-                  <Icon size={18} className={cor} />
+              {ACOES_RAPIDAS.map(({ href, icon: Icon, label, desc, iconBg, iconFg }) => (
+                <Link key={href} href={href}
+                  className="flex flex-col gap-2.5 p-4 rounded-xl transition-all duration-200 hover:shadow-tonal hover:scale-[1.02]"
+                  style={{ background: '#fff2da' }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                    style={{ background: iconBg }}>
+                    <Icon size={15} style={{ color: iconFg }} />
+                  </div>
                   <div>
-                    <p className="text-xs font-semibold text-foreground leading-tight">{label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{desc}</p>
+                    <p className="text-xs font-display font-semibold leading-tight" style={{ color: '#003223' }}>{label}</p>
+                    <p className="text-[11px] font-sans mt-0.5 leading-tight" style={{ color: '#707974' }}>{desc}</p>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          <div className="card-depth p-5">
+          <div className="bg-white p-5 rounded-2xl shadow-tonal">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold">Formulações recentes</h2>
-              <Link href="/formulacoes" className="text-xs text-morphe-orange hover:text-morphe-orange-hover transition-colors flex items-center gap-1">
+              <h2 className="font-display font-bold text-base" style={{ color: '#003223' }}>Formulações recentes</h2>
+              <Link href="/formulacoes" className="text-xs font-display font-semibold flex items-center gap-1 transition-opacity hover:opacity-70"
+                style={{ color: '#516600' }}>
                 Ver todas <ArrowRight size={11} />
               </Link>
             </div>
 
             {carregando ? (
               <div className="space-y-2">
-                {[1, 2, 3].map(i => <div key={i} className="skeleton h-10 rounded-lg" />)}
+                {[1, 2, 3].map(i => <div key={i} className="skeleton h-10 rounded-xl" />)}
               </div>
             ) : recentes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 bg-morphe-dark border border-border rounded-xl flex items-center justify-center mb-3">
-                  <BookOpen size={20} className="text-muted-foreground/40" />
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+                  style={{ background: '#fff2da' }}>
+                  <BookOpen size={20} style={{ color: '#bfc9c2' }} />
                 </div>
-                <p className="text-sm text-muted-foreground mb-1">Nenhuma formulação ainda</p>
-                <p className="text-xs text-muted-foreground/60 mb-4">Crie sua primeira com a MIA</p>
-                <Link href="/formular" className="btn-glow text-xs px-4 py-2">
+                <p className="text-sm font-sans mb-1" style={{ color: '#58413c' }}>Nenhuma formulação ainda</p>
+                <p className="text-xs font-sans mb-4" style={{ color: '#707974' }}>Crie sua primeira com a MIA</p>
+                <Link href="/formular" className="btn-primary text-xs px-4 py-2">
                   Criar formulação
                 </Link>
               </div>
             ) : (
               <div className="space-y-1">
                 {recentes.map(f => (
-                  <Link
-                    key={f.id}
-                    href="/formulacoes"
-                    className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-transparent hover:bg-morphe-dark-3/50 hover:border-border/40 transition-all duration-150 group"
-                  >
+                  <Link key={f.id} href="/formulacoes"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150"
+                    style={{ background: 'transparent' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fff2da')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-1.5 h-1.5 bg-morphe-orange rounded-full flex-shrink-0" />
-                      <span className="text-sm truncate">{f.nome}</span>
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#003223' }} />
+                      <span className="text-sm font-sans truncate" style={{ color: '#211b0c' }}>{f.nome}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">{formatarData(f.created_at)}</span>
+                    <span className="text-xs font-sans flex-shrink-0 ml-2" style={{ color: '#707974' }}>{formatarData(f.created_at)}</span>
                   </Link>
                 ))}
               </div>
@@ -191,33 +196,33 @@ export default function DashboardPage() {
         </div>
 
         {/* Dica da MIA */}
-        <div className="card-depth p-5" style={{ borderColor: 'rgba(250,85,40,0.2)' }}>
+        <div className="p-5 rounded-2xl" style={{ background: '#f9edd4', borderLeft: '3px solid #003223' }}>
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-morphe-orange/10 border border-morphe-orange/25 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Lightbulb size={15} className="text-morphe-orange" />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ background: '#003223' }}>
+              <Lightbulb size={15} style={{ color: 'white' }} />
             </div>
             <div>
-              <p className="text-xs font-semibold text-morphe-orange mb-1.5 uppercase tracking-wider">Dica da MIA</p>
-              <p className="text-sm text-muted-foreground leading-relaxed">{dica}</p>
+              <p className="text-xs font-display font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#516600' }}>Dica da MIA</p>
+              <p className="text-sm font-sans leading-relaxed" style={{ color: '#58413c' }}>{dica}</p>
             </div>
           </div>
         </div>
 
         {/* Fluxo de trabalho */}
-        <div className="card-depth p-5">
-          <h2 className="text-base font-semibold mb-4">Fluxo de trabalho</h2>
-          <div className="flex items-center gap-1 flex-wrap">
+        <div className="bg-white p-5 rounded-2xl shadow-tonal">
+          <h2 className="font-display font-bold text-base mb-4" style={{ color: '#003223' }}>Fluxo de trabalho</h2>
+          <div className="flex items-center gap-1.5 flex-wrap">
             {WORKFLOW_STEPS.map(({ label, href, step, icon: Icon }, i, arr) => (
-              <div key={href} className="flex items-center gap-1">
-                <Link
-                  href={href}
-                  className="flex items-center gap-1.5 bg-morphe-dark border border-border/60 hover:border-morphe-orange/40 hover:bg-morphe-orange/5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150 group"
-                >
-                  <span className="text-[10px] font-bold text-morphe-orange/70">{step}</span>
-                  <Icon size={11} className="text-muted-foreground group-hover:text-morphe-orange transition-colors" />
-                  <span className="text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
+              <div key={href} className="flex items-center gap-1.5">
+                <Link href={href}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-display font-medium transition-all duration-150"
+                  style={{ background: '#fff2da', color: '#003223' }}>
+                  <span className="text-[10px] font-bold opacity-50">{step}</span>
+                  <Icon size={11} />
+                  <span>{label}</span>
                 </Link>
-                {i < arr.length - 1 && <ArrowRight size={10} className="text-muted-foreground/25 flex-shrink-0" />}
+                {i < arr.length - 1 && <ArrowRight size={10} style={{ color: '#bfc9c2' }} className="flex-shrink-0" />}
               </div>
             ))}
           </div>

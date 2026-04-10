@@ -322,10 +322,10 @@ export default function ProtocolosPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-morphe-dark">
-      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6 mb-6">
         <h1 className="text-2xl font-bold">Protocolos</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-[#58413c] mt-1">
           Baixe documentos gerados: protocolos de caracterização, POP e ficha técnica.
         </p>
       </div>
@@ -335,16 +335,16 @@ export default function ProtocolosPage() {
         {/* Documentos por formulação */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <FlaskConical size={15} className="text-morphe-orange" />
+            <FlaskConical size={15} className="text-[#003223]" />
             <h2 className="text-sm font-semibold">Documentos da formulação</h2>
           </div>
 
-          <div className="card-depth p-4 mb-3">
-            <label className="text-xs text-muted-foreground block mb-1.5">Selecione a formulação</label>
+          <div className="bg-white rounded-2xl shadow-tonal p-4 mb-3">
+            <label className="text-xs text-[#58413c] block mb-1.5">Selecione a formulação</label>
             <select
               value={formulacaoId}
               onChange={e => setFormulacaoId(e.target.value)}
-              className="input-premium focus:ring-morphe-orange/50"
+              className="input-premium focus:ring-[#003223]/30"
             >
               <option value="">Selecione...</option>
               {formulacoes.map(f => (
@@ -352,9 +352,9 @@ export default function ProtocolosPage() {
               ))}
             </select>
             {formulacoes.length === 0 && (
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-[#58413c] mt-1">
                 Nenhuma formulação salva.{' '}
-                <a href="/formular" className="text-morphe-orange hover:underline">Criar agora</a>
+                <a href="/formular" className="text-[#003223] hover:underline">Criar agora</a>
               </p>
             )}
           </div>
@@ -374,16 +374,16 @@ export default function ProtocolosPage() {
                 icon: FileText,
               },
             ].map(doc => (
-              <div key={doc.tipo} className="card-depth p-4">
+              <div key={doc.tipo} className="bg-white rounded-2xl shadow-tonal p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <doc.icon size={14} className="text-morphe-orange" />
+                  <doc.icon size={14} className="text-[#003223]" />
                   <h3 className="text-sm font-medium">{doc.titulo}</h3>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">{doc.desc}</p>
+                <p className="text-xs text-[#58413c] mb-4 leading-relaxed">{doc.desc}</p>
                 <button
                   onClick={() => baixarDocFormulacao(doc.tipo)}
                   disabled={!formulacaoId || baixando === doc.tipo}
-                  className="w-full flex items-center justify-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium py-2 rounded-md transition-colors"
+                  className="w-full flex items-center justify-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-medium py-2 rounded-md transition-colors"
                 >
                   <Download size={12} />
                   {baixando === doc.tipo ? 'Gerando...' : `Baixar ${doc.titulo}`}
@@ -396,27 +396,27 @@ export default function ProtocolosPage() {
         {/* Protocolos de caracterização */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Microscope size={15} className="text-morphe-orange" />
+            <Microscope size={15} className="text-[#003223]" />
             <h2 className="text-sm font-semibold">Protocolos de caracterização</h2>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">
+          <p className="text-xs text-[#58413c] mb-4">
             Protocolos metodológicos para todas as análises disponíveis na aba Caracterização.
           </p>
 
           <div className="space-y-2">
             {PROTOCOLOS_CARACTERIZACAO.map(p => (
-              <div key={p.id} className="card-depth p-4 flex items-center justify-between gap-4">
+              <div key={p.id} className="bg-white rounded-2xl shadow-tonal p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <FileDown size={15} className="text-muted-foreground flex-shrink-0" />
+                  <FileDown size={15} className="text-[#58413c] flex-shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{p.titulo}</p>
-                    <p className="text-xs text-muted-foreground truncate">{p.descricao}</p>
+                    <p className="text-xs text-[#58413c] truncate">{p.descricao}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => baixarProtocoloCaracterizacao(p)}
                   disabled={baixando === p.id}
-                  className="flex items-center gap-1.5 flex-shrink-0 text-xs bg-morphe-dark border border-border hover:border-morphe-orange/40 hover:text-morphe-orange text-muted-foreground px-3 py-1.5 rounded-md transition-colors"
+                  className="flex items-center gap-1.5 flex-shrink-0 text-xs bg-[#fff8f1] border border-[#e5d9c1] hover:border-[#e5d9c1] hover:text-[#003223] text-[#58413c] px-3 py-1.5 rounded-md transition-colors"
                 >
                   <Download size={11} />
                   {baixando === p.id ? '...' : 'Baixar'}

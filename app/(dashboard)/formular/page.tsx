@@ -171,24 +171,24 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 
   // --- TELA INICIAL ---
   if (modo === 'escolha') return (
-    <div className="h-full overflow-y-auto bg-morphe-dark">
-      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6 mb-6">
         <h1 className="text-2xl font-bold">Formular</h1>
-        <p className="text-sm text-muted-foreground mt-1">Ponto de partida do fluxo MIA. Insira ou crie sua formulação.</p>
+        <p className="text-sm text-[#58413c] mt-1">Ponto de partida do fluxo MIA. Insira ou crie sua formulação.</p>
       </div>
       <div className="max-w-2xl mx-auto px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button onClick={() => setModo('input')} className="card-depth p-6 text-left group">
-            <FlaskConical size={28} className="text-morphe-orange mb-4" />
+          <button onClick={() => setModo('input')} className="bg-white rounded-2xl shadow-tonal p-6 text-left group">
+            <FlaskConical size={28} className="text-[#003223] mb-4" />
             <h2 className="font-semibold text-base mb-1">Tenho uma formulação</h2>
-            <p className="text-sm text-muted-foreground">Insira os ingredientes e percentuais para validar e salvar.</p>
-            <div className="flex items-center gap-1 text-morphe-orange text-xs mt-4 opacity-0 group-hover:opacity-100 transition-opacity">Inserir <ArrowRight size={12} /></div>
+            <p className="text-sm text-[#58413c]">Insira os ingredientes e percentuais para validar e salvar.</p>
+            <div className="flex items-center gap-1 text-[#003223] text-xs mt-4 opacity-0 group-hover:opacity-100 transition-opacity">Inserir <ArrowRight size={12} /></div>
           </button>
-          <button onClick={() => setModo('wizard_app')} className="card-depth p-6 text-left group">
-            <Sparkles size={28} className="text-morphe-orange mb-4" />
+          <button onClick={() => setModo('wizard_app')} className="bg-white rounded-2xl shadow-tonal p-6 text-left group">
+            <Sparkles size={28} className="text-[#003223] mb-4" />
             <h2 className="font-semibold text-base mb-1">Criar com a MIA</h2>
-            <p className="text-sm text-muted-foreground">Deixe a MIA sugerir uma formulação otimizada para sua aplicação.</p>
-            <div className="flex items-center gap-1 text-morphe-orange text-xs mt-4 opacity-0 group-hover:opacity-100 transition-opacity">Iniciar guia <ArrowRight size={12} /></div>
+            <p className="text-sm text-[#58413c]">Deixe a MIA sugerir uma formulação otimizada para sua aplicação.</p>
+            <div className="flex items-center gap-1 text-[#003223] text-xs mt-4 opacity-0 group-hover:opacity-100 transition-opacity">Iniciar guia <ArrowRight size={12} /></div>
           </button>
         </div>
       </div>
@@ -201,30 +201,30 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       <div className="max-w-2xl mx-auto">
         <WizardHeader passo={1} total={3} onVoltar={() => setModo('escolha')} />
         <h2 className="text-lg font-semibold mb-1">Escolha a sua aplicação</h2>
-        <p className="text-sm text-muted-foreground mb-6">Selecione o segmento para o qual deseja desenvolver sua formulação.</p>
+        <p className="text-sm text-[#58413c] mb-6">Selecione o segmento para o qual deseja desenvolver sua formulação.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
           {APLICACOES.map(a => (
             <button key={a.id} onClick={() => setAplicacao(a.id)}
-              className={`text-left p-4 rounded-xl border transition-colors ${aplicacao === a.id ? 'border-morphe-orange/60 bg-morphe-orange/10' : 'border-border bg-morphe-dark-2 hover:border-morphe-orange/30'}`}>
+              className={`text-left p-4 rounded-xl border transition-colors ${aplicacao === a.id ? 'border-[#e5d9c1] bg-[rgba(0,50,35,0.08)]' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#e5d9c1]'}`}>
               <div className="flex items-start gap-3">
                 <span className="text-2xl">{a.emoji}</span>
                 <div>
                   <p className="font-medium text-sm">{a.nome}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{a.desc}</p>
+                  <p className="text-xs text-[#58413c] mt-0.5">{a.desc}</p>
                 </div>
-                {aplicacao === a.id && <CheckCircle size={14} className="text-morphe-orange ml-auto flex-shrink-0 mt-0.5" />}
+                {aplicacao === a.id && <CheckCircle size={14} className="text-[#003223] ml-auto flex-shrink-0 mt-0.5" />}
               </div>
             </button>
           ))}
         </div>
         {aplicacao && (
-          <div className="bg-morphe-dark-2 border border-morphe-orange/20 rounded-lg p-3 mb-5 flex gap-2">
-            <Sparkles size={13} className="text-morphe-orange flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground"><span className="text-morphe-orange font-medium">MIA Intelligence: </span>{DICAS_MIA[aplicacao]}</p>
+          <div className="bg-[#fff2da] border border-[#e5d9c1] rounded-lg p-3 mb-5 flex gap-2">
+            <Sparkles size={13} className="text-[#003223] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-[#58413c]"><span className="text-[#003223] font-medium">MIA Intelligence: </span>{DICAS_MIA[aplicacao]}</p>
           </div>
         )}
         <button onClick={() => setModo('wizard_tendencias')} disabled={!aplicacao}
-          className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+          className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
           Próximo Passo <ArrowRight size={14} />
         </button>
       </div>
@@ -237,23 +237,23 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       <div className="max-w-2xl mx-auto">
         <WizardHeader passo={2} total={3} onVoltar={() => setModo('wizard_app')} />
         <h2 className="text-lg font-semibold mb-1">Tendências nutricionais</h2>
-        <p className="text-sm text-muted-foreground mb-1">Selecione as tendências desejadas <span className="text-xs">(opcional)</span></p>
+        <p className="text-sm text-[#58413c] mb-1">Selecione as tendências desejadas <span className="text-xs">(opcional)</span></p>
         {tendencias.length > 0 && tendencias.includes('Alto em Proteína') && tendencias.includes('Vegano') && (
-          <div className="bg-morphe-dark-2 border border-morphe-orange/20 rounded-lg p-3 mb-4 flex gap-2">
-            <Sparkles size={13} className="text-morphe-orange flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-muted-foreground"><span className="text-morphe-orange font-medium">Dica da MIA: </span>Formular com &quot;Alto em Proteína&quot; e &quot;Vegano&quot; priorizará micro-proteínas de ervilha e sementes de girassol.</p>
+          <div className="bg-[#fff2da] border border-[#e5d9c1] rounded-lg p-3 mb-4 flex gap-2">
+            <Sparkles size={13} className="text-[#003223] flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-[#58413c]"><span className="text-[#003223] font-medium">Dica da MIA: </span>Formular com &quot;Alto em Proteína&quot; e &quot;Vegano&quot; priorizará micro-proteínas de ervilha e sementes de girassol.</p>
           </div>
         )}
         <div className="flex flex-wrap gap-2 mb-6 mt-4">
           {TENDENCIAS.map(t => (
             <button key={t} onClick={() => toggleTendencia(t)}
-              className={`px-3 py-2 rounded-lg border text-sm transition-colors ${tendencias.includes(t) ? 'border-morphe-orange/60 bg-morphe-orange/10 text-morphe-orange' : 'border-border text-muted-foreground hover:border-morphe-orange/30'}`}>
+              className={`px-3 py-2 rounded-lg border text-sm transition-colors ${tendencias.includes(t) ? 'border-[#e5d9c1] bg-[rgba(0,50,35,0.08)] text-[#003223]' : 'border-[#e5d9c1] text-[#58413c] hover:border-[#e5d9c1]'}`}>
               {t}
             </button>
           ))}
         </div>
         <button onClick={() => setModo('wizard_ingredientes')}
-          className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+          className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
           Próximo <ArrowRight size={14} />
         </button>
       </div>
@@ -266,21 +266,21 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       <div className="max-w-2xl mx-auto">
         <WizardHeader passo={3} total={3} onVoltar={() => setModo('wizard_tendencias')} />
         <h2 className="text-lg font-semibold mb-1">Ingrediente(s) base</h2>
-        <p className="text-sm text-muted-foreground mb-4">Selecione os elementos fundamentais. A MIA irá otimizar a formulação completa.</p>
+        <p className="text-sm text-[#58413c] mb-4">Selecione os elementos fundamentais. A MIA irá otimizar a formulação completa.</p>
         <div className="flex gap-2 mb-3">
           <input value={buscaIngrediente} onChange={e => setBuscaIngrediente(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addIngredienteWizard(buscaIngrediente)}
             placeholder="Ex: cenoura, batata-doce, proteína de ervilha..."
-            className="flex-1 card-depth px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
+            className="flex-1 bg-white rounded-2xl shadow-tonal px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
           <button onClick={() => addIngredienteWizard(buscaIngrediente)} disabled={!buscaIngrediente.trim()}
-            className="flex items-center gap-1.5 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 text-white text-sm px-4 py-2.5 rounded-lg transition-colors">
+            className="flex items-center gap-1.5 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm px-4 py-2.5 rounded-lg transition-colors">
             <Plus size={14} /> Adicionar
           </button>
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
           {(INGREDIENTES_SUGERIDOS[aplicacao] ?? []).filter(s => !ingredientesWizard.includes(s)).map(s => (
             <button key={s} onClick={() => addIngredienteWizard(s)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-border text-xs text-muted-foreground hover:border-morphe-orange/40 hover:text-morphe-orange transition-colors">
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[#e5d9c1] text-xs text-[#58413c] hover:border-[#e5d9c1] hover:text-[#003223] transition-colors">
               <Plus size={10} /> {s}
             </button>
           ))}
@@ -288,7 +288,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
         {ingredientesWizard.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {ingredientesWizard.map(i => (
-              <span key={i} className="flex items-center gap-1.5 bg-morphe-orange/10 border border-morphe-orange/30 text-morphe-orange text-xs px-3 py-1.5 rounded-full">
+              <span key={i} className="flex items-center gap-1.5 bg-[rgba(0,50,35,0.08)] border border-[#e5d9c1] text-[#003223] text-xs px-3 py-1.5 rounded-full">
                 {i}
                 <button onClick={() => removeIngredienteWizard(i)}><X size={10} /></button>
               </span>
@@ -297,7 +297,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
         )}
         <div className="flex gap-3">
           <button onClick={gerarComMIA}
-            className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+            className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
             <Sparkles size={14} /> Gerar com MIA
           </button>
         </div>
@@ -310,17 +310,17 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
     <div className="h-full flex items-center justify-center p-6">
       <div className="text-center max-w-sm">
         <div className="relative mx-auto w-20 h-20 mb-6">
-          <div className="w-20 h-20 rounded-full border-2 border-morphe-orange/20 flex items-center justify-center">
-            <FlaskConical size={32} className="text-morphe-orange animate-pulse" />
+          <div className="w-20 h-20 rounded-full border-2 border-[#e5d9c1] flex items-center justify-center">
+            <FlaskConical size={32} className="text-[#003223] animate-pulse" />
           </div>
-          <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-morphe-orange/40 animate-bounce" />
-          <div className="absolute bottom-0 left-0 w-3 h-3 rounded-full bg-morphe-orange/30 animate-bounce delay-150" />
+          <div className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[rgba(0,50,35,0.1)] animate-bounce" />
+          <div className="absolute bottom-0 left-0 w-3 h-3 rounded-full bg-[rgba(0,50,35,0.1)] animate-bounce delay-150" />
         </div>
         <h2 className="text-lg font-semibold mb-2">MIA está formulando...</h2>
-        <p className="text-sm text-muted-foreground mb-4">Buscando referências e calculando parâmetros</p>
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        <p className="text-sm text-[#58413c] mb-4">Buscando referências e calculando parâmetros</p>
+        <div className="flex items-center justify-center gap-2 text-xs text-[#58413c]">
           {['Ajustando viscosidade', 'Sinergia de bioativos', 'Teste de estabilidade'].map((s, i) => (
-            <span key={s} className={`px-2 py-1 rounded border border-border ${i === 0 ? 'text-morphe-orange border-morphe-orange/30' : ''}`}>{s}</span>
+            <span key={s} className={`px-2 py-1 rounded border border-[#e5d9c1] ${i === 0 ? 'text-[#003223] border-[#e5d9c1]' : ''}`}>{s}</span>
           ))}
         </div>
       </div>
@@ -334,73 +334,73 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       <div className="h-full overflow-y-auto p-6">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <button onClick={() => setModo(isWizard ? 'wizard_ingredientes' : 'escolha')} className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Voltar</button>
+            <button onClick={() => setModo(isWizard ? 'wizard_ingredientes' : 'escolha')} className="text-xs text-[#58413c] hover:text-[#211b0c] transition-colors">← Voltar</button>
             <h1 className="text-xl font-semibold">{isWizard ? 'Formulação sugerida pela MIA' : 'Inserir formulação'}</h1>
             {isWizard && (
               <a href="/chat" target="_blank" rel="noopener noreferrer"
-                className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-morphe-orange border border-border hover:border-morphe-orange/40 px-3 py-1.5 rounded-md transition-colors">
+                className="ml-auto flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#003223] border border-[#e5d9c1] hover:border-[#e5d9c1] px-3 py-1.5 rounded-md transition-colors">
                 <ExternalLink size={11} /> Chat com MIA
               </a>
             )}
           </div>
 
           {isWizard && validacao && (
-            <div className="bg-morphe-dark-2 border border-morphe-orange/20 rounded-xl p-4 mb-4">
+            <div className="bg-[#fff2da] border border-[#e5d9c1] rounded-xl p-4 mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={13} className="text-morphe-orange" />
-                <span className="text-xs font-medium text-morphe-orange">Análise MIA</span>
+                <Sparkles size={13} className="text-[#003223]" />
+                <span className="text-xs font-medium text-[#003223]">Análise MIA</span>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">{validacao}</p>
+              <p className="text-sm text-[#58413c] leading-relaxed">{validacao}</p>
             </div>
           )}
 
-          <div className="card-depth p-5 mb-4">
+          <div className="bg-white rounded-2xl shadow-tonal p-5 mb-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium">Ingredientes {isWizard && <span className="text-xs text-muted-foreground font-normal ml-1">(você pode editar)</span>}</h2>
-              <span className="text-xs text-muted-foreground">Total: {ingredientes.reduce((acc, i) => acc + (parseFloat(i.percentual) || 0), 0).toFixed(1)}%</span>
+              <h2 className="text-sm font-medium">Ingredientes {isWizard && <span className="text-xs text-[#58413c] font-normal ml-1">(você pode editar)</span>}</h2>
+              <span className="text-xs text-[#58413c]">Total: {ingredientes.reduce((acc, i) => acc + (parseFloat(i.percentual) || 0), 0).toFixed(1)}%</span>
             </div>
             <div className="space-y-2">
               {ingredientes.map((ing, i) => (
                 <div key={i} className="grid grid-cols-[1fr_80px_140px_32px] gap-2 items-center">
                   <input value={ing.nome} onChange={e => updateIngrediente(i, 'nome', e.target.value)} placeholder="Ingrediente"
-                    className="bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
+                    className="bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
                   <div className="relative">
                     <input value={ing.percentual} onChange={e => updateIngrediente(i, 'percentual', e.target.value)} placeholder="0" type="number" min="0" max="100"
-                      className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">%</span>
+                      className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-[#58413c]">%</span>
                   </div>
                   <select value={ing.funcao} onChange={e => updateIngrediente(i, 'funcao', e.target.value)}
-                    className="bg-morphe-dark border border-border rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50">
+                    className="bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30">
                     {FUNCOES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
-                  <button onClick={() => removeIngrediente(i)} disabled={ingredientes.length === 1} className="text-muted-foreground hover:text-red-400 disabled:opacity-20 transition-colors">
+                  <button onClick={() => removeIngrediente(i)} disabled={ingredientes.length === 1} className="text-[#58413c] hover:text-red-400 disabled:opacity-20 transition-colors">
                     <Trash2 size={14} />
                   </button>
                 </div>
               ))}
             </div>
-            <button onClick={addIngrediente} className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-morphe-orange transition-colors">
+            <button onClick={addIngrediente} className="mt-3 flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#003223] transition-colors">
               <Plus size={13} /> Adicionar ingrediente
             </button>
           </div>
 
           {!isWizard && validacao && (
-            <div className="bg-morphe-dark-2 border border-morphe-orange/20 rounded-xl p-5 mb-4">
+            <div className="bg-[#fff2da] border border-[#e5d9c1] rounded-xl p-5 mb-4">
               <div className="flex items-center gap-2 mb-3">
-                <CheckCircle size={15} className="text-morphe-orange" />
+                <CheckCircle size={15} className="text-[#003223]" />
                 <span className="text-sm font-medium">Análise da MIA</span>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{validacao}</p>
+              <p className="text-sm text-[#58413c] leading-relaxed whitespace-pre-wrap">{validacao}</p>
             </div>
           )}
 
-          <div className="card-depth p-5 mb-4">
+          <div className="bg-white rounded-2xl shadow-tonal p-5 mb-4">
             <h2 className="text-sm font-medium mb-3">Salvar formulação</h2>
             <div className="flex gap-3">
               <input value={nomeFormulacao} onChange={e => setNomeFormulacao(e.target.value)} placeholder="Nome da formulação (ex: Pasta de batata-doce v1)"
-                className="flex-1 bg-morphe-dark border border-border rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
+                className="flex-1 bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
               <button onClick={salvarFormulacao} disabled={!nomeFormulacao.trim() || salvando}
-                className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-md transition-colors">
+                className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-md transition-colors">
                 <Save size={14} /> {salvando ? 'Salvando...' : 'Salvar'}
               </button>
             </div>
@@ -408,7 +408,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 
           {!isWizard && modo !== 'validar' && (
             <button onClick={validarFormulacao} disabled={validando || !ingredientes.some(i => i.nome.trim())}
-              className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-md transition-colors">
+              className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-md transition-colors">
               <Sparkles size={14} /> {validando ? 'Validando...' : 'Validar com MIA'}
             </button>
           )}
@@ -423,13 +423,13 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 function WizardHeader({ passo, total, onVoltar }: { passo: number; total: number; onVoltar: () => void }) {
   return (
     <div className="flex items-center gap-4 mb-6">
-      <button onClick={onVoltar} className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Voltar</button>
+      <button onClick={onVoltar} className="text-xs text-[#58413c] hover:text-[#211b0c] transition-colors">← Voltar</button>
       <div className="flex items-center gap-1.5">
         {Array.from({ length: total }, (_, i) => (
-          <div key={i} className={`h-1.5 rounded-full transition-all ${i < passo ? 'w-8 bg-morphe-orange' : 'w-4 bg-border'}`} />
+          <div key={i} className={`h-1.5 rounded-full transition-all ${i < passo ? 'w-8 bg-[#003223]' : 'w-4 bg-[#e5d9c1]'}`} />
         ))}
       </div>
-      <span className="text-xs text-muted-foreground">{passo}/{total}</span>
+      <span className="text-xs text-[#58413c]">{passo}/{total}</span>
     </div>
   )
 }

@@ -25,20 +25,19 @@ export function ChatWindow() {
   const isEmpty = messages.length === 0
 
   return (
-    <div className="flex flex-col h-full bg-morphe-dark">
+    <div className="flex flex-col h-full bg-[#fff8f1]">
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-border/60 section-alt">
-        <div className="w-9 h-9 rounded-xl bg-morphe-orange/15 border border-morphe-orange/30 flex items-center justify-center"
-          style={{ boxShadow: '0 0 16px rgba(250,85,40,0.15)' }}>
-          <Sparkles size={16} className="text-morphe-orange" />
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-[#e5d9c1] bg-[#fff2da]">
+        <div className="w-9 h-9 rounded-xl bg-[rgba(0,50,35,0.10)] border border-[#e5d9c1] flex items-center justify-center">
+          <Sparkles size={16} className="text-[#003223]" />
         </div>
         <div>
           <h1 className="text-sm font-bold">MIA</h1>
-          <p className="text-xs text-muted-foreground">Especialista em impressão 3D de alimentos</p>
+          <p className="text-xs text-[#58413c]">Especialista em impressão 3D de alimentos</p>
         </div>
-        <div className="ml-auto flex items-center gap-2 bg-morphe-dark border border-border/60 rounded-lg px-3 py-1.5">
+        <div className="ml-auto flex items-center gap-2 bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-1.5">
           <span className="status-online" />
-          <span className="text-[11px] text-green-400 font-medium">Online</span>
+          <span className="text-[11px] text-[#516600] font-medium">Online</span>
         </div>
       </div>
 
@@ -47,13 +46,12 @@ export function ChatWindow() {
         {isEmpty && (
           <div className="flex flex-col items-center justify-center h-full text-center max-w-lg mx-auto animate-slide-up">
             <div
-              className="w-16 h-16 rounded-2xl bg-morphe-orange/12 border border-morphe-orange/25 flex items-center justify-center mb-5"
-              style={{ boxShadow: '0 0 32px rgba(250,85,40,0.12)' }}
+              className="w-16 h-16 rounded-2xl bg-[rgba(0,50,35,0.08)] border border-[#e5d9c1] flex items-center justify-center mb-5"
             >
-              <Sparkles size={28} className="text-morphe-orange" />
+              <Sparkles size={28} className="text-[#003223]" />
             </div>
             <h2 className="text-xl font-bold mb-2">Olá, sou a MIA</h2>
-            <p className="text-muted-foreground text-sm mb-7 leading-relaxed">
+            <p className="text-[#58413c] text-sm mb-7 leading-relaxed">
               Posso ajudar com formulações, diagnóstico de problemas, parâmetros de impressão e muito mais.
             </p>
             <div className="grid grid-cols-1 gap-2 w-full">
@@ -61,7 +59,7 @@ export function ChatWindow() {
                 <button
                   key={s}
                   onClick={() => { setInput(s) }}
-                  className="text-left text-sm px-4 py-3 rounded-xl border border-border/60 bg-morphe-dark-2 hover:border-morphe-orange/35 hover:bg-morphe-orange/5 transition-all duration-200 text-muted-foreground hover:text-foreground animate-slide-up"
+                  className="text-left text-sm px-4 py-3 rounded-xl border border-[#e5d9c1] bg-[#fff2da] hover:border-[#e5d9c1] hover:bg-[rgba(0,50,35,0.08)] transition-all duration-200 text-[#58413c] hover:text-[#211b0c] animate-slide-up"
                   style={{
                     animationDelay: `${i * 80}ms`,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
@@ -80,14 +78,14 @@ export function ChatWindow() {
 
         {isLoading && (
           <div className="flex gap-3 animate-fade-in">
-            <div className="w-7 h-7 rounded-full bg-morphe-orange/15 border border-morphe-orange/30 flex-shrink-0 flex items-center justify-center">
-              <Sparkles size={12} className="text-morphe-orange" />
+            <div className="w-7 h-7 rounded-full bg-[rgba(0,50,35,0.10)] border border-[#e5d9c1] flex-shrink-0 flex items-center justify-center">
+              <Sparkles size={12} className="text-[#003223]" />
             </div>
-            <div className="card-depth px-4 py-3" style={{ borderRadius: '0 1rem 1rem 1rem' }}>
+            <div className="bg-white rounded-2xl shadow-tonal px-4 py-3" style={{ borderRadius: '0 1rem 1rem 1rem' }}>
               <div className="flex gap-1.5 items-center h-5">
-                <span className="w-1.5 h-1.5 bg-morphe-orange rounded-full animate-bounce [animation-delay:0ms]" />
-                <span className="w-1.5 h-1.5 bg-morphe-orange rounded-full animate-bounce [animation-delay:150ms]" />
-                <span className="w-1.5 h-1.5 bg-morphe-orange rounded-full animate-bounce [animation-delay:300ms]" />
+                <span className="w-1.5 h-1.5 bg-[#003223] rounded-full animate-bounce [animation-delay:0ms]" />
+                <span className="w-1.5 h-1.5 bg-[#003223] rounded-full animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 bg-[#003223] rounded-full animate-bounce [animation-delay:300ms]" />
               </div>
             </div>
           </div>
@@ -105,13 +103,13 @@ export function ChatWindow() {
       />
 
       {/* Guia */}
-      <div className="px-6 py-4 border-t border-border/60 section-alt">
-        <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider text-muted-foreground">Guia de uso</h3>
-        <div className="text-[11px] text-muted-foreground space-y-0.5">
-          <p>• <span className="text-foreground/70 font-medium">Formulações:</span> Descreva o objetivo para a MIA sugerir ingredientes e %.</p>
-          <p>• <span className="text-foreground/70 font-medium">Diagnóstico:</span> Conte o que aconteceu para análise técnica detalhada.</p>
-          <p>• <span className="text-foreground/70 font-medium">Parâmetros:</span> Forneça formulação e ponteira para calcular velocidade e temp.</p>
-          <p>• <span className="text-foreground/70 font-medium">Protocolos:</span> Peça passos detalhados de qualquer processo.</p>
+      <div className="px-6 py-4 border-t border-[#e5d9c1] bg-[#fff2da]">
+        <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider text-[#58413c]">Guia de uso</h3>
+        <div className="text-[11px] text-[#58413c] space-y-0.5">
+          <p>• <span className="text-[#211b0c]/70 font-medium">Formulações:</span> Descreva o objetivo para a MIA sugerir ingredientes e %.</p>
+          <p>• <span className="text-[#211b0c]/70 font-medium">Diagnóstico:</span> Conte o que aconteceu para análise técnica detalhada.</p>
+          <p>• <span className="text-[#211b0c]/70 font-medium">Parâmetros:</span> Forneça formulação e ponteira para calcular velocidade e temp.</p>
+          <p>• <span className="text-[#211b0c]/70 font-medium">Protocolos:</span> Peça passos detalhados de qualquer processo.</p>
         </div>
       </div>
     </div>

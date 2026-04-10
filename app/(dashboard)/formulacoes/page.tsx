@@ -116,29 +116,29 @@ export default function FormulacoesPage() {
   }
 
   return (
-    <div className="h-full overflow-hidden flex bg-morphe-dark">
+    <div className="h-full overflow-hidden flex bg-[#fff8f1]">
       {/* Lista */}
-      <div className={`${selecionada ? 'w-72 flex-shrink-0' : 'flex-1'} overflow-y-auto section-alt border-r border-border/60 transition-all`}>
-        <div className="flex items-center justify-between p-5 pb-4 border-b border-border/60">
+      <div className={`${selecionada ? 'w-72 flex-shrink-0' : 'flex-1'} overflow-y-auto section-alt border-r border-[#e5d9c1] transition-all`}>
+        <div className="flex items-center justify-between p-5 pb-4 border-b border-[#e5d9c1]">
           <div>
             <h1 className="text-base font-bold">Formulações</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{formulacoes.length} salvas</p>
+            <p className="text-xs text-[#58413c] mt-0.5">{formulacoes.length} salvas</p>
           </div>
           <Link
             href="/formular"
-            className="btn-glow flex items-center gap-1.5 text-xs px-3 py-1.5"
+            className="btn-primary flex items-center gap-1.5 text-xs px-3 py-1.5"
           >
             <FlaskConical size={12} /> Nova
           </Link>
         </div>
         <div className="p-3">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground text-xs">Carregando...</div>
+          <div className="text-center py-8 text-[#58413c] text-xs">Carregando...</div>
         ) : formulacoes.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
+          <div className="text-center py-12 text-[#58413c]">
             <FlaskConical size={28} className="mx-auto mb-2 opacity-30" />
             <p className="text-xs">Nenhuma formulação.</p>
-            <Link href="/formular" className="text-morphe-orange text-xs hover:underline mt-1 inline-block">
+            <Link href="/formular" className="text-[#003223] text-xs hover:underline mt-1 inline-block">
               Criar agora
             </Link>
           </div>
@@ -147,19 +147,19 @@ export default function FormulacoesPage() {
             {formulacoes.map(f => {
               const isActive = selecionada?.id === f.id
               return (
-                <div key={f.id} className={`card-depth p-3.5 transition-all ${isActive ? '!border-morphe-orange/40' : ''}`} style={isActive ? {boxShadow:'0 4px 20px rgba(250,85,40,0.12)'} : {}}>
+                <div key={f.id} className={`bg-white rounded-2xl shadow-tonal p-3.5 transition-all ${isActive ? '!border-[#e5d9c1]' : ''}`} style={isActive ? {boxShadow:'0 0 0 2px #003223'} : {}}>
                   <button className="w-full text-left" onClick={() => { setSelecionada(isActive ? null : f); setAbaDetalhe('nutri') }}>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate flex-1 mr-2">{f.nome}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">{f.ingredientes?.length ?? 0} ingredientes</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(f.created_at), 'dd MMM yyyy', { locale: ptBR })}</p>
+                    <p className="text-xs text-[#58413c] mt-1">{f.ingredientes?.length ?? 0} ingredientes</p>
+                    <p className="text-xs text-[#58413c]">{format(new Date(f.created_at), 'dd MMM yyyy', { locale: ptBR })}</p>
                     {!selecionada && (
-                      <div className="flex items-center gap-1 text-morphe-orange text-xs mt-2">Ver análise <ChevronRight size={11} /></div>
+                      <div className="flex items-center gap-1 text-[#003223] text-xs mt-2">Ver análise <ChevronRight size={11} /></div>
                     )}
                   </button>
                   <button onClick={() => excluirFormulacao(f.id)} disabled={excluindo === f.id}
-                    className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-red-400 disabled:opacity-40 transition-colors">
+                    className="mt-2 flex items-center gap-1 text-xs text-[#58413c] hover:text-red-400 disabled:opacity-40 transition-colors">
                     <Trash2 size={11} /> {excluindo === f.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                 </div>
@@ -172,12 +172,12 @@ export default function FormulacoesPage() {
 
       {/* Painel de detalhe */}
       {selecionada && (
-        <div className="flex-1 overflow-y-auto p-6 bg-morphe-dark">
+        <div className="flex-1 overflow-y-auto p-6 bg-[#fff8f1]">
           {/* Header */}
           <div className="flex items-start justify-between mb-5">
             <div>
               <h2 className="text-lg font-semibold">{selecionada.nome}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-xs text-[#58413c] mt-0.5">
                 {selecionada.ingredientes?.length ?? 0} ingredientes ·{' '}
                 {format(new Date(selecionada.created_at), "dd 'de' MMMM yyyy", { locale: ptBR })}
               </p>
@@ -185,11 +185,11 @@ export default function FormulacoesPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => baixarRelatorio(selecionada)}
-                className="flex items-center gap-1.5 text-xs bg-morphe-orange hover:bg-morphe-orange-hover text-white px-3 py-1.5 rounded-md transition-colors"
+                className="flex items-center gap-1.5 text-xs bg-[#003223] hover:bg-[#004d35] text-white px-3 py-1.5 rounded-md transition-colors"
               >
                 <Download size={12} /> Baixar PDF
               </button>
-              <button onClick={() => setSelecionada(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+              <button onClick={() => setSelecionada(null)} className="text-[#58413c] hover:text-[#211b0c] transition-colors">
                 <X size={16} />
               </button>
             </div>
@@ -213,15 +213,15 @@ export default function FormulacoesPage() {
           </div>
 
           {/* Ingredientes */}
-          <div className="card-depth p-4 mb-4">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Composição</h3>
+          <div className="bg-white rounded-2xl shadow-tonal p-4 mb-4">
+            <h3 className="text-xs font-medium text-[#58413c] uppercase tracking-wider mb-3">Composição</h3>
             <div className="space-y-1.5">
               {selecionada.ingredientes?.map((ing, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
                   <span>{ing.nome}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground">{ing.funcao}</span>
-                    <span className="font-medium text-morphe-orange">{ing.percentual}%</span>
+                    <span className="text-xs text-[#58413c]">{ing.funcao}</span>
+                    <span className="font-medium text-[#003223]">{ing.percentual}%</span>
                   </div>
                 </div>
               ))}
@@ -230,11 +230,11 @@ export default function FormulacoesPage() {
 
           {/* Aba Nutricional */}
           {abaDetalhe === 'nutri' && (
-            <div className="card-depth p-4">
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+            <div className="bg-white rounded-2xl shadow-tonal p-4">
+              <h3 className="text-xs font-medium text-[#58413c] uppercase tracking-wider mb-3">
                 Tabela Nutricional Estimada (por 100 g)
               </h3>
-              <p className="text-xs text-muted-foreground mb-3 italic">
+              <p className="text-xs text-[#58413c] mb-3 italic">
                 Estimativa baseada na composição declarada e dados da Tabela Brasileira de Composição de Alimentos (TACO). Para valores precisos, realizar análise laboratorial.
               </p>
               {(() => {
@@ -251,7 +251,7 @@ export default function FormulacoesPage() {
                         ['Umidade estimada', nutri.umidade],
                       ].map(([label, valor]) => (
                         <tr key={label}>
-                          <td className="py-2 text-muted-foreground">{label}</td>
+                          <td className="py-2 text-[#58413c]">{label}</td>
                           <td className="py-2 text-right font-medium">{valor}</td>
                         </tr>
                       ))}
@@ -259,7 +259,7 @@ export default function FormulacoesPage() {
                   </table>
                 )
               })()}
-              <p className="text-xs text-muted-foreground mt-3">
+              <p className="text-xs text-[#58413c] mt-3">
                 * Sólidos totais estimados: {
                   Math.min(
                     selecionada.ingredientes?.reduce((s, i) => s + i.percentual, 0) ?? 0,
@@ -274,15 +274,15 @@ export default function FormulacoesPage() {
           {abaDetalhe === 'anvisa' && (
             <div className="space-y-3">
               {ANVISA_ORIENTACOES.map(o => (
-                <div key={o.titulo} className="card-depth p-4">
+                <div key={o.titulo} className="bg-white rounded-2xl shadow-tonal p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <ShieldCheck size={14} className="text-morphe-orange flex-shrink-0" />
+                    <ShieldCheck size={14} className="text-[#003223] flex-shrink-0" />
                     <h4 className="text-sm font-medium">{o.titulo}</h4>
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{o.texto}</p>
+                  <p className="text-sm text-[#58413c] leading-relaxed">{o.texto}</p>
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground px-1">
+              <p className="text-xs text-[#58413c] px-1">
                 As orientações acima são referências gerais. Consulte a legislação vigente e um profissional habilitado para adequação regulatória completa.
               </p>
             </div>

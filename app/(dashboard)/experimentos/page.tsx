@@ -169,22 +169,22 @@ export default function ExperimentosPage() {
   const precisaDiagnostico = resultado === 'falha' || resultado === 'parcial'
 
   return (
-    <div className="h-full overflow-y-auto bg-morphe-dark">
-      <div className="section-alt border-b border-border/60 px-8 py-6">
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Experimentos</h1>
-            <p className="text-sm text-muted-foreground mt-1">Registre impressões e obtenha diagnósticos da MIA.</p>
+            <p className="text-sm text-[#58413c] mt-1">Registre impressões e obtenha diagnósticos da MIA.</p>
           </div>
           <div className="flex gap-2">
             {experimentos.length > 0 && (
               <button onClick={baixarHistorico}
-                className="btn-outline flex items-center gap-1.5 text-xs px-3 py-2">
+                className="btn-ghost flex items-center gap-1.5 text-xs px-3 py-2">
                 <Download size={12} /> Histórico
               </button>
             )}
             <button onClick={() => setNovoAberto(!novoAberto)}
-              className="btn-glow flex items-center gap-1.5 text-sm px-4 py-2">
+              className="btn-primary flex items-center gap-1.5 text-sm px-4 py-2">
               <Plus size={14} /> Novo experimento
             </button>
           </div>
@@ -195,36 +195,36 @@ export default function ExperimentosPage() {
 
         {/* Formulário */}
         {novoAberto && (
-          <div className="bg-morphe-dark-2 border border-morphe-orange/20 rounded-xl p-5 mb-6">
+          <div className="bg-[#fff2da] border border-[#e5d9c1] rounded-xl p-5 mb-6">
             <h2 className="text-sm font-medium mb-4">Registrar experimento</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Formulação usada</label>
+                <label className="text-xs text-[#58413c] block mb-1.5">Formulação usada</label>
                 <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}
-                  className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50">
+                  className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30">
                   <option value="">Selecione...</option>
                   {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground block mb-1.5">Data</label>
+                <label className="text-xs text-[#58413c] block mb-1.5">Data</label>
                 <div className="relative">
-                  <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#58413c]" />
                   <input type="date" value={data} onChange={e => setData(e.target.value)}
-                    className="w-full bg-morphe-dark border border-border rounded-md pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
+                    className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
                 </div>
               </div>
             </div>
 
             <div className="mb-4">
-              <label className="text-xs text-muted-foreground block mb-2">Resultado</label>
+              <label className="text-xs text-[#58413c] block mb-2">Resultado</label>
               <div className="flex gap-2">
                 {(['sucesso', 'parcial', 'falha'] as Resultado[]).map(r => {
                   const cfg = resultadoConfig[r]
                   const Icon = cfg.icon
                   return (
                     <button key={r} onClick={() => setResultado(r)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors ${resultado === r ? cfg.bg + ' ' + cfg.color : 'border-border text-muted-foreground hover:border-border/80'}`}>
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors ${resultado === r ? cfg.bg + ' ' + cfg.color : 'border-[#e5d9c1] text-[#58413c] hover:border-[#e5d9c1]'}`}>
                       <Icon size={13} /> {cfg.label}
                     </button>
                   )
@@ -235,64 +235,64 @@ export default function ExperimentosPage() {
             {precisaDiagnostico && (
               <div className="mb-4 space-y-3">
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-2">O que aconteceu?</label>
+                  <label className="text-xs text-[#58413c] block mb-2">O que aconteceu?</label>
                   <div className="grid grid-cols-1 gap-1.5">
                     {PROBLEMAS_COMUNS.map(p => (
                       <button key={p} onClick={() => setProblemaSelecionado(p === problemaSelecionado ? '' : p)}
-                        className={`text-left text-sm px-3 py-2 rounded-md border transition-colors ${problemaSelecionado === p ? 'border-morphe-orange/40 bg-morphe-orange/10 text-morphe-orange' : 'border-border text-muted-foreground hover:border-border/80 hover:text-foreground'}`}>
+                        className={`text-left text-sm px-3 py-2 rounded-md border transition-colors ${problemaSelecionado === p ? 'border-[#e5d9c1] bg-[rgba(0,50,35,0.08)] text-[#003223]' : 'border-[#e5d9c1] text-[#58413c] hover:border-[#e5d9c1] hover:text-[#211b0c]'}`}>
                         {p}
                       </button>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground block mb-1.5">Detalhes adicionais</label>
+                  <label className="text-xs text-[#58413c] block mb-1.5">Detalhes adicionais</label>
                   <textarea value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Descreva o que observou..." rows={3}
-                    className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50 resize-none" />
+                    className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30 resize-none" />
                 </div>
                 <button onClick={gerarDiagnostico} disabled={diagnosticando || (!descricao.trim() && !problemaSelecionado)}
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-morphe-orange border border-border hover:border-morphe-orange/40 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-md transition-colors">
+                  className="flex items-center gap-2 text-sm text-[#58413c] hover:text-[#003223] border border-[#e5d9c1] hover:border-[#e5d9c1] disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2 rounded-md transition-colors">
                   <Sparkles size={13} /> {diagnosticando ? 'Gerando...' : 'Gerar diagnóstico com MIA'}
                 </button>
                 {diagnostico && (
-                  <div className="bg-morphe-dark border border-morphe-orange/20 rounded-lg p-4">
-                    <p className="text-xs font-medium text-morphe-orange mb-2">Diagnóstico MIA</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{diagnostico}</p>
+                  <div className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-4">
+                    <p className="text-xs font-medium text-[#003223] mb-2">Diagnóstico MIA</p>
+                    <p className="text-sm text-[#58413c] leading-relaxed whitespace-pre-wrap">{diagnostico}</p>
                   </div>
                 )}
               </div>
             )}
 
             <div className="mb-4">
-              <label className="text-xs text-muted-foreground block mb-1.5">G-code usado (opcional)</label>
+              <label className="text-xs text-[#58413c] block mb-1.5">G-code usado (opcional)</label>
               <textarea value={gcode} onChange={e => setGcode(e.target.value)} placeholder="Cole o G-code gerado ou usado na impressão..." rows={4}
-                className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50 resize-none font-mono text-xs" />
+                className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30 resize-none font-mono text-xs" />
             </div>
 
             {resultado === 'sucesso' && (
               <div className="mb-4">
-                <label className="text-xs text-muted-foreground block mb-1.5">Observações (opcional)</label>
+                <label className="text-xs text-[#58413c] block mb-1.5">Observações (opcional)</label>
                 <textarea value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Alguma observação sobre a impressão bem-sucedida?" rows={2}
-                  className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50 resize-none" />
+                  className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30 resize-none" />
               </div>
             )}
 
             <div className="flex gap-2 pt-2">
               <button onClick={registrarExperimento} disabled={salvando}
-                className="flex items-center gap-2 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">
+                className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">
                 <TestTube2 size={14} /> {salvando ? 'Salvando...' : 'Registrar experimento'}
               </button>
-              <button onClick={() => setNovoAberto(false)} className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 border border-border rounded-md transition-colors">Cancelar</button>
+              <button onClick={() => setNovoAberto(false)} className="text-sm text-[#58413c] hover:text-[#211b0c] px-4 py-2 border border-[#e5d9c1] rounded-md transition-colors">Cancelar</button>
             </div>
           </div>
         )}
 
         {/* Lista */}
         {experimentos.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground">
+          <div className="text-center py-16 text-[#58413c]">
             <TestTube2 size={32} className="mx-auto mb-3 opacity-30" />
             <p className="text-sm">Nenhum experimento registrado ainda.</p>
-            <button onClick={() => setNovoAberto(true)} className="text-morphe-orange text-sm hover:underline mt-2 inline-block">Registrar primeiro experimento</button>
+            <button onClick={() => setNovoAberto(true)} className="text-[#003223] text-sm hover:underline mt-2 inline-block">Registrar primeiro experimento</button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -302,35 +302,35 @@ export default function ExperimentosPage() {
               const aberto = expandido === exp.id
               const aba = getAba(exp.id)
               return (
-                <div key={exp.id} className={`bg-morphe-dark-2 border rounded-xl overflow-hidden transition-colors ${cfg.bg}`}>
+                <div key={exp.id} className={`bg-[#fff2da] border rounded-xl overflow-hidden transition-colors ${cfg.bg}`}>
                   <button onClick={() => setExpandido(aberto ? null : exp.id)} className="w-full flex items-center justify-between p-4 text-left">
                     <div className="flex items-center gap-3">
                       <Icon size={16} className={cfg.color} />
                       <div>
                         <p className="text-sm font-medium">{exp.formulacao_nome}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{exp.data} · {cfg.label}</p>
+                        <p className="text-xs text-[#58413c] mt-0.5">{exp.data} · {cfg.label}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={e => { e.stopPropagation(); excluirExperimento(exp.id) }}
-                        className="text-muted-foreground hover:text-red-400 transition-colors p-1">
+                        className="text-[#58413c] hover:text-red-400 transition-colors p-1">
                         <Trash2 size={13} />
                       </button>
-                      {aberto ? <ChevronUp size={15} className="text-muted-foreground" /> : <ChevronDown size={15} className="text-muted-foreground" />}
+                      {aberto ? <ChevronUp size={15} className="text-[#58413c]" /> : <ChevronDown size={15} className="text-[#58413c]" />}
                     </div>
                   </button>
 
                   {aberto && (
-                    <div className="border-t border-border/50">
+                    <div className="border-t border-[#e5d9c1]">
                       {/* Abas */}
-                      <div className="flex border-b border-border/50">
+                      <div className="flex border-b border-[#e5d9c1]">
                         {[
                           { id: 'observacao' as const, label: 'Observação' },
                           { id: 'diagnostico' as const, label: 'Diagnóstico MIA' },
                           ...(exp.gcode ? [{ id: 'gcode' as const, label: 'G-code' }] : []),
                         ].map(a => (
                           <button key={a.id} onClick={() => setAba(exp.id, a.id)}
-                            className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${aba === a.id ? 'border-morphe-orange text-morphe-orange' : 'border-transparent text-muted-foreground hover:text-foreground'}`}>
+                            className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px ${aba === a.id ? 'border-[#003223] text-[#003223]' : 'border-transparent text-[#58413c] hover:text-[#211b0c]'}`}>
                             {a.label}
                           </button>
                         ))}
@@ -340,9 +340,9 @@ export default function ExperimentosPage() {
                         {aba === 'observacao' && (
                           <div>
                             {exp.descricao ? (
-                              <p className="text-sm text-muted-foreground leading-relaxed">{exp.descricao}</p>
+                              <p className="text-sm text-[#58413c] leading-relaxed">{exp.descricao}</p>
                             ) : (
-                              <p className="text-xs text-muted-foreground italic">Nenhuma observação registrada.</p>
+                              <p className="text-xs text-[#58413c] italic">Nenhuma observação registrada.</p>
                             )}
                           </div>
                         )}
@@ -350,12 +350,12 @@ export default function ExperimentosPage() {
                         {aba === 'diagnostico' && (
                           <div>
                             {exp.diagnostico ? (
-                              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{exp.diagnostico}</p>
+                              <p className="text-sm text-[#58413c] leading-relaxed whitespace-pre-wrap">{exp.diagnostico}</p>
                             ) : (
                               <div className="space-y-3">
-                                <p className="text-xs text-muted-foreground italic">Nenhum diagnóstico gerado ainda.</p>
+                                <p className="text-xs text-[#58413c] italic">Nenhum diagnóstico gerado ainda.</p>
                                 <button onClick={() => gerarDiagnosticoExistente(exp)} disabled={gerandoDiag === exp.id}
-                                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-morphe-orange border border-border hover:border-morphe-orange/40 disabled:opacity-40 px-4 py-2 rounded-md transition-colors">
+                                  className="flex items-center gap-2 text-sm text-[#58413c] hover:text-[#003223] border border-[#e5d9c1] hover:border-[#e5d9c1] disabled:opacity-40 px-4 py-2 rounded-md transition-colors">
                                   <Sparkles size={13} /> {gerandoDiag === exp.id ? 'Gerando diagnóstico...' : 'Gerar diagnóstico com MIA'}
                                 </button>
                               </div>
@@ -366,7 +366,7 @@ export default function ExperimentosPage() {
                         {aba === 'gcode' && exp.gcode && (
                           <div>
                             <div className="flex items-center justify-between mb-3">
-                              <p className="text-xs text-muted-foreground">G-code usado neste experimento</p>
+                              <p className="text-xs text-[#58413c]">G-code usado neste experimento</p>
                               <button onClick={() => {
                                 const blob = new Blob([exp.gcode!], { type: 'text/plain' })
                                 const url = URL.createObjectURL(blob)
@@ -374,11 +374,11 @@ export default function ExperimentosPage() {
                                 a.href = url; a.download = `experimento_${exp.id}.gcode`; a.click()
                                 URL.revokeObjectURL(url)
                               }}
-                                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border px-2 py-1 rounded-md transition-colors">
+                                className="flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-2 py-1 rounded-md transition-colors">
                                 <Download size={11} /> Baixar .gcode
                               </button>
                             </div>
-                            <pre className="text-xs text-muted-foreground bg-morphe-dark rounded-lg p-4 overflow-x-auto leading-relaxed font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">{exp.gcode}</pre>
+                            <pre className="text-xs text-[#58413c] bg-[#fff8f1] rounded-lg p-4 overflow-x-auto leading-relaxed font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">{exp.gcode}</pre>
                           </div>
                         )}
                       </div>
