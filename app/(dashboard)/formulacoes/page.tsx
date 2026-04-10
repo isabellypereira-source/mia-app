@@ -116,22 +116,22 @@ export default function FormulacoesPage() {
   }
 
   return (
-    <div className="h-full overflow-hidden flex">
+    <div className="h-full overflow-hidden flex bg-morphe-dark">
       {/* Lista */}
-      <div className={`${selecionada ? 'w-72 flex-shrink-0' : 'flex-1'} overflow-y-auto p-5 border-r border-border transition-all`}>
-        <div className="flex items-center justify-between mb-4">
+      <div className={`${selecionada ? 'w-72 flex-shrink-0' : 'flex-1'} overflow-y-auto section-alt border-r border-border/60 transition-all`}>
+        <div className="flex items-center justify-between p-5 pb-4 border-b border-border/60">
           <div>
-            <h1 className="text-base font-semibold">Formulações</h1>
+            <h1 className="text-base font-bold">Formulações</h1>
             <p className="text-xs text-muted-foreground mt-0.5">{formulacoes.length} salvas</p>
           </div>
           <Link
             href="/formular"
-            className="flex items-center gap-1.5 text-xs bg-morphe-orange hover:bg-morphe-orange-hover text-white px-3 py-1.5 rounded-md transition-colors"
+            className="btn-glow flex items-center gap-1.5 text-xs px-3 py-1.5"
           >
             <FlaskConical size={12} /> Nova
           </Link>
         </div>
-
+        <div className="p-3">
         {loading ? (
           <div className="text-center py-8 text-muted-foreground text-xs">Carregando...</div>
         ) : formulacoes.length === 0 ? (
@@ -147,7 +147,7 @@ export default function FormulacoesPage() {
             {formulacoes.map(f => {
               const isActive = selecionada?.id === f.id
               return (
-                <div key={f.id} className={`bg-morphe-dark-2 border rounded-xl p-3.5 transition-colors ${isActive ? 'border-morphe-orange/40 bg-morphe-orange/5' : 'border-border'}`}>
+                <div key={f.id} className={`card-depth p-3.5 transition-all ${isActive ? '!border-morphe-orange/40' : ''}`} style={isActive ? {boxShadow:'0 4px 20px rgba(250,85,40,0.12)'} : {}}>
                   <button className="w-full text-left" onClick={() => { setSelecionada(isActive ? null : f); setAbaDetalhe('nutri') }}>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate flex-1 mr-2">{f.nome}</span>
@@ -167,11 +167,12 @@ export default function FormulacoesPage() {
             })}
           </div>
         )}
+        </div>
       </div>
 
       {/* Painel de detalhe */}
       {selecionada && (
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-morphe-dark">
           {/* Header */}
           <div className="flex items-start justify-between mb-5">
             <div>
@@ -195,7 +196,7 @@ export default function FormulacoesPage() {
           </div>
 
           {/* Abas */}
-          <div className="flex gap-1 mb-5 border-b border-border">
+          <div className="flex gap-1 mb-5">
             {[
               { id: 'nutri', label: 'Análise Nutricional', icon: BarChart3 },
               { id: 'anvisa', label: 'Orientação ANVISA', icon: ShieldCheck },
@@ -203,20 +204,16 @@ export default function FormulacoesPage() {
               <button
                 key={aba.id}
                 onClick={() => setAbaDetalhe(aba.id as 'nutri' | 'anvisa')}
-                className={`flex items-center gap-1.5 px-4 py-2.5 text-sm transition-colors border-b-2 -mb-px ${
-                  abaDetalhe === aba.id
-                    ? 'border-morphe-orange text-morphe-orange'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
+                className={`flex items-center gap-1.5 ${abaDetalhe === aba.id ? 'tab-pill-active' : 'tab-pill-inactive'}`}
               >
-                <aba.icon size={13} />
+                <aba.icon size={12} />
                 {aba.label}
               </button>
             ))}
           </div>
 
           {/* Ingredientes */}
-          <div className="bg-morphe-dark-2 border border-border rounded-xl p-4 mb-4">
+          <div className="card-depth p-4 mb-4">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Composição</h3>
             <div className="space-y-1.5">
               {selecionada.ingredientes?.map((ing, i) => (
@@ -233,7 +230,7 @@ export default function FormulacoesPage() {
 
           {/* Aba Nutricional */}
           {abaDetalhe === 'nutri' && (
-            <div className="bg-morphe-dark-2 border border-border rounded-xl p-4">
+            <div className="card-depth p-4">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                 Tabela Nutricional Estimada (por 100 g)
               </h3>
@@ -277,7 +274,7 @@ export default function FormulacoesPage() {
           {abaDetalhe === 'anvisa' && (
             <div className="space-y-3">
               {ANVISA_ORIENTACOES.map(o => (
-                <div key={o.titulo} className="bg-morphe-dark-2 border border-border rounded-xl p-4">
+                <div key={o.titulo} className="card-depth p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <ShieldCheck size={14} className="text-morphe-orange flex-shrink-0" />
                     <h4 className="text-sm font-medium">{o.titulo}</h4>

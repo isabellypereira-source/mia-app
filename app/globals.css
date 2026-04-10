@@ -23,7 +23,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 165 35% 27%;
     --input: 165 35% 27%;
-    --ring: 13 95% 57%;             /* Orange focus ring */
+    --ring: 13 95% 57%;
     --radius: 0.6rem;
   }
 }
@@ -34,29 +34,190 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { @apply bg-muted; }
-  ::-webkit-scrollbar-thumb { @apply bg-border rounded-full; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border/60 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-border; }
 }
 
-/* Chat streaming cursor */
+/* ─── Chat streaming cursor ─── */
 .streaming-cursor::after {
   content: '▋';
   @apply animate-cursor-blink ml-0.5;
 }
 
-/* Card de formulação, diagnóstico etc */
+/* ─── Card de formulação, diagnóstico etc ─── */
 .mia-card {
   @apply rounded-lg border border-border bg-morphe-dark-2 p-4 my-3 text-sm;
 }
 
-/* Tabela dentro de markdown */
-.prose table {
-  @apply w-full text-sm border-collapse;
-}
+/* ─── Tabela dentro de markdown ─── */
+.prose table { @apply w-full text-sm border-collapse; }
 .prose th {
   @apply bg-muted text-muted-foreground font-medium text-left px-3 py-2 border-b border-border;
 }
-.prose td {
-  @apply px-3 py-2 border-b border-border/50;
+.prose td { @apply px-3 py-2 border-b border-border/50; }
+
+/* ─────────────────────────────────────────────
+   SISTEMA DE DESIGN PREMIUM
+   ───────────────────────────────────────────── */
+
+/* Card com profundidade + hover glow laranja */
+.card-depth {
+  @apply rounded-xl border border-border/60 bg-morphe-dark-2;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms ease;
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 60%);
+}
+.card-depth:hover {
+  box-shadow: 0 8px 40px rgba(250,85,40,0.18), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+  @apply border-morphe-orange/40;
+}
+
+/* Card com hover glow verde-limão */
+.card-depth-viva {
+  @apply rounded-xl border border-border/60 bg-morphe-dark-2;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition: box-shadow 300ms ease, border-color 300ms ease;
+  background-image: linear-gradient(135deg, rgba(255,255,255,0.025) 0%, transparent 60%);
+}
+.card-depth-viva:hover {
+  box-shadow: 0 8px 40px rgba(171,208,50,0.15), 0 2px 8px rgba(0,0,0,0.4);
+  @apply border-morphe-viva/40;
+}
+
+/* Botão CTA primário com glow */
+.btn-glow {
+  @apply bg-morphe-orange text-white font-semibold rounded-lg;
+  box-shadow: 0 0 0 rgba(250,85,40,0);
+  transition: background-color 200ms ease, box-shadow 200ms ease, transform 150ms ease;
+}
+.btn-glow:hover {
+  @apply bg-morphe-orange-hover;
+  box-shadow: 0 0 24px rgba(250,85,40,0.4), 0 4px 12px rgba(0,0,0,0.3);
+  transform: translateY(-1px);
+}
+.btn-glow:active {
+  transform: translateY(0);
+}
+
+/* Botão secundário com borda */
+.btn-outline {
+  @apply border border-border/70 text-foreground rounded-lg;
+  transition: border-color 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
+}
+.btn-outline:hover {
+  @apply border-morphe-orange/50 bg-morphe-orange/5;
+  box-shadow: 0 0 12px rgba(250,85,40,0.08);
+}
+
+/* Seção alternada (Ancestral) */
+.section-alt {
+  @apply bg-morphe-dark-2;
+}
+
+/* Badge pill estilo Stitch */
+.badge-pill {
+  @apply inline-flex items-center gap-1.5 rounded-full border text-xs font-medium px-3 py-1;
+}
+.badge-pill-orange {
+  @apply badge-pill border-morphe-orange/30 bg-morphe-orange/10 text-morphe-orange;
+}
+.badge-pill-viva {
+  @apply badge-pill border-morphe-viva/30 bg-morphe-viva/10 text-morphe-viva;
+}
+.badge-pill-muted {
+  @apply badge-pill border-border bg-morphe-dark-2 text-muted-foreground;
+}
+
+/* Radial glow no hero */
+.hero-glow {
+  background-image: radial-gradient(ellipse 80% 50% at 50% -5%, rgba(250,85,40,0.12) 0%, transparent 70%);
+}
+
+/* Step connector (linha entre steps do workflow) */
+.step-connector {
+  @apply flex-1 h-px bg-gradient-to-r from-border/60 to-border/20;
+}
+
+/* Input premium */
+.input-premium {
+  @apply w-full bg-morphe-dark border border-border/70 rounded-lg px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+}
+.input-premium:focus {
+  outline: none;
+  @apply border-morphe-orange/60;
+  box-shadow: 0 0 0 3px rgba(250,85,40,0.12), inset 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Animações de entrada em sequência */
+.animate-delay-100 { animation-delay: 100ms; }
+.animate-delay-200 { animation-delay: 200ms; }
+.animate-delay-300 { animation-delay: 300ms; }
+.animate-delay-400 { animation-delay: 400ms; }
+.animate-delay-500 { animation-delay: 500ms; }
+.animate-delay-600 { animation-delay: 600ms; }
+
+/* Skeleton shimmer */
+.skeleton {
+  @apply bg-morphe-dark-2 rounded-lg;
+  background-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Sidebar nav item */
+.nav-item {
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm border border-transparent;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.nav-item:hover {
+  @apply text-foreground bg-morphe-dark-3/70 border-border/30;
+  transform: translateX(2px);
+}
+.nav-item-active {
+  @apply nav-item bg-morphe-orange/10 text-morphe-orange border-morphe-orange/25;
+}
+
+/* Divisor com gradiente */
+.divider-gradient {
+  @apply w-full h-px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border)) 30%, hsl(var(--border)) 70%, transparent);
+}
+
+/* Tabs premium */
+.tab-pill {
+  @apply px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200;
+}
+.tab-pill-active {
+  @apply tab-pill bg-morphe-orange/15 text-morphe-orange border border-morphe-orange/30;
+}
+.tab-pill-inactive {
+  @apply tab-pill text-muted-foreground hover:text-foreground hover:bg-morphe-dark-3/50;
+}
+
+/* Indicador lateral colorido (experimentos) */
+.result-indicator {
+  @apply absolute left-0 top-0 bottom-0 w-1 rounded-l-xl;
+}
+
+/* Accordion header */
+.accordion-header {
+  @apply flex items-center justify-between w-full px-5 py-4 text-left;
+  transition: background-color 150ms ease;
+}
+.accordion-header:hover {
+  @apply bg-morphe-dark-3/30;
+}
+
+/* Glow pulsante no badge "online" */
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 4px rgba(74, 222, 128, 0); }
+}
+.status-online {
+  @apply w-2 h-2 bg-green-400 rounded-full;
+  animation: status-pulse 2s ease-in-out infinite;
 }

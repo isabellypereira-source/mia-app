@@ -225,18 +225,19 @@ max_print_speed = 150
   const altCamada = calcularAlturaCamada(ponteira, resolucao)
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="h-full overflow-y-auto bg-morphe-dark">
+      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+        <h1 className="text-2xl font-bold">Parâmetros de Impressão</h1>
+        <p className="text-sm text-muted-foreground mt-1">Configure sua impressão e receba parâmetros e G-code otimizados.</p>
+      </div>
+      <div className="max-w-3xl mx-auto px-8">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold">Parâmetros de Impressão</h1>
-          <p className="text-sm text-muted-foreground mt-1">Configure sua impressão e receba parâmetros e G-code otimizados.</p>
-        </div>
 
         {/* Formulação */}
         <div className="mb-5">
           <label className="text-sm font-medium block mb-1.5">Formulação</label>
           <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}
-            className="w-full bg-morphe-dark-2 border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50">
+            className="w-full card-depth px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50">
             <option value="">Selecione uma formulação</option>
             {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
           </select>
@@ -332,7 +333,7 @@ max_print_speed = 150
         {/* Resultados */}
         {params && (
           <div className="space-y-4">
-            <div className="bg-morphe-dark-2 border border-border rounded-xl p-5">
+            <div className="card-depth p-5">
               <div className="flex items-center gap-2 mb-4">
                 <SlidersHorizontal size={15} className="text-morphe-orange" />
                 <h2 className="text-sm font-medium">Parâmetros recomendados <span className="text-xs text-muted-foreground font-normal ml-1">(editáveis)</span></h2>
@@ -364,7 +365,7 @@ max_print_speed = 150
             </div>
 
             {gcode && (
-              <div className="bg-morphe-dark-2 border border-border rounded-xl p-5">
+              <div className="card-depth p-5">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-sm font-medium">G-code</h2>
                   <div className="flex gap-2">
@@ -384,6 +385,7 @@ max_print_speed = 150
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

@@ -45,18 +45,20 @@ export default function ExportarPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-lg mx-auto">
-        <h1 className="text-xl font-semibold mb-1">Exportar documentos</h1>
-        <p className="text-sm text-muted-foreground mb-8">Gere ficha técnica ou POP em PDF a partir das suas formulações.</p>
+    <div className="h-full overflow-y-auto bg-morphe-dark">
+      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+        <h1 className="text-2xl font-bold">Exportar documentos</h1>
+        <p className="text-sm text-muted-foreground mt-1">Gere ficha técnica ou POP em PDF a partir das suas formulações.</p>
+      </div>
 
+      <div className="max-w-lg mx-auto px-8">
         {/* Selecionar formulação */}
         <div className="mb-6">
-          <label className="text-sm font-medium block mb-2">Formulação</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground block mb-2">Formulação</label>
           <select
             value={selecionada}
             onChange={e => setSelecionada(e.target.value)}
-            className="w-full bg-morphe-dark-2 border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-green"
+            className="input-premium"
           >
             <option value="">Selecione uma formulação</option>
             {formulacoes.map(f => (
@@ -64,29 +66,32 @@ export default function ExportarPage() {
             ))}
           </select>
           {formulacoes.length === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">Nenhuma formulação salva. Crie uma no chat primeiro.</p>
+            <p className="text-xs text-muted-foreground mt-1">Nenhuma formulação salva. <a href="/formular" className="text-morphe-orange hover:underline">Criar agora</a></p>
           )}
         </div>
 
         {/* Tipo de documento */}
         <div className="mb-8">
-          <label className="text-sm font-medium block mb-2">Tipo de documento</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground block mb-3">Tipo de documento</label>
           <div className="space-y-2">
             {TIPOS_EXPORTACAO.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTipo(t.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                className={`w-full text-left px-4 py-3.5 rounded-xl border transition-all duration-200 ${
                   tipo === t.id
-                    ? 'border-morphe-green/50 bg-morphe-green/10'
-                    : 'border-border bg-morphe-dark-2 hover:border-border/80'
+                    ? 'border-morphe-orange/50 bg-morphe-orange/8'
+                    : 'card-depth hover:border-morphe-orange/30'
                 }`}
+                style={tipo === t.id ? {boxShadow:'0 0 16px rgba(250,85,40,0.1)'} : {}}
               >
-                <div className="flex items-center gap-2">
-                  <FileText size={14} className={tipo === t.id ? 'text-morphe-green-light' : 'text-muted-foreground'} />
-                  <span className="text-sm font-medium">{t.label}</span>
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${tipo === t.id ? 'bg-morphe-orange/15' : 'bg-morphe-dark'}`}>
+                    <FileText size={13} className={tipo === t.id ? 'text-morphe-orange' : 'text-muted-foreground'} />
+                  </div>
+                  <span className="text-sm font-semibold">{t.label}</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5 ml-5">{t.desc}</p>
+                <p className="text-xs text-muted-foreground mt-1.5 ml-9">{t.desc}</p>
               </button>
             ))}
           </div>
@@ -95,7 +100,7 @@ export default function ExportarPage() {
         <button
           onClick={exportar}
           disabled={!selecionada || loading}
-          className="w-full flex items-center justify-center gap-2 bg-morphe-green hover:bg-morphe-green-light disabled:opacity-40 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors"
+          className="btn-glow w-full flex items-center justify-center gap-2 py-3 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
           <Download size={16} />
           {loading ? 'Gerando PDF...' : 'Exportar PDF'}

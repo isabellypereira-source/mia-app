@@ -194,21 +194,22 @@ export default function CaracterizacaoPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-full overflow-y-auto bg-morphe-dark">
+      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+        <h1 className="text-2xl font-bold">Caracterização</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Insira dados das análises para calcular índices e obter protocolos.
+        </p>
+      </div>
+      <div className="max-w-2xl mx-auto px-8">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold">Caracterização</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Insira os dados das análises realizadas para calcular índices e obter protocolos.
-          </p>
-        </div>
 
         <div className="space-y-2">
           {SECOES.map(secao => {
             const aberta = secaoAberta === secao.id
             const temResultado = !!resultados[secao.id]
             return (
-              <div key={secao.id} className="bg-morphe-dark-2 border border-border rounded-xl overflow-hidden">
+              <div key={secao.id} className="card-depth overflow-hidden">
                 <button
                   onClick={() => setSecaoAberta(aberta ? null : secao.id)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-morphe-dark-3 transition-colors"
@@ -279,6 +280,7 @@ export default function CaracterizacaoPage() {
             )
           })}
         </div>
+      </div>
       </div>
     </div>
   )

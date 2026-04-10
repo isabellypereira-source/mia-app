@@ -169,26 +169,29 @@ export default function ExperimentosPage() {
   const precisaDiagnostico = resultado === 'falha' || resultado === 'parcial'
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="h-full overflow-y-auto bg-morphe-dark">
+      <div className="section-alt border-b border-border/60 px-8 py-6">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold">Experimentos</h1>
-            <p className="text-sm text-muted-foreground mt-1">Registre experimentos de impressão e obtenha diagnósticos.</p>
+            <h1 className="text-2xl font-bold">Experimentos</h1>
+            <p className="text-sm text-muted-foreground mt-1">Registre impressões e obtenha diagnósticos da MIA.</p>
           </div>
           <div className="flex gap-2">
             {experimentos.length > 0 && (
               <button onClick={baixarHistorico}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground border border-border px-3 py-2 rounded-lg transition-colors">
+                className="btn-outline flex items-center gap-1.5 text-xs px-3 py-2">
                 <Download size={12} /> Histórico
               </button>
             )}
             <button onClick={() => setNovoAberto(!novoAberto)}
-              className="flex items-center gap-1.5 bg-morphe-orange hover:bg-morphe-orange-hover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+              className="btn-glow flex items-center gap-1.5 text-sm px-4 py-2">
               <Plus size={14} /> Novo experimento
             </button>
           </div>
         </div>
+      </div>
+      <div className="max-w-2xl mx-auto px-8 py-6">
+        <div className="mb-6">
 
         {/* Formulário */}
         {novoAberto && (
@@ -386,6 +389,7 @@ export default function ExperimentosPage() {
             })}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

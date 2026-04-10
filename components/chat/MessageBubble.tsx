@@ -14,24 +14,26 @@ export function MessageBubble({ message }: Props) {
 
   if (isUser) {
     return (
-      <div className="flex gap-3 justify-end">
-        <div className="bg-morphe-green/15 border border-morphe-green/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
+      <div className="flex gap-3 justify-end animate-fade-in">
+        <div
+          className="bg-morphe-orange/12 border border-morphe-orange/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]"
+          style={{ boxShadow: '0 2px 12px rgba(250,85,40,0.08)' }}
+        >
           <p className="text-sm text-foreground whitespace-pre-wrap">{message.content}</p>
         </div>
-        <div className="w-7 h-7 rounded-full bg-secondary border border-border flex-shrink-0 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full bg-morphe-dark-2 border border-border flex-shrink-0 flex items-center justify-center">
           <User size={12} className="text-muted-foreground" />
         </div>
       </div>
     )
   }
 
-  // Parse content for special MIA cards
   const parts = parseMessageContent(message.content)
 
   return (
-    <div className="flex gap-3">
-      <div className="w-7 h-7 rounded-full bg-morphe-green/20 border border-morphe-green/30 flex-shrink-0 flex items-center justify-center mt-1">
-        <Sparkles size={12} className="text-morphe-green-light" />
+    <div className="flex gap-3 animate-fade-in">
+      <div className="w-7 h-7 rounded-full bg-morphe-orange/15 border border-morphe-orange/30 flex-shrink-0 flex items-center justify-center mt-1">
+        <Sparkles size={12} className="text-morphe-orange" />
       </div>
       <div className="max-w-[85%] space-y-2">
         {parts.map((part, i) => {
@@ -39,7 +41,11 @@ export function MessageBubble({ message }: Props) {
             return <MiaCard key={i} data={part.data} />
           }
           return (
-            <div key={i} className="bg-morphe-dark-2 border border-border rounded-2xl rounded-tl-sm px-4 py-3">
+            <div
+              key={i}
+              className="card-depth px-4 py-3"
+              style={{ borderRadius: '0 1rem 1rem 1rem' }}
+            >
               <div className="prose prose-sm prose-invert max-w-none text-sm text-foreground leading-relaxed">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.content}</ReactMarkdown>
               </div>
@@ -62,13 +68,11 @@ function parseMessageContent(content: string): Part[] {
   let match
 
   while ((match = codeBlockRegex.exec(content)) !== null) {
-    // Text before this block
     if (match.index > lastIndex) {
       const text = content.slice(lastIndex, match.index).trim()
       if (text) parts.push({ type: 'text', content: text })
     }
 
-    // Try to parse JSON
     try {
       const data = JSON.parse(match[1])
       if (data.__type) {
@@ -83,7 +87,6 @@ function parseMessageContent(content: string): Part[] {
     lastIndex = match.index + match[0].length
   }
 
-  // Remaining text
   if (lastIndex < content.length) {
     const text = content.slice(lastIndex).trim()
     if (text) parts.push({ type: 'text', content: text })

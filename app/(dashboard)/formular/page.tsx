@@ -171,20 +171,20 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 
   // --- TELA INICIAL ---
   if (modo === 'escolha') return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold">Formular</h1>
-          <p className="text-sm text-muted-foreground mt-1">Ponto de partida do fluxo MIA. Insira ou crie sua formulação.</p>
-        </div>
+    <div className="h-full overflow-y-auto bg-morphe-dark">
+      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+        <h1 className="text-2xl font-bold">Formular</h1>
+        <p className="text-sm text-muted-foreground mt-1">Ponto de partida do fluxo MIA. Insira ou crie sua formulação.</p>
+      </div>
+      <div className="max-w-2xl mx-auto px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button onClick={() => setModo('input')} className="bg-morphe-dark-2 border border-border rounded-xl p-6 text-left hover:border-morphe-orange/40 hover:bg-morphe-dark-3 transition-colors group">
+          <button onClick={() => setModo('input')} className="card-depth p-6 text-left group">
             <FlaskConical size={28} className="text-morphe-orange mb-4" />
             <h2 className="font-semibold text-base mb-1">Tenho uma formulação</h2>
             <p className="text-sm text-muted-foreground">Insira os ingredientes e percentuais para validar e salvar.</p>
             <div className="flex items-center gap-1 text-morphe-orange text-xs mt-4 opacity-0 group-hover:opacity-100 transition-opacity">Inserir <ArrowRight size={12} /></div>
           </button>
-          <button onClick={() => setModo('wizard_app')} className="bg-morphe-dark-2 border border-border rounded-xl p-6 text-left hover:border-morphe-orange/40 hover:bg-morphe-dark-3 transition-colors group">
+          <button onClick={() => setModo('wizard_app')} className="card-depth p-6 text-left group">
             <Sparkles size={28} className="text-morphe-orange mb-4" />
             <h2 className="font-semibold text-base mb-1">Criar com a MIA</h2>
             <p className="text-sm text-muted-foreground">Deixe a MIA sugerir uma formulação otimizada para sua aplicação.</p>
@@ -271,7 +271,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
           <input value={buscaIngrediente} onChange={e => setBuscaIngrediente(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addIngredienteWizard(buscaIngrediente)}
             placeholder="Ex: cenoura, batata-doce, proteína de ervilha..."
-            className="flex-1 bg-morphe-dark-2 border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
+            className="flex-1 card-depth px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50" />
           <button onClick={() => addIngredienteWizard(buscaIngrediente)} disabled={!buscaIngrediente.trim()}
             className="flex items-center gap-1.5 bg-morphe-orange hover:bg-morphe-orange-hover disabled:opacity-40 text-white text-sm px-4 py-2.5 rounded-lg transition-colors">
             <Plus size={14} /> Adicionar
@@ -354,7 +354,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
             </div>
           )}
 
-          <div className="bg-morphe-dark-2 border border-border rounded-xl p-5 mb-4">
+          <div className="card-depth p-5 mb-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-medium">Ingredientes {isWizard && <span className="text-xs text-muted-foreground font-normal ml-1">(você pode editar)</span>}</h2>
               <span className="text-xs text-muted-foreground">Total: {ingredientes.reduce((acc, i) => acc + (parseFloat(i.percentual) || 0), 0).toFixed(1)}%</span>
@@ -394,7 +394,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
             </div>
           )}
 
-          <div className="bg-morphe-dark-2 border border-border rounded-xl p-5 mb-4">
+          <div className="card-depth p-5 mb-4">
             <h2 className="text-sm font-medium mb-3">Salvar formulação</h2>
             <div className="flex gap-3">
               <input value={nomeFormulacao} onChange={e => setNomeFormulacao(e.target.value)} placeholder="Nome da formulação (ex: Pasta de batata-doce v1)"

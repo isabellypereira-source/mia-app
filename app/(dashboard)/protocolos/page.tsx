@@ -322,14 +322,15 @@ export default function ProtocolosPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-full overflow-y-auto bg-morphe-dark">
+      <div className="section-alt border-b border-border/60 px-8 py-6 mb-6">
+        <h1 className="text-2xl font-bold">Protocolos</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Baixe documentos gerados: protocolos de caracterização, POP e ficha técnica.
+        </p>
+      </div>
+      <div className="max-w-2xl mx-auto px-8">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold">Protocolos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Baixe todos os documentos gerados: protocolos de caracterização, POP e ficha técnica.
-          </p>
-        </div>
 
         {/* Documentos por formulação */}
         <div className="mb-6">
@@ -338,12 +339,12 @@ export default function ProtocolosPage() {
             <h2 className="text-sm font-semibold">Documentos da formulação</h2>
           </div>
 
-          <div className="bg-morphe-dark-2 border border-border rounded-xl p-4 mb-3">
+          <div className="card-depth p-4 mb-3">
             <label className="text-xs text-muted-foreground block mb-1.5">Selecione a formulação</label>
             <select
               value={formulacaoId}
               onChange={e => setFormulacaoId(e.target.value)}
-              className="w-full bg-morphe-dark border border-border rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-morphe-orange/50"
+              className="input-premium focus:ring-morphe-orange/50"
             >
               <option value="">Selecione...</option>
               {formulacoes.map(f => (
@@ -373,7 +374,7 @@ export default function ProtocolosPage() {
                 icon: FileText,
               },
             ].map(doc => (
-              <div key={doc.tipo} className="bg-morphe-dark-2 border border-border rounded-xl p-4">
+              <div key={doc.tipo} className="card-depth p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <doc.icon size={14} className="text-morphe-orange" />
                   <h3 className="text-sm font-medium">{doc.titulo}</h3>
@@ -404,7 +405,7 @@ export default function ProtocolosPage() {
 
           <div className="space-y-2">
             {PROTOCOLOS_CARACTERIZACAO.map(p => (
-              <div key={p.id} className="bg-morphe-dark-2 border border-border rounded-xl p-4 flex items-center justify-between gap-4">
+              <div key={p.id} className="card-depth p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <FileDown size={15} className="text-muted-foreground flex-shrink-0" />
                   <div className="min-w-0">
@@ -424,6 +425,7 @@ export default function ProtocolosPage() {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

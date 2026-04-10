@@ -208,12 +208,11 @@ export default function BibliotecaPage() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Header */}
-      <div className="bg-morphe-dark-2 border-b border-border px-8 py-6">
+      <div className="section-alt border-b border-border/60 px-8 py-6">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-2 mb-4">
-            <Library size={18} className="text-morphe-orange" />
-            <h1 className="text-xl font-semibold">Biblioteca</h1>
-            <span className="text-xs text-muted-foreground ml-1">— referências técnicas de impressão 3D de alimentos</span>
+            <Library size={16} className="text-morphe-orange" />
+            <h1 className="text-2xl font-bold">Biblioteca</h1>
           </div>
           <div className="relative max-w-md">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -222,26 +221,22 @@ export default function BibliotecaPage() {
               placeholder="Buscar ingrediente, parâmetro ou problema..."
               value={busca}
               onChange={e => setBusca(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-morphe-dark border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-morphe-orange/50 text-foreground placeholder:text-muted-foreground"
+              className="w-full pl-9 pr-4 py-2.5 text-sm bg-morphe-dark border border-border/70 rounded-lg focus:outline-none focus:border-morphe-orange/50 focus:ring-2 focus:ring-morphe-orange/10 text-foreground placeholder:text-muted-foreground/60 transition-all"
             />
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="bg-morphe-dark-2 border-b border-border px-8">
-        <div className="max-w-5xl mx-auto flex gap-1 overflow-x-auto">
+      <div className="section-alt border-b border-border/60 px-8">
+        <div className="max-w-5xl mx-auto flex gap-1 overflow-x-auto py-2">
           {ABAS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => { setAbaAtiva(id as AbaId); setBusca('') }}
-              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
-                abaAtiva === id
-                  ? 'border-morphe-orange text-morphe-orange'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
+              className={abaAtiva === id ? 'tab-pill-active flex items-center gap-1.5 whitespace-nowrap' : 'tab-pill-inactive flex items-center gap-1.5 whitespace-nowrap'}
             >
-              <Icon size={13} />
+              <Icon size={12} />
               {label}
             </button>
           ))}
@@ -255,7 +250,7 @@ export default function BibliotecaPage() {
         {abaAtiva === 'hidrocoloides' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {hidroFiltered.map(h => (
-              <div key={h.nome} className="bg-morphe-dark-2 border border-border rounded-xl p-5 hover:border-morphe-orange/20 transition-colors">
+              <div key={h.nome} className="card-depth p-5 hover:border-morphe-orange/20 transition-colors">
                 <div className="flex items-start gap-3 mb-3">
                   <div className={`w-3 h-3 rounded-full flex-shrink-0 mt-1 ${h.cor}`} />
                   <div>
@@ -285,7 +280,7 @@ export default function BibliotecaPage() {
         {/* REOLOGIA */}
         {abaAtiva === 'reologia' && (
           <div className="space-y-4">
-            <div className="bg-morphe-dark-2 border border-border rounded-xl p-6">
+            <div className="card-depth p-6">
               <h2 className="font-semibold mb-1">Modelo de Herschel-Bulkley</h2>
               <p className="text-xs text-muted-foreground mb-3">Modelo mais completo para fluidos alimentares com yield stress:</p>
               <div className="bg-morphe-dark rounded-xl p-4 font-mono text-sm text-morphe-orange mb-4 text-center">
@@ -312,7 +307,7 @@ export default function BibliotecaPage() {
                 { titulo: 'Tixotropia', conteudo: `Recuperação temporal da estrutura após remoção do cisalhamento. Importante para:\n- Colapso pós-impressão (recuperação lenta = colapso)\n- Tempo de estabilização antes da impressão\n\nXantana e géis de amido são tixotrópicos.` },
                 { titulo: 'Yield Stress na prática', conteudo: `Como medir sem reômetro:\n1. Teste de placa: colocar pasta entre placas e observar espalhamento\n2. Teste de penetração: usar agulha calibrada\n3. Empiricamente: pasta que mantém sulco = τ₀ > 50 Pa\n\nCorrelação visual: pasta que não cai do garfo invertido ≈ 100–300 Pa.` },
               ].map(({ titulo, conteudo }) => (
-                <div key={titulo} className="bg-morphe-dark-2 border border-border rounded-xl p-5">
+                <div key={titulo} className="card-depth p-5">
                   <h3 className="font-semibold text-sm mb-2">{titulo}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">{conteudo}</p>
                 </div>
@@ -323,7 +318,7 @@ export default function BibliotecaPage() {
 
         {/* PARÂMETROS */}
         {abaAtiva === 'parametros' && (
-          <div className="bg-morphe-dark-2 border border-border rounded-xl overflow-hidden">
+          <div className="card-depth overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-morphe-dark">
@@ -349,7 +344,7 @@ export default function BibliotecaPage() {
         {abaAtiva === 'taco' && (
           <div>
             <p className="text-xs text-muted-foreground mb-4">Fonte: TACO — Tabela Brasileira de Composição de Alimentos, 4ª edição (UNICAMP). Valores por 100g de parte comestível.</p>
-            <div className="bg-morphe-dark-2 border border-border rounded-xl overflow-hidden">
+            <div className="card-depth overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -389,7 +384,7 @@ export default function BibliotecaPage() {
         {abaAtiva === 'troubleshooting' && (
           <div className="space-y-4">
             {troubleFiltered.map(t => (
-              <div key={t.problema} className="bg-morphe-dark-2 border border-border rounded-xl p-5 hover:border-red-400/20 transition-colors">
+              <div key={t.problema} className="card-depth p-5 hover:border-red-400/20 transition-colors">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">{t.icone}</span>
                   <h3 className="font-semibold text-sm">{t.problema}</h3>
@@ -430,7 +425,7 @@ export default function BibliotecaPage() {
         {abaAtiva === 'amidos' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {AMIDOS.map(a => (
-              <div key={a.nome} className="bg-morphe-dark-2 border border-border rounded-xl p-5 hover:border-morphe-orange/20 transition-colors">
+              <div key={a.nome} className="card-depth p-5 hover:border-morphe-orange/20 transition-colors">
                 <h3 className="font-semibold text-sm mb-1">{a.nome}</h3>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[10px] font-mono bg-morphe-orange/10 text-morphe-orange px-2 py-0.5 rounded-full border border-morphe-orange/20">
