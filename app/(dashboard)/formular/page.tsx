@@ -14,12 +14,12 @@ interface Ingrediente {
 const FUNCOES = ['Estruturante', 'Hidrocolóide', 'Plastificante', 'Emulsificante', 'Aromatizante', 'Corante', 'Conservante', 'Proteína', 'Lipídio', 'Carboidrato', 'Líquidos', 'Outro']
 
 const APLICACOES = [
-  { id: 'snacks',       nome: 'Snacks e Conveniência',   desc: 'Snacks crocantes, biscoitos recheados e barras de cereais funcionais.',              emoji: '🍪' },
-  { id: 'massas',       nome: 'Massas e Grãos',          desc: 'Massas frescas ou secas com perfis nutricionais otimizados e texturas de extrusão.', emoji: '🍝' },
-  { id: 'proteinas',    nome: 'Proteínas e Análogos',    desc: 'Soluções plant-based e híbridas com foco em suculência e estrutura fibrosa avançada.', emoji: '🥩' },
-  { id: 'laticinios',   nome: 'Laticínios e Sobremesas', desc: 'Iogurtes, queijos vegetais e sobremesas lácteas com estabilidade térmica superior.',  emoji: '🍦' },
-  { id: 'nutraceuticos',nome: 'Nutracêuticos',           desc: 'Suplementos bioativos em formatos inovadores de entrega de nutrientes.',              emoji: '💊' },
-  { id: 'outros',       nome: 'Outras Aplicações',       desc: 'Projetos customizados para demandas específicas de ingredientes e processos.',         emoji: '✂️' },
+  { id: 'snacks',        nome: 'Snacks e Conveniência',   desc: 'Snacks crocantes, biscoitos recheados e barras de cereais funcionais.',               icon: 'cookie' },
+  { id: 'massas',        nome: 'Massas e Grãos',          desc: 'Massas frescas ou secas com perfis nutricionais otimizados e texturas de extrusão.',  icon: 'ramen_dining' },
+  { id: 'proteinas',     nome: 'Proteínas e Análogos',    desc: 'Soluções plant-based e híbridas com foco em suculência e estrutura fibrosa avançada.', icon: 'kebab_dining' },
+  { id: 'laticinios',    nome: 'Laticínios e Sobremesas', desc: 'Iogurtes, queijos vegetais e sobremesas lácteas com estabilidade térmica superior.',   icon: 'icecream' },
+  { id: 'nutraceuticos', nome: 'Nutracêuticos',           desc: 'Suplementos bioativos em formatos inovadores de entrega de nutrientes.',               icon: 'medication' },
+  { id: 'outros',        nome: 'Outras Aplicações',       desc: 'Projetos customizados para demandas específicas de ingredientes e processos.',          icon: 'content_cut' },
 ]
 
 const TENDENCIAS = ['Alto em Proteína', 'Sem Glúten', 'Funcional / Bioativo', 'Vegano', 'Sem Lactose', 'Alto em Fibra', 'Low Carb']
@@ -228,26 +228,31 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       onAvancar={() => setModo('wizard_tendencias')}
       avancarDisabled={!aplicacao}
       avancarLabel="Próximo Passo"
-      onVerFormulacoes={() => router.push('/formulacoes')}
+
     >
       <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Escolha a sua aplicação</h2>
       <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
-        Selecione o segmento industrial para o qual deseja desenvolver sua nova formulação biônica.
+        Selecione o segmento industrial para o qual deseja desenvolver<br />sua nova formulação biônica.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {APLICACOES.map(a => (
           <button key={a.id} onClick={() => setAplicacao(a.id)}
             className="relative text-left p-5 rounded-2xl border-2 transition-all duration-200 hover:shadow-tonal"
             style={{
-              borderColor: aplicacao === a.id ? '#003223' : '#e5d9c1',
-              background: aplicacao === a.id ? 'rgba(0,50,35,0.04)' : 'white',
+              borderColor: aplicacao === a.id ? '#516600' : '#e5d9c1',
+              background: aplicacao === a.id ? 'rgba(81,102,0,0.04)' : 'white',
             }}>
             {aplicacao === a.id && (
-              <span className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#003223' }}>
-                <CheckCircle size={12} color="white" />
+              <span className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#516600' }}>
+                <span className="material-symbols-outlined text-white" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>check</span>
               </span>
             )}
-            <div className="text-3xl mb-3">{a.emoji}</div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+              style={{ background: aplicacao === a.id ? 'rgba(81,102,0,0.12)' : '#fff2da' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: aplicacao === a.id ? '#516600' : '#003223', fontVariationSettings: "'wght' 300, 'FILL' 0" }}>
+                {a.icon}
+              </span>
+            </div>
             <p className="font-display font-semibold text-sm mb-1.5" style={{ color: '#003223' }}>{a.nome}</p>
             <p className="text-xs font-sans leading-relaxed" style={{ color: '#58413c' }}>{a.desc}</p>
           </button>
@@ -266,7 +271,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       onCancelar={() => setModo('wizard_app')}
       onAvancar={() => setModo('wizard_ingredientes')}
       avancarLabel="Próximo"
-      onVerFormulacoes={() => router.push('/formulacoes')}
+
     >
       <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Tendências nutricionais</h2>
       <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
@@ -298,7 +303,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       onAvancar={gerarComMIA}
       avancarLabel="Gerar com MIA"
       avancarIcon={<Sparkles size={14} />}
-      onVerFormulacoes={() => router.push('/formulacoes')}
+
     >
       <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Ingrediente(s) base</h2>
       <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
@@ -487,7 +492,6 @@ function WizardShell({
   avancarDisabled,
   avancarLabel,
   avancarIcon,
-  onVerFormulacoes,
 }: {
   passo: number
   children: React.ReactNode
@@ -497,36 +501,39 @@ function WizardShell({
   avancarDisabled?: boolean
   avancarLabel: string
   avancarIcon?: React.ReactNode
-  onVerFormulacoes: () => void
 }) {
   return (
     <div className="h-full flex flex-col" style={{ background: '#fff8f1' }}>
       {/* Step bar */}
-      <div className="px-8 py-5 border-b" style={{ background: '#fff2da', borderColor: '#e5d9c1' }}>
+      <div className="px-8 py-4 border-b" style={{ background: '#fff8f1', borderColor: '#e5d9c1' }}>
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             {WIZARD_STEPS.map((step, i) => {
               const num = i + 1
               const isActive = num === passo
               const isDone = num < passo
               return (
-                <div key={step.id} className="flex items-center gap-2 flex-1">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-display font-bold transition-all"
+                <div key={step.id} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-display font-bold transition-all"
                       style={{
-                        background: isActive ? '#003223' : isDone ? 'rgba(0,50,35,0.15)' : 'transparent',
-                        border: isActive ? 'none' : isDone ? 'none' : '2px solid #e5d9c1',
-                        color: isActive ? 'white' : isDone ? '#003223' : '#bfc9c2',
+                        background: isActive ? '#003223' : isDone ? '#516600' : 'transparent',
+                        border: isActive || isDone ? 'none' : '1.5px solid #d4ccc0',
+                        color: isActive || isDone ? 'white' : '#bfc9c2',
+                        minWidth: '28px',
                       }}>
-                      {isDone ? '✓' : num}
+                      {isDone
+                        ? <span className="material-symbols-outlined" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>check</span>
+                        : num}
                     </div>
-                    <span className="text-[10px] font-display font-semibold whitespace-nowrap"
-                      style={{ color: isActive ? '#003223' : isDone ? '#516600' : '#bfc9c2' }}>
+                    <span className="text-[10px] font-sans whitespace-nowrap"
+                      style={{ color: isActive ? '#003223' : isDone ? '#516600' : '#bfc9c2', fontWeight: isActive ? 600 : 400 }}>
                       {step.label}
                     </span>
                   </div>
                   {i < WIZARD_STEPS.length - 1 && (
-                    <div className="flex-1 h-px mb-5 mx-1" style={{ background: isDone ? '#003223' : '#e5d9c1', opacity: 0.4 }} />
+                    <div className="flex-1 h-px mx-2 mb-4"
+                      style={{ background: isDone ? '#516600' : '#e5d9c1' }} />
                   )}
                 </div>
               )
@@ -544,39 +551,32 @@ function WizardShell({
 
       {/* Footer: actions */}
       <div className="px-8 py-4 border-t flex items-center justify-between"
-        style={{ background: '#fff2da', borderColor: '#e5d9c1' }}>
-        <button onClick={onVerFormulacoes}
-          className="px-4 py-2 rounded-xl text-sm font-display font-semibold transition-colors"
-          style={{ background: '#003223', color: 'white' }}>
-          Ver Formulações
+        style={{ background: '#fff8f1', borderColor: '#e5d9c1' }}>
+        <button onClick={onCancelar}
+          className="flex items-center gap-1.5 text-sm font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>
+          <ArrowRight size={13} style={{ transform: 'rotate(180deg)' }} /> Cancelar
         </button>
-        <div className="flex items-center gap-3">
-          <button onClick={onCancelar}
-            className="text-sm font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>
-            ← Cancelar
-          </button>
-          <button onClick={onAvancar} disabled={avancarDisabled}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:scale-[1.02]"
-            style={{ background: '#516600', color: 'white' }}>
-            {avancarIcon} {avancarLabel} <ArrowRight size={14} />
-          </button>
-        </div>
+        <button onClick={onAvancar} disabled={avancarDisabled}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:opacity-90"
+          style={{ background: '#003223', color: 'white' }}>
+          {avancarIcon} {avancarLabel} <ArrowRight size={14} />
+        </button>
       </div>
 
       {/* MIA Intelligence floating card */}
       {miaIntelDica && (
-        <div className="fixed bottom-20 right-6 max-w-xs rounded-2xl p-4 shadow-tonal-lg z-10 animate-slide-up"
-          style={{ background: '#003223' }}>
-          <div className="flex items-start gap-3">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: 'rgba(200,238,79,0.2)' }}>
-              <Sparkles size={13} style={{ color: '#c8ee4f' }} />
+        <div className="fixed bottom-6 right-6 max-w-[260px] rounded-2xl p-4 shadow-tonal-lg z-10 animate-slide-up"
+          style={{ background: '#1a2e1a', border: '1px solid rgba(200,238,79,0.2)' }}>
+          <div className="flex items-start gap-2.5">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ background: '#c8ee4f' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#003223', fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
             </div>
             <div>
-              <p className="text-[10px] font-display font-bold uppercase tracking-wider mb-1" style={{ color: '#c8ee4f' }}>
+              <p className="text-[10px] font-display font-bold uppercase tracking-widest mb-1.5" style={{ color: '#c8ee4f' }}>
                 MIA Intelligence
               </p>
-              <p className="text-xs font-sans leading-relaxed" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              <p className="text-[11px] font-sans leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
                 {miaIntelDica}
               </p>
             </div>
