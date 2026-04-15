@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   ArrowLeft, ArrowRight, CheckCircle, Copy, CheckCheck,
@@ -11,12 +11,11 @@ import {
   cylinderDimsFromVolume, cubeSideFromVolume, flowRateMm3s, pistonSpeedMmS,
 } from '@/lib/parametros/extrusion'
 import { generateGCode, type GCodeConfig } from '@/lib/parametros/gcode'
-import { generateCylinderSTL, generateCubeSTL, stlToObjectUrl } from '@/lib/parametros/stl-gen'
 
-// STL viewer precisa ser client-only (Three.js não tem SSR)
-const StlViewer = dynamic(
-  () => import('react-stl-viewer').then(m => m.StlViewer),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-40 text-xs text-[#58413c]">Carregando viewer…</div> },
+// Viewer 3D leve (Three.js direto, sem react-three-fiber)
+const ShapePreview = dynamic(
+  () => import('@/components/parametros/ShapePreview'),
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[280px] text-xs text-[#58413c]">Carregando viewer…</div> },
 )
 
 // ---------------------------------------------------------------------------
@@ -83,17 +82,11 @@ export default function ParametrosPage() {
 
   // Resultado
   const [gcode, setGcode] = useState('')
-  const [stlUrl, setStlUrl] = useState<string | null>(null)
   const [showGcode, setShowGcode] = useState(false)
   const [copiado, setCopiado] = useState(false)
-  const prevStlUrl = useRef<string | null>(null)
 
   useEffect(() => {
     fetch('/api/formulacoes').then(r => r.json()).then(d => setFormulacoes(d || []))
-  }, [])
-
-  useEffect(() => {
-    return () => { if (prevStlUrl.current) URL.revokeObjectURL(prevStlUrl.current) }
   }, [])
 
   // ---------------------------------------------------------------------------
@@ -144,13 +137,6 @@ export default function ParametrosPage() {
   }
 
   function gerarResultado() {
-    const stl = formato === 'cilindro'
-      ? generateCylinderSTL(dims.diametro, dims.altura)
-      : generateCubeSTL(dims.diametro)
-    if (prevStlUrl.current) URL.revokeObjectURL(prevStlUrl.current)
-    const url = stlToObjectUrl(stl)
-    prevStlUrl.current = url
-    setStlUrl(url)
     setGcode(buildGCode())
     setPasso('resultado')
     window.scrollTo(0, 0)
@@ -559,22 +545,18 @@ export default function ParametrosPage() {
               </button>
             </div>
 
-            {/* STL Viewer */}
-            {stlUrl && (
-              <div className="mb-4 bg-white border border-[#e5d9c1] rounded-2xl overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-[#e5d9c1] flex justify-between items-center">
-                  <span className="text-xs font-medium">Visualização 3D — {FORMATOS.find(f => f.id === formato)?.label}</span>
-                  <span className="text-xs text-[#58413c]">Arraste · Scroll</span>
-                </div>
-                <StlViewer
-                  url={stlUrl}
-                  style={{ width: '100%', height: 280 }}
-                  orbitControls
-                  shadows
-                  modelProps={{ color: '#7c9b8e', scale: 0.8 }}
-                />
+            {/* 3D Viewer */}
+            <div className="mb-4 bg-white border border-[#e5d9c1] rounded-2xl overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-[#e5d9c1] flex justify-between items-center">
+                <span className="text-xs font-medium">Visualização 3D — {FORMATOS.find(f => f.id === formato)?.label}</span>
+                <span className="text-xs text-[#58413c]">Arraste · Scroll</span>
               </div>
-            )}
+              <ShapePreview
+                formato={formato as 'cilindro' | 'cubo'}
+                diametro={dims.diametro}
+                altura={dims.altura}
+              />
+            </div>
 
             {/* Parâmetros */}
             <div className="bg-white border border-[#e5d9c1] rounded-2xl p-4 mb-4">
