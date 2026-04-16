@@ -6,10 +6,11 @@ interface Props {
   formato: string
   diametro: number
   altura: number
-  stlPath?: string   // ex: '/stl/tilapia.stl' — se fornecido, carrega o arquivo
+  stlPath?: string
+  stlScale?: number  // 0.5–2.0, default 1.0
 }
 
-export default function ShapePreview({ formato, diametro, altura, stlPath }: Props) {
+export default function ShapePreview({ formato, diametro, altura, stlPath, stlScale = 1 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -47,7 +48,6 @@ export default function ShapePreview({ formato, diametro, altura, stlPath }: Pro
         controls.enableDamping = true
         controls.dampingFactor = 0.08
 
-        // Luz
         scene.add(new THREE.AmbientLight(0xffffff, 0.65))
         const dir = new THREE.DirectionalLight(0xffffff, 1.2)
         dir.position.set(200, 300, 200)
@@ -61,7 +61,6 @@ export default function ShapePreview({ formato, diametro, altura, stlPath }: Pro
         let mesh: import('three').Mesh
 
         if (stlPath) {
-          // Carrega STL real
           const { STLLoader } = await import('three/examples/jsm/loaders/STLLoader.js')
           if (disposed) return
           const loader = new STLLoader()
@@ -73,27 +72,30 @@ export default function ShapePreview({ formato, diametro, altura, stlPath }: Pro
           geo.center()
           mesh = new THREE.Mesh(geo, mat)
           mesh.castShadow = true
+          mesh.scale.setScalar(stlScale)
 
+          // Senta na mesa: calcula bounding box após escala, move base para y=0
           const box = new THREE.Box3().setFromObject(mesh)
           const size = box.getSize(new THREE.Vector3())
+          mesh.position.y = size.y / 2
+
           const maxDim = Math.max(size.x, size.y, size.z)
           camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5)
-          camera.lookAt(0, 0, 0)
+          camera.lookAt(0, size.y / 2, 0)
           controls.minDistance = maxDim * 0.4
           controls.maxDistance = maxDim * 6
 
           const grid = new THREE.GridHelper(maxDim * 3, 10, 0xe5d9c1, 0xe5d9c1)
-          grid.position.y = -size.y / 2
           scene.add(grid)
         } else {
-          // Geometria paramétrica (cilindro / cubo)
+          // Geometria paramétrica — base em y=0
           const geo = formato === 'cubo'
             ? new THREE.BoxGeometry(diametro, altura, diametro)
             : new THREE.CylinderGeometry(diametro / 2, diametro / 2, altura, 48)
 
           mesh = new THREE.Mesh(geo, mat)
           mesh.castShadow = true
-          mesh.position.y = formato === 'cubo' ? 0 : altura / 2
+          mesh.position.y = altura / 2  // base na mesa
 
           const maxDim = Math.max(diametro, altura)
           camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5)
@@ -102,7 +104,6 @@ export default function ShapePreview({ formato, diametro, altura, stlPath }: Pro
           controls.maxDistance = maxDim * 5
 
           const grid = new THREE.GridHelper(maxDim * 3, 10, 0xe5d9c1, 0xe5d9c1)
-          grid.position.y = formato === 'cubo' ? -altura / 2 : 0
           scene.add(grid)
         }
 
@@ -138,7 +139,7 @@ export default function ShapePreview({ formato, diametro, altura, stlPath }: Pro
       controls?.dispose()
       renderer?.dispose()
     }
-  }, [formato, diametro, altura, stlPath])
+  }, [formato, diametro, altura, stlPath, stlScale])
 
   return (
     <canvas
