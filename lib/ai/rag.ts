@@ -86,10 +86,21 @@ export async function retrieveContext(query: string, limit = 5): Promise<string>
       if (tacoCtx) parts.push(tacoCtx)
     }
 
-    // Busca semântica na KB (quando embeddings estiverem indexados)
-    // const embedding = await generateEmbedding(query)
-    // const { data } = await supabase.rpc('match_kb_embeddings', { query_embedding: embedding, match_count: limit })
-    // if (data) parts.push(data.map(c => c.content).join('\n\n'))
+    // Busca semântica na KB via pgvector
+    const embedding = await generateEmbedding(query)
+    const { data: kbData } = await supabase.rpc('match_kb_embeddings', {
+      query_embedding: embedding,
+      match_count: limit,
+    })
+    if (kbData && kbData.length > 0) {
+      const kbCtx = kbData
+        .filter((c: { similarity: number }) => c.similarity > 0.3)
+        .map((c: { content: string; metadata: { fonte?: string } }) =>
+          `[Fonte: ${c.metadata?.fonte ?? '—'}]\n${c.content}`
+        )
+        .join('\n\n')
+      if (kbCtx) parts.push(`## Base de Conhecimento MIA\n\n${kbCtx}`)
+    }
 
     return parts.join('\n\n---\n\n')
   } catch {

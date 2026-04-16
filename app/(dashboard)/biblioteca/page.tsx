@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
-import { Search, Library, Droplets, BarChart3, Sliders, Table2, FileText, AlertTriangle } from 'lucide-react'
+import { Search, Library, Droplets, BarChart3, Sliders, Table2, FileText, AlertTriangle, Upload, BookMarked, ExternalLink, CheckCircle2, Loader2 } from 'lucide-react'
+import type { ArxivEntry } from '@/app/api/arxiv/route'
 
 /* ─── DADOS ─── */
 
@@ -177,13 +178,87 @@ const ABAS = [
   { id: 'taco', label: 'TACO', icon: Table2 },
   { id: 'troubleshooting', label: 'Diagnóstico', icon: AlertTriangle },
   { id: 'amidos', label: 'Amidos', icon: FileText },
+  { id: 'artigos', label: 'Artigos KB', icon: Upload },
+  { id: 'pesquisar', label: 'Pesquisar', icon: BookMarked },
 ]
 
-type AbaId = 'hidrocoloides' | 'reologia' | 'parametros' | 'taco' | 'troubleshooting' | 'amidos'
+type AbaId = 'hidrocoloides' | 'reologia' | 'parametros' | 'taco' | 'troubleshooting' | 'amidos' | 'artigos' | 'pesquisar'
+
+// ---------------------------------------------------------------------------
+// Queries padrão para impressão alimentar com extrusão por deslocamento positivo
+// ---------------------------------------------------------------------------
+const QUERIES_SUGERIDAS = [
+  'food 3D printing positive displacement extrusion',
+  'food bioprinting syringe extrusion hydrocolloid',
+  'positive displacement extruder food paste printing',
+  'food 3D printing rheology printability',
+  'food additive manufacturing texture modification',
+]
 
 export default function BibliotecaPage() {
   const [abaAtiva, setAbaAtiva] = useState<AbaId>('hidrocoloides')
   const [busca, setBusca] = useState('')
+
+  // ── Artigos KB ──
+  const [artTitle, setArtTitle] = useState('')
+  const [artSource, setArtSource] = useState('')
+  const [artCategory, setArtCategory] = useState('extrusao-deslocamento')
+  const [artContent, setArtContent] = useState('')
+  const [artLoading, setArtLoading] = useState(false)
+  const [artResult, setArtResult] = useState<{ ok: boolean; msg: string } | null>(null)
+
+  async function submeterArtigo() {
+    if (artContent.trim().length < 100) { setArtResult({ ok: false, msg: 'Cole pelo menos 100 caracteres de conteúdo.' }); return }
+    setArtLoading(true); setArtResult(null)
+    try {
+      const res = await fetch('/api/kb/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: artTitle, source: artSource, category: artCategory, content: artContent }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setArtResult({ ok: true, msg: `Indexado com sucesso! ${data.chunks} trecho(s) adicionado(s) à base.` })
+        setArtTitle(''); setArtSource(''); setArtContent('')
+      } else {
+        setArtResult({ ok: false, msg: data.error ?? 'Erro ao indexar.' })
+      }
+    } catch {
+      setArtResult({ ok: false, msg: 'Erro de rede.' })
+    }
+    setArtLoading(false)
+  }
+
+  // ── Pesquisar arXiv ──
+  const [arxivQuery, setArxivQuery] = useState(QUERIES_SUGERIDAS[0])
+  const [arxivResults, setArxivResults] = useState<ArxivEntry[]>([])
+  const [arxivLoading, setArxivLoading] = useState(false)
+  const [arxivAdded, setArxivAdded] = useState<Set<string>>(new Set())
+  const [arxivAdding, setArxivAdding] = useState<string | null>(null)
+
+  async function buscarArxiv() {
+    setArxivLoading(true)
+    try {
+      const res = await fetch(`/api/arxiv?q=${encodeURIComponent(arxivQuery)}&max=12`)
+      const data = await res.json()
+      setArxivResults(Array.isArray(data) ? data : [])
+    } catch {
+      setArxivResults([])
+    }
+    setArxivLoading(false)
+  }
+
+  async function adicionarArxivKB(entry: ArxivEntry) {
+    setArxivAdding(entry.id)
+    const content = `${entry.title}\n\nAutores: ${entry.authors}\nPublicado: ${entry.published}\nCategoria arXiv: ${entry.categories}\n\n${entry.summary}`
+    await fetch('/api/kb/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: entry.title, source: entry.link, category: 'artigo-cientifico', content }),
+    })
+    setArxivAdded(prev => new Set([...prev, entry.id]))
+    setArxivAdding(null)
+  }
 
   const hidroFiltered = useMemo(() =>
     HIDROCOLOIDES.filter(h =>
@@ -435,6 +510,140 @@ export default function BibliotecaPage() {
                 <p className="text-xs text-[#58413c] leading-relaxed">{a.caracteristica}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* ARTIGOS KB */}
+        {abaAtiva === 'artigos' && (
+          <div className="max-w-2xl space-y-5">
+            <div className="bg-white rounded-2xl shadow-tonal p-5">
+              <h2 className="font-semibold text-sm mb-1">Adicionar artigo à base de conhecimento</h2>
+              <p className="text-xs text-[#58413c] mb-4">
+                Cole o texto de um artigo científico ou resultado experimental. A MIA fragmenta e indexa automaticamente para usar nas respostas.
+                Foco recomendado: <span className="text-[#003223] font-medium">extrusão por deslocamento positivo · impressão de alimentos</span>.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium text-[#211b0c] block mb-1">Título</label>
+                  <input value={artTitle} onChange={e => setArtTitle(e.target.value)} placeholder="ex: Printability of food gels..."
+                    className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-[#211b0c] block mb-1">Fonte / DOI / URL</label>
+                    <input value={artSource} onChange={e => setArtSource(e.target.value)} placeholder="ex: doi:10.1016/..."
+                      className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-[#211b0c] block mb-1">Categoria</label>
+                    <select value={artCategory} onChange={e => setArtCategory(e.target.value)}
+                      className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20">
+                      <option value="extrusao-deslocamento">Extrusão deslocamento positivo</option>
+                      <option value="reologia">Reologia</option>
+                      <option value="hidrocoloides">Hidrocolóides</option>
+                      <option value="experimento">Resultado experimental</option>
+                      <option value="artigo-cientifico">Artigo científico (geral)</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-[#211b0c] block mb-1">Conteúdo do artigo</label>
+                  <textarea value={artContent} onChange={e => setArtContent(e.target.value)} rows={10}
+                    placeholder="Cole aqui o texto completo (abstract, métodos, resultados, conclusão)..."
+                    className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20 font-mono resize-y" />
+                  <p className="text-[10px] text-[#bfc9c2] mt-1">{artContent.split(/\s+/).filter(Boolean).length} palavras</p>
+                </div>
+                <button onClick={submeterArtigo} disabled={artLoading}
+                  className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-50 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+                  {artLoading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  {artLoading ? 'Indexando…' : 'Indexar na MIA'}
+                </button>
+                {artResult && (
+                  <div className={`flex items-start gap-2 p-3 rounded-lg text-xs ${artResult.ok ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+                    {artResult.ok ? <CheckCircle2 size={13} className="flex-shrink-0 mt-0.5" /> : <span className="flex-shrink-0">⚠</span>}
+                    {artResult.msg}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="p-4 bg-[#003223]/5 border border-[#003223]/10 rounded-xl text-xs text-[#58413c] space-y-1.5">
+              <p className="font-semibold text-[#003223]">Boas fontes para indexar</p>
+              <p>• <strong>Journal of Food Engineering</strong> — imprimibilidade, reologia</p>
+              <p>• <strong>Food Hydrocolloids</strong> — hidrocolóides, géis</p>
+              <p>• <strong>LWT – Food Science & Technology</strong> — análogos, texturas</p>
+              <p>• <strong>arXiv (cs.RO / q-bio)</strong> — bioprintng, extrusão mecânica</p>
+              <p>• <strong>Seus próprios resultados</strong> — formulação, parâmetros, fotos, avaliação sensorial</p>
+            </div>
+          </div>
+        )}
+
+        {/* PESQUISAR arXiv */}
+        {abaAtiva === 'pesquisar' && (
+          <div className="space-y-5">
+            <div className="bg-white rounded-2xl shadow-tonal p-5">
+              <h2 className="font-semibold text-sm mb-1">Pesquisar artigos científicos</h2>
+              <p className="text-xs text-[#58413c] mb-4">Busca no arXiv em tempo real. Encontrou algo relevante? Clique em &quot;Adicionar à MIA&quot; para indexar.</p>
+
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {QUERIES_SUGERIDAS.map(q => (
+                  <button key={q} onClick={() => setArxivQuery(q)}
+                    className={`px-2.5 py-1 rounded-full text-xs border transition-colors ${arxivQuery === q ? 'bg-[#003223] text-white border-[#003223]' : 'border-[#e5d9c1] text-[#58413c] hover:border-[#003223]/30'}`}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <input value={arxivQuery} onChange={e => setArxivQuery(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && buscarArxiv()}
+                  placeholder="Ex: food 3D printing rheology..."
+                  className="flex-1 bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
+                <button onClick={buscarArxiv} disabled={arxivLoading}
+                  className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-50 text-white text-sm px-4 py-2 rounded-lg transition-colors">
+                  {arxivLoading ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
+                  {arxivLoading ? 'Buscando…' : 'Buscar'}
+                </button>
+              </div>
+            </div>
+
+            {arxivResults.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs text-[#58413c]">{arxivResults.length} resultado(s) — clique em &quot;Adicionar à MIA&quot; nos que forem relevantes.</p>
+                {arxivResults.map(entry => {
+                  const added = arxivAdded.has(entry.id)
+                  const adding = arxivAdding === entry.id
+                  return (
+                    <div key={entry.id} className="bg-white rounded-2xl shadow-tonal p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold leading-snug mb-1">{entry.title}</h3>
+                          <p className="text-xs text-[#58413c] mb-1">{entry.authors} · {entry.published}</p>
+                          {entry.categories && (
+                            <span className="text-[10px] font-mono bg-[rgba(0,50,35,0.06)] text-[#003223] px-1.5 py-0.5 rounded border border-[#e5d9c1] mr-2">{entry.categories}</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-1.5 flex-shrink-0">
+                          <a href={entry.link} target="_blank" rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[11px] text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-2 py-1 rounded-lg transition-colors">
+                            <ExternalLink size={10} /> Ver artigo
+                          </a>
+                          <button onClick={() => !added && adicionarArxivKB(entry)} disabled={added || adding}
+                            className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg transition-colors ${added ? 'bg-green-50 border border-green-200 text-green-700 cursor-default' : 'bg-[#003223] hover:bg-[#004d35] text-white'} disabled:opacity-60`}>
+                            {adding ? <Loader2 size={10} className="animate-spin" /> : added ? <CheckCircle2 size={10} /> : <Upload size={10} />}
+                            {adding ? 'Adicionando…' : added ? 'Adicionado' : 'Adicionar à MIA'}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-[#58413c] leading-relaxed mt-2 line-clamp-3">{entry.summary}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {!arxivLoading && arxivResults.length === 0 && arxivQuery && (
+              <p className="text-center text-sm text-[#58413c] py-8">Clique em &quot;Buscar&quot; para pesquisar no arXiv.</p>
+            )}
           </div>
         )}
       </div>

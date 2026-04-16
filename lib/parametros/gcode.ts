@@ -3,11 +3,9 @@
  *
  * Modelo de extrusão:
  *   E (mm de curso do pistão) = Σ(segmento_mm × E_per_mm)
- *   E_per_mm = (d_ponteira / d_seringa)² × fator_calibração
+ *   E_per_mm = (d_ponteira / d_seringa)²
  *
- * O eixo E no firmware deve estar configurado para:
- *   steps/mm = (steps_motor_por_rev × microstepping) / (passo_fuso_ou_engrenagem)
- * (usuário informará steps/mm em etapa futura; por ora, E em mm de curso real do pistão)
+ * O ajuste fino de fluxo é feito no host da BioedTech após a impressão.
  */
 
 import { SYRINGES, calcEPerMm } from './extrusion'
@@ -19,7 +17,6 @@ export interface GCodeConfig {
   ponteira_mm: number
   layer_height_mm: number
   print_speed_mm_s: number
-  fator_calibracao: number    // %, default 100. Ajuste empírico pós-calibração.
   temperatura_c: number | null
   // Dimensões da peça
   diametro_mm: number         // cilindro: diâmetro; cubo: aresta
@@ -32,8 +29,7 @@ const BED_CY = 100 // centro da mesa Y
 
 export function generateGCode(cfg: GCodeConfig): string {
   const syringe = SYRINGES.find(s => s.volume_ml === cfg.seringa_ml)!
-  const ePerMmTeorico = calcEPerMm(cfg.ponteira_mm, syringe.diameter_mm)
-  const ePerMm = ePerMmTeorico * (cfg.fator_calibracao / 100)
+  const ePerMm = calcEPerMm(cfg.ponteira_mm, syringe.diameter_mm)
   const speedF = Math.round(cfg.print_speed_mm_s * 60)
   const lh = cfg.layer_height_mm
   const layers = Math.ceil(cfg.altura_mm / lh)
@@ -49,9 +45,7 @@ export function generateGCode(cfg: GCodeConfig): string {
     `; Velocidade   : ${cfg.print_speed_mm_s} mm/s`,
     `; Temperatura  : ${cfg.temperatura_c ?? 'Ambiente'}°C`,
     `; ─────────────────────────────────────────`,
-    `; E/mm teórico : (${cfg.ponteira_mm}/${syringe.diameter_mm})² = ${ePerMmTeorico.toFixed(6)} mm pistão / mm percurso`,
-    `; Calibração   : ${cfg.fator_calibracao}%`,
-    `; E/mm efetivo : ${ePerMm.toFixed(6)} mm pistão / mm percurso`,
+    `; E/mm          : (${cfg.ponteira_mm}/${syringe.diameter_mm})² = ${ePerMm.toFixed(6)} mm pistão / mm percurso`,
     `; ============================================================`,
     ``,
     `G28         ; Home all axes`,

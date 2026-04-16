@@ -99,7 +99,6 @@ export default function ParametrosPage() {
   const [formulacaoId, setFormulacaoId] = useState('')
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [temperatura, setTemperatura] = useState('')
-  const [ajusteFluxo, setAjusteFluxo] = useState(0)   // -30 a +30, default 0
 
   const [gcode, setGcode] = useState('')
   const [showGcode, setShowGcode] = useState(false)
@@ -139,8 +138,7 @@ export default function ParametrosPage() {
   const qualSpec = QUALIDADES.find(q => q.id === qualidade)!
   const layerHeight = parseFloat((ponteira * qualSpec.fator).toFixed(2))
   const printSpeed = qualidade === 'fina' ? 8 : qualidade === 'normal' ? 15 : 22
-  const fatorCalib = 100 + ajusteFluxo
-  const ePerMm = calcEPerMm(ponteira, syringeSpec.diameter_mm) * (fatorCalib / 100)
+  const ePerMm = calcEPerMm(ponteira, syringeSpec.diameter_mm)
   const formulacaoNome = formulacoes.find(f => f.id === formulacaoId)?.nome ?? 'Sem formulação'
   const formatoSpec = FORMATOS.find(f => f.id === formato)
 
@@ -167,7 +165,6 @@ export default function ParametrosPage() {
       ponteira_mm: ponteira,
       layer_height_mm: layerHeight,
       print_speed_mm_s: printSpeed,
-      fator_calibracao: fatorCalib,
       temperatura_c: temperatura ? parseFloat(temperatura) : null,
       diametro_mm: dims.diametro,
       altura_mm: dims.altura,
@@ -193,6 +190,39 @@ export default function ParametrosPage() {
   async function copiarGcode() {
     await navigator.clipboard.writeText(gcode)
     setCopiado(true); setTimeout(() => setCopiado(false), 2000)
+  }
+
+  async function abrirNoPrusaSlicer() {
+    let blobUrl: string
+    let filename: string
+
+    if (formatoSpec?.stl) {
+      // STL real — busca do servidor
+      const resp = await fetch(formatoSpec.stl)
+      const buf = await resp.arrayBuffer()
+      const blob = new Blob([buf], { type: 'model/stl' })
+      blobUrl = URL.createObjectURL(blob)
+      filename = `${formato}.stl`
+    } else {
+      // Paramétrico — gera STL no cliente
+      const { generateCylinderSTL, generateCubeSTL, stlToObjectUrl } = await import('@/lib/parametros/stl-gen')
+      const buffer = formato === 'cubo'
+        ? generateCubeSTL(dims.diametro)
+        : generateCylinderSTL(dims.diametro, dims.altura)
+      blobUrl = stlToObjectUrl(buffer)
+      filename = `mia_${formato}_${dims.diametro}x${dims.altura}.stl`
+    }
+
+    // 1. Baixa o STL
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(blobUrl) }, 100)
+
+    // 2. Abre PrusaSlicer (protocolo registrado na instalação)
+    setTimeout(() => { window.location.href = 'prusaslicer://' }, 800)
   }
 
   function exportarIni() {
@@ -522,27 +552,6 @@ export default function ParametrosPage() {
               </div>
             </div>
 
-            {/* Ajuste de fluxo — explicação simples */}
-            <div className="mb-5 p-4 bg-white border border-[#e5d9c1] rounded-xl">
-              <div className="flex justify-between mb-1.5">
-                <label className="text-xs font-medium text-[#211b0c]">Ajuste de fluxo</label>
-                <span className={`text-xs font-semibold ${ajusteFluxo === 0 ? 'text-[#58413c]' : ajusteFluxo < 0 ? 'text-amber-600' : 'text-[#003223]'}`}>
-                  {ajusteFluxo === 0 ? 'Padrão' : ajusteFluxo > 0 ? `+${ajusteFluxo}% material` : `${ajusteFluxo}% material`}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[10px] text-[#58413c] w-16 text-right">Menos</span>
-                <input type="range" min={-30} max={30} step={5} value={ajusteFluxo}
-                  onChange={e => setAjusteFluxo(parseInt(e.target.value))}
-                  className="flex-1 accent-[#003223]" />
-                <span className="text-[10px] text-[#58413c] w-12">Mais</span>
-              </div>
-              <p className="text-xs text-[#58413c] flex gap-1.5">
-                <Info size={11} className="flex-shrink-0 mt-0.5" />
-                A pasta saiu em excesso? Arraste para esquerda. Faltou material na peça? Arraste para direita. Dexe no centro para o cálculo padrão.
-              </p>
-            </div>
-
             {/* Resumo */}
             <div className="p-4 bg-white border border-[#e5d9c1] rounded-xl text-xs">
               <p className="font-semibold mb-2.5">Resumo antes de gerar</p>
@@ -611,17 +620,14 @@ export default function ParametrosPage() {
                 ))}
               </div>
 
-              {ajusteFluxo !== 0 && (
-                <p className="text-xs text-[#58413c] mt-3 flex gap-1.5">
-                  <Info size={11} className="flex-shrink-0 mt-0.5" />
-                  Ajuste de fluxo aplicado: {ajusteFluxo > 0 ? `+${ajusteFluxo}%` : `${ajusteFluxo}%`}
-                </p>
-              )}
-
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-wrap gap-2 mt-4">
                 <button onClick={exportarIni}
                   className="flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-3 py-1.5 rounded-lg transition-colors">
                   <Download size={11} /> Config PrusaSlicer (.ini)
+                </button>
+                <button onClick={abrirNoPrusaSlicer}
+                  className="flex items-center gap-1.5 text-xs bg-[#003223] hover:bg-[#004d35] text-white px-3 py-1.5 rounded-lg transition-colors">
+                  <Download size={11} /> STL + Abrir PrusaSlicer
                 </button>
               </div>
             </div>
