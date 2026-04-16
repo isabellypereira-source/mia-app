@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   ArrowLeft, ArrowRight, CheckCircle, Copy, CheckCheck,
-  Download, Lock, Sparkles, SlidersHorizontal, Info,
+  Download, Sparkles, SlidersHorizontal, Info,
 } from 'lucide-react'
 import {
   SYRINGES, MACHINES, calcEPerMm, massToVolumeMm3, caloriesToMassG,
@@ -283,25 +283,16 @@ export default function ParametrosPage() {
         {passo === 'formato' && (
           <div>
             <h2 className="text-base font-semibold mb-1">Qual é o formato da peça?</h2>
-            <p className="text-xs text-[#58413c] mb-5">Cilindro e Cubo são gratuitos para testes. Formatos temáticos disponíveis como add-on.</p>
+            <p className="text-xs text-[#58413c] mb-5">Escolha o formato da sua peça. Cilindro e Cubo são paramétricos; os demais carregam modelos 3D.</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {FORMATOS.map(f => (
                 <div key={f.id} className="relative">
-                  {f.pago ? (
-                    <div className="p-3 rounded-xl border border-[#e5d9c1] bg-[#fff2da] opacity-55 cursor-not-allowed select-none h-full">
-                      <Lock size={10} className="absolute top-2 right-2 text-[#58413c]" />
-                      <span className="text-xl mb-1.5 block">{f.emoji}</span>
-                      <p className="text-xs font-medium leading-tight">{f.label}</p>
-                      <p className="text-[10px] text-[#003223] mt-0.5 font-medium">{f.preco}</p>
-                    </div>
-                  ) : (
-                    <button onClick={() => setFormato(f.id)}
-                      className={`w-full p-3 rounded-xl border text-left transition-all h-full ${formato === f.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                      <span className="text-xl mb-1.5 block">{f.emoji}</span>
-                      <p className="text-xs font-medium leading-tight">{f.label}</p>
-                      <p className="text-[10px] text-[#58413c] mt-0.5">{f.desc}</p>
-                    </button>
-                  )}
+                  <button onClick={() => setFormato(f.id)}
+                    className={`w-full p-3 rounded-xl border text-left transition-all h-full ${formato === f.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
+                    <span className="text-xl mb-1.5 block">{f.emoji}</span>
+                    <p className="text-xs font-medium leading-tight">{f.label}</p>
+                    <p className="text-[10px] text-[#58413c] mt-0.5">{f.desc}</p>
+                  </button>
                 </div>
               ))}
             </div>
