@@ -4,65 +4,84 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   ArrowLeft, ArrowRight, CheckCircle, Copy, CheckCheck,
-  Download, Lock, Info, SlidersHorizontal, Sparkles,
+  Download, Lock, Sparkles, SlidersHorizontal, Info,
 } from 'lucide-react'
 import {
-  SYRINGES, calcEPerMm, massToVolumeMm3, caloriesToMassG,
-  cylinderDimsFromVolume, cubeSideFromVolume, flowRateMm3s, pistonSpeedMmS,
+  SYRINGES, MACHINES, calcEPerMm, massToVolumeMm3, caloriesToMassG,
+  cylinderDimsFromVolume, cubeSideFromVolume, type MachineId,
 } from '@/lib/parametros/extrusion'
 import { generateGCode, type GCodeConfig } from '@/lib/parametros/gcode'
 
-// Viewer 3D leve (Three.js direto, sem react-three-fiber)
 const ShapePreview = dynamic(
   () => import('@/components/parametros/ShapePreview'),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-[280px] text-xs text-[#58413c]">Carregando viewer…</div> },
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[280px] text-xs text-[#58413c]">Carregando…</div> },
 )
 
 // ---------------------------------------------------------------------------
-// Tipos e constantes
+// Dados
 // ---------------------------------------------------------------------------
 
-type Passo = 'formato' | 'tamanho' | 'seringa' | 'ponteira' | 'resolucao' | 'formulacao' | 'resultado'
-
-const PASSOS: Passo[] = ['formato', 'tamanho', 'seringa', 'ponteira', 'resolucao', 'formulacao', 'resultado']
+type Passo = 'formato' | 'tamanho' | 'seringa' | 'ponteira' | 'qualidade' | 'ajustes' | 'resultado'
+const PASSOS: Passo[] = ['formato', 'tamanho', 'seringa', 'ponteira', 'qualidade', 'ajustes', 'resultado']
 const PASSO_LABEL: Record<Passo, string> = {
   formato: 'Formato', tamanho: 'Tamanho', seringa: 'Seringa',
-  ponteira: 'Ponteira', resolucao: 'Resolução', formulacao: 'Formulação', resultado: 'Resultado',
+  ponteira: 'Ponteira', qualidade: 'Qualidade', ajustes: 'Ajustes', resultado: 'Resultado',
 }
 
 const FORMATOS = [
-  { id: 'cilindro', label: 'Cilindro', emoji: '🟤', desc: 'Padrão para testes de extrusão e flow', pago: false },
-  { id: 'cubo',     label: 'Cubo',     emoji: '🟫', desc: 'Avaliação de estabilidade estrutural',  pago: false },
-  { id: 'capivara', label: 'Capivara', emoji: '🦫', desc: 'Cookie temático premium',               pago: true, preco: 'R$ 9,90' },
-  { id: 'tilapia',  label: 'Tilápia',  emoji: '🐟', desc: 'Análogo de peixe estruturado',          pago: true, preco: 'R$ 14,90' },
-  { id: 'coelho',   label: 'Coelho',   emoji: '🐰', desc: 'Formato festivo para produtos especiais', pago: true, preco: 'R$ 12,90' },
-]
+  { id: 'cilindro',    label: 'Cilindro',        emoji: '🟤', desc: 'Teste padrão de extrusão',        pago: false, stl: null          },
+  { id: 'cubo',        label: 'Cubo',             emoji: '🟫', desc: 'Teste de estabilidade estrutural', pago: false, stl: null          },
+  { id: 'coracao',     label: 'Coração',          emoji: '🩷', desc: 'Clássico, para produtos especiais', pago: true, preco: 'R$ 9,90',  stl: '/stl/coracao.stl'     },
+  { id: 'estrela',     label: 'Estrela',          emoji: '⭐', desc: 'Decorativo e festivo',             pago: true, preco: 'R$ 9,90',  stl: '/stl/estrela.stl'     },
+  { id: 'tilapia',     label: 'Filé de Tilápia',  emoji: '🐟', desc: 'Análogo de peixe estruturado',    pago: true, preco: 'R$ 14,90', stl: '/stl/tilapia.stl'     },
+  { id: 'flor-lotus',  label: 'Flor de Lótus',   emoji: '🌸', desc: 'Alta resolução, look premium',     pago: true, preco: 'R$ 12,90', stl: '/stl/flor-lotus.stl'  },
+  { id: 'mandala',     label: 'Mandala',          emoji: '🔮', desc: 'Detalhe fino, ideal para cookies', pago: true, preco: 'R$ 12,90', stl: '/stl/mandala.stl'     },
+  { id: 'arabesco',    label: 'Arabesco',         emoji: '🌀', desc: 'Padrão geométrico elegante',       pago: true, preco: 'R$ 12,90', stl: '/stl/arabesco.stl'    },
+  { id: 'croissant',   label: 'Croissant',        emoji: '🥐', desc: 'Formato de panificação',           pago: true, preco: 'R$ 9,90',  stl: '/stl/croissant.stl'   },
+  { id: 'cogumelo',    label: 'Cogumelo',         emoji: '🍄', desc: 'Formato temático fofo',            pago: true, preco: 'R$ 9,90',  stl: '/stl/cogumelo.stl'    },
+  { id: 'snoopy',      label: 'Snoopy',           emoji: '🐾', desc: 'Personagem icônico',               pago: true, preco: 'R$ 9,90',  stl: '/stl/snoopy.stl'      },
+  { id: 'stitch',      label: 'Stitch',           emoji: '💙', desc: 'Personagem favorito',              pago: true, preco: 'R$ 9,90',  stl: '/stl/stitch.stl'      },
+  { id: 'pacman',      label: 'Pac-Man',          emoji: '🎮', desc: 'Clássico dos games',               pago: true, preco: 'R$ 9,90',  stl: '/stl/pacman.stl'      },
+  { id: 'gatinho',     label: 'Gatinho',          emoji: '🐱', desc: 'Fofura garantida',                 pago: true, preco: 'R$ 9,90',  stl: '/stl/gatinho.stl'     },
+  { id: 'boneco-neve', label: 'Boneco de Neve',   emoji: '⛄', desc: 'Temático natalino',                pago: true, preco: 'R$ 9,90',  stl: '/stl/boneco-neve.stl' },
+  { id: 'crocodilo',   label: 'Crocodilo',        emoji: '🐊', desc: 'Detalhe de escamas',               pago: true, preco: 'R$ 12,90', stl: '/stl/crocodilo.stl'   },
+  { id: 'mandala2',    label: 'Mandala II',       emoji: '🌐', desc: 'Variação de mandala mais densa',   pago: true, preco: 'R$ 12,90', stl: '/stl/mandala2.stl'    },
+] as const
 
 const PONTEIRAS = [
-  { value: 0.6,  label: '0,6 mm', cor: 'bg-pink-400',    corLabel: 'Rosa',            desc: 'Alta resolução — pastas lisas',             luerlock: true },
-  { value: 0.8,  label: '0,8 mm', cor: 'bg-emerald-400', corLabel: 'Verde-esmeralda', desc: 'Alta resolução — pastas lisas',             luerlock: true },
-  { value: 1.2,  label: '1,2 mm', cor: 'bg-gray-400',    corLabel: 'Cinza',           desc: 'Boa resolução — baixa granulometria',       luerlock: true },
-  { value: 1.6,  label: '1,6 mm', cor: 'bg-green-500',   corLabel: 'Verde',           desc: 'Uso geral — granulometria média',           luerlock: true },
-  { value: 3.0,  label: '3,0 mm', cor: 'bg-green-300',   corLabel: 'Verde claro',     desc: 'Pastas densas, fibrosas, muito granuladas', luerlock: true },
-  { value: 3.2,  label: '3,2 mm', cor: '',               corLabel: '—',               desc: 'Sem luerlock — similar à 3,0 mm',          luerlock: false },
+  { value: 0.6, label: '0,6 mm', cor: 'bg-pink-400',    corLabel: 'Rosa',          luerlock: true },
+  { value: 0.8, label: '0,8 mm', cor: 'bg-emerald-400', corLabel: 'Verde-esmeralda', luerlock: true },
+  { value: 1.2, label: '1,2 mm', cor: 'bg-gray-400',    corLabel: 'Cinza',         luerlock: true },
+  { value: 1.6, label: '1,6 mm', cor: 'bg-green-500',   corLabel: 'Verde',         luerlock: true },
+  { value: 3.0, label: '3,0 mm', cor: 'bg-green-300',   corLabel: 'Verde claro',   luerlock: true },
+  { value: 3.2, label: '3,2 mm', cor: 'bg-gray-200',    corLabel: '—',             luerlock: false },
 ]
 
-const RESOLUCOES = [
-  { id: 'alta',       label: 'Alta Definição', desc: 'Máximo detalhe, mais lento.',         fator: 0.4  },
-  { id: 'balanceado', label: 'Balanceado',     desc: 'Equilíbrio detalhe/velocidade.',      fator: 0.5  },
-  { id: 'otimizado',  label: 'Otimizado',      desc: 'Alta velocidade, menor definição.',   fator: 0.65 },
+// Sugestão de ponteira por tipo de pasta
+const TIPOS_PASTA = [
+  { id: 'lisa',      label: 'Lisa / purê / gel',          ponteira: 0.8,  emoji: '✨', dica: 'Pasta lisa e homogênea — use 0,8 mm (verde-esmeralda) para boa resolução.' },
+  { id: 'amido',     label: 'Com amido ou açúcar',         ponteira: 1.2,  emoji: '🌾', dica: 'Amido e açúcar podem cristalizar. Use 1,2 mm (cinza) para evitar entupimento.' },
+  { id: 'fibras',    label: 'Com fibras ou farinha',       ponteira: 1.6,  emoji: '🌿', dica: 'Fibras e farinhas exigem abertura maior. Use 1,6 mm (verde).' },
+  { id: 'densa',     label: 'Muito densa ou granulada',    ponteira: 3.0,  emoji: '🪨', dica: 'Pastas densas, fibrosas ou com pedaços visíveis. Use 3,0 mm (verde claro).' },
+  { id: 'proteina',  label: 'Base proteica (carne/peixe)', ponteira: 1.6,  emoji: '🥩', dica: 'Análogos de proteína animal tendem a ter fibras. Use 1,6 mm (verde).' },
+  { id: 'outro',     label: 'Não sei ainda',               ponteira: null, emoji: '🤔', dica: 'Faça um teste com 1,2 mm — é o ponto médio mais seguro.' },
 ]
 
-interface Formulacao { id: string; nome: string; ingredientes: { nome: string }[] }
+const QUALIDADES = [
+  { id: 'fina',    label: 'Fina',   desc: 'Máximo detalhe. Mais lenta.',        fator: 0.4,  velDesc: 'lenta'  },
+  { id: 'normal',  label: 'Normal', desc: 'Bom detalhe. Velocidade equilibrada.', fator: 0.5,  velDesc: 'média'  },
+  { id: 'rapida',  label: 'Rápida', desc: 'Menos detalhe. Mais produtiva.',      fator: 0.65, velDesc: 'rápida' },
+]
+
+interface Formulacao { id: string; nome: string }
 
 // ---------------------------------------------------------------------------
-// Componente principal
+// Página
 // ---------------------------------------------------------------------------
 
 export default function ParametrosPage() {
   const [passo, setPasso] = useState<Passo>('formato')
 
-  // Wizard state
   const [formato, setFormato] = useState('cilindro')
   const [tamanhoMode, setTamanhoMode] = useState<'massa' | 'calorias' | 'manual'>('massa')
   const [massa, setMassa] = useState('100')
@@ -72,15 +91,16 @@ export default function ParametrosPage() {
   const [manualDiam, setManualDiam] = useState('40')
   const [manualAltura, setManualAltura] = useState('40')
   const [manualLado, setManualLado] = useState('40')
+  const [machine, setMachine] = useState<MachineId>('bioender_pro')
   const [seringa, setSeringa] = useState<10 | 60>(10)
+  const [tipoPasta, setTipoPasta] = useState('')
   const [ponteira, setPonteira] = useState(0.8)
-  const [resolucao, setResolucao] = useState('otimizado')
+  const [qualidade, setQualidade] = useState('normal')
   const [formulacaoId, setFormulacaoId] = useState('')
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
-  const [fatorCalib, setFatorCalib] = useState(100)
   const [temperatura, setTemperatura] = useState('')
+  const [ajusteFluxo, setAjusteFluxo] = useState(0)   // -30 a +30, default 0
 
-  // Resultado
   const [gcode, setGcode] = useState('')
   const [showGcode, setShowGcode] = useState(false)
   const [copiado, setCopiado] = useState(false)
@@ -89,11 +109,17 @@ export default function ParametrosPage() {
     fetch('/api/formulacoes').then(r => r.json()).then(d => setFormulacoes(d || []))
   }, [])
 
+  // Aplica sugestão de ponteira quando tipo de pasta é selecionado
+  useEffect(() => {
+    const tipo = TIPOS_PASTA.find(t => t.id === tipoPasta)
+    if (tipo?.ponteira) setPonteira(tipo.ponteira)
+  }, [tipoPasta])
+
   // ---------------------------------------------------------------------------
-  // Cálculos derivados
+  // Cálculos
   // ---------------------------------------------------------------------------
 
-  function getDims(): { diametro: number; altura: number } {
+  function getDims() {
     if (tamanhoMode === 'manual') {
       if (formato === 'cubo') { const l = parseFloat(manualLado) || 40; return { diametro: l, altura: l } }
       return { diametro: parseFloat(manualDiam) || 40, altura: parseFloat(manualAltura) || 40 }
@@ -110,42 +136,33 @@ export default function ParametrosPage() {
 
   const dims = getDims()
   const syringeSpec = SYRINGES.find(s => s.volume_ml === seringa)!
-  const resolucaoSpec = RESOLUCOES.find(r => r.id === resolucao)!
-  const layerHeight = parseFloat((ponteira * resolucaoSpec.fator).toFixed(2))
-  const printSpeed = resolucao === 'alta' ? 8 : resolucao === 'balanceado' ? 15 : 22
-  const ePerMmTeorico = calcEPerMm(ponteira, syringeSpec.diameter_mm)
-  const ePerMmEfetivo = ePerMmTeorico * (fatorCalib / 100)
+  const qualSpec = QUALIDADES.find(q => q.id === qualidade)!
+  const layerHeight = parseFloat((ponteira * qualSpec.fator).toFixed(2))
+  const printSpeed = qualidade === 'fina' ? 8 : qualidade === 'normal' ? 15 : 22
+  const fatorCalib = 100 + ajusteFluxo
+  const ePerMm = calcEPerMm(ponteira, syringeSpec.diameter_mm) * (fatorCalib / 100)
   const formulacaoNome = formulacoes.find(f => f.id === formulacaoId)?.nome ?? 'Sem formulação'
-
-  // ---------------------------------------------------------------------------
-  // Navegação
-  // ---------------------------------------------------------------------------
+  const formatoSpec = FORMATOS.find(f => f.id === formato)
 
   const passoIdx = PASSOS.indexOf(passo)
 
-  function avancar() {
-    if (passo === 'formulacao') {
-      gerarResultado()
-    } else {
-      setPasso(PASSOS[passoIdx + 1])
-      window.scrollTo(0, 0)
-    }
-  }
+  // ---------------------------------------------------------------------------
+  // Ações
+  // ---------------------------------------------------------------------------
 
+  function avancar() {
+    if (passo === 'ajustes') { gerarResultado(); return }
+    setPasso(PASSOS[passoIdx + 1])
+    window.scrollTo(0, 0)
+  }
   function voltar() {
     if (passoIdx > 0) { setPasso(PASSOS[passoIdx - 1]); window.scrollTo(0, 0) }
   }
 
   function gerarResultado() {
-    setGcode(buildGCode())
-    setPasso('resultado')
-    window.scrollTo(0, 0)
-  }
-
-  function buildGCode() {
     const cfg: GCodeConfig = {
       formulacao_nome: formulacaoNome,
-      formato: formato as 'cilindro' | 'cubo',
+      formato: (formato === 'cilindro' || formato === 'cubo') ? formato : 'cilindro',
       seringa_ml: seringa,
       ponteira_mm: ponteira,
       layer_height_mm: layerHeight,
@@ -155,20 +172,23 @@ export default function ParametrosPage() {
       diametro_mm: dims.diametro,
       altura_mm: dims.altura,
     }
-    return generateGCode(cfg)
+    setGcode(generateGCode(cfg))
+    setPasso('resultado')
+    window.scrollTo(0, 0)
   }
 
-  function regenerarGCode() {
-    setGcode(buildGCode())
-  }
-
-  async function baixarGcode() {
-    const blob = new Blob([gcode], { type: 'text/plain' })
+  function download(content: string, filename: string, type = 'text/plain') {
+    const blob = new Blob([content], { type })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `mia_${formulacaoNome.replace(/\s+/g, '_')}_${formato}.gcode`; a.click()
-    URL.revokeObjectURL(url)
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url) }, 100)
   }
+
+  function baixarGcode() { download(gcode, `mia_${formulacaoNome.replace(/\s+/g, '_')}_${formato}.gcode`) }
 
   async function copiarGcode() {
     await navigator.clipboard.writeText(gcode)
@@ -191,20 +211,16 @@ export default function ParametrosPage() {
       `nozzle_diameter = ${ponteira}`,
       temperatura ? `temperature = ${temperatura}` : `; temperature = ambiente`,
       ``,
-      `; Gerado por MIA — Morphê Foods`,
+      `; MIA — Morphê Foods`,
       `; Formulação: ${formulacaoNome}`,
-      `; Seringa: ${seringa}mL — Ø${syringeSpec.diameter_mm}mm`,
-      `; E/mm: ${ePerMmEfetivo.toFixed(6)} mm pistão/mm percurso`,
+      `; Máquina: ${MACHINES.find(m => m.id === machine)?.label}`,
+      `; Seringa: ${seringa}mL | E/mm: ${ePerMm.toFixed(6)}`,
     ].join('\n')
-    const blob = new Blob([ini], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `mia_${formulacaoNome.replace(/\s+/g, '_')}.ini`; a.click()
-    URL.revokeObjectURL(url)
+    download(ini, `mia_${formulacaoNome.replace(/\s+/g, '_')}.ini`)
   }
 
   // ---------------------------------------------------------------------------
-  // Componentes internos
+  // Progress bar
   // ---------------------------------------------------------------------------
 
   const progressSteps = PASSOS.filter(p => p !== 'resultado')
@@ -220,9 +236,7 @@ export default function ParametrosPage() {
             <div key={p} className="flex items-center flex-1">
               {i > 0 && <div className={`h-px flex-1 mx-1 ${done ? 'bg-[#003223]' : 'bg-[#e5d9c1]'}`} />}
               <div className="flex flex-col items-center gap-0.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-colors ${
-                  done ? 'bg-[#003223] text-white' : active ? 'bg-[#003223] text-white' : 'bg-[#e5d9c1] text-[#bfc9c2]'
-                }`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-colors ${done ? 'bg-[#003223] text-white' : active ? 'bg-[#003223] text-white' : 'bg-[#e5d9c1] text-[#bfc9c2]'}`}>
                   {done ? <CheckCircle size={12} /> : i + 1}
                 </div>
                 <span className={`text-[9px] font-medium hidden sm:block ${active ? 'text-[#003223]' : 'text-[#bfc9c2]'}`}>{PASSO_LABEL[p]}</span>
@@ -235,7 +249,6 @@ export default function ParametrosPage() {
   }
 
   function NavButtons({ disableNext = false }: { disableNext?: boolean }) {
-    const isLast = passo === 'formulacao'
     return (
       <div className="flex justify-between mt-8">
         <button onClick={voltar} disabled={passoIdx === 0}
@@ -244,7 +257,7 @@ export default function ParametrosPage() {
         </button>
         <button onClick={avancar} disabled={disableNext}
           className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
-          {isLast ? <><Sparkles size={14} /> Gerar resultado</> : <>Próximo <ArrowRight size={14} /></>}
+          {passo === 'ajustes' ? <><Sparkles size={14} /> Gerar</> : <>Próximo <ArrowRight size={14} /></>}
         </button>
       </div>
     )
@@ -266,32 +279,27 @@ export default function ParametrosPage() {
       <div className="max-w-2xl mx-auto px-8 py-8">
         <ProgressBar />
 
-        {/* ── Passo 1: Formato ── */}
+        {/* ── 1. Formato ── */}
         {passo === 'formato' && (
           <div>
             <h2 className="text-base font-semibold mb-1">Qual é o formato da peça?</h2>
-            <p className="text-xs text-[#58413c] mb-5">Gratuitos para testes. Formatos temáticos disponíveis como add-on.</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <p className="text-xs text-[#58413c] mb-5">Cilindro e Cubo são gratuitos para testes. Formatos temáticos disponíveis como add-on.</p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {FORMATOS.map(f => (
                 <div key={f.id} className="relative">
                   {f.pago ? (
-                    <div className="p-4 rounded-xl border border-[#e5d9c1] bg-[#fff2da] opacity-55 cursor-not-allowed select-none">
-                      <Lock size={11} className="absolute top-2.5 right-2.5 text-[#58413c]" />
-                      <span className="text-2xl mb-2 block">{f.emoji}</span>
-                      <p className="text-sm font-medium">{f.label}</p>
-                      <p className="text-xs text-[#58413c] mt-0.5">{f.desc}</p>
-                      <p className="text-xs text-[#003223] mt-1 font-medium">{f.preco}</p>
+                    <div className="p-3 rounded-xl border border-[#e5d9c1] bg-[#fff2da] opacity-55 cursor-not-allowed select-none h-full">
+                      <Lock size={10} className="absolute top-2 right-2 text-[#58413c]" />
+                      <span className="text-xl mb-1.5 block">{f.emoji}</span>
+                      <p className="text-xs font-medium leading-tight">{f.label}</p>
+                      <p className="text-[10px] text-[#003223] mt-0.5 font-medium">{f.preco}</p>
                     </div>
                   ) : (
                     <button onClick={() => setFormato(f.id)}
-                      className={`w-full p-4 rounded-xl border text-left transition-all ${
-                        formato === f.id
-                          ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20'
-                          : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'
-                      }`}>
-                      <span className="text-2xl mb-2 block">{f.emoji}</span>
-                      <p className="text-sm font-medium">{f.label}</p>
-                      <p className="text-xs text-[#58413c] mt-0.5">{f.desc}</p>
+                      className={`w-full p-3 rounded-xl border text-left transition-all h-full ${formato === f.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
+                      <span className="text-xl mb-1.5 block">{f.emoji}</span>
+                      <p className="text-xs font-medium leading-tight">{f.label}</p>
+                      <p className="text-[10px] text-[#58413c] mt-0.5">{f.desc}</p>
                     </button>
                   )}
                 </div>
@@ -301,44 +309,54 @@ export default function ParametrosPage() {
           </div>
         )}
 
-        {/* ── Passo 2: Tamanho ── */}
+        {/* ── 2. Tamanho ── */}
         {passo === 'tamanho' && (
           <div>
             <h2 className="text-base font-semibold mb-1">Qual o tamanho da peça?</h2>
-            <p className="text-xs text-[#58413c] mb-5">Calcule a partir de propriedades nutricionais ou insira as dimensões manualmente.</p>
+            <p className="text-xs text-[#58413c] mb-5">Você pode definir pelo peso, pelas calorias, ou inserir o tamanho diretamente.</p>
 
-            <div className="flex gap-1 mb-6 p-1 bg-[#fff2da] rounded-xl w-fit">
+            <div className="flex gap-1 mb-5 p-1 bg-[#fff2da] rounded-xl w-fit">
               {(['massa', 'calorias', 'manual'] as const).map(m => (
                 <button key={m} onClick={() => setTamanhoMode(m)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    tamanhoMode === m ? 'bg-[#003223] text-white' : 'text-[#58413c] hover:bg-[#e5d9c1]/60'
-                  }`}>
-                  {m === 'massa' ? 'Por massa' : m === 'calorias' ? 'Por calorias' : 'Manual'}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors ${tamanhoMode === m ? 'bg-[#003223] text-white' : 'text-[#58413c] hover:bg-[#e5d9c1]/60'}`}>
+                  {m === 'massa' ? 'Pelo peso' : m === 'calorias' ? 'Pelas calorias' : 'Tamanho direto'}
                 </button>
               ))}
             </div>
 
             {tamanhoMode === 'massa' && (
               <div className="space-y-4">
-                <Field label="Massa desejada (g)">
+                <Field label="Quanto pesa a peça? (gramas)">
                   <NumInput value={massa} onChange={setMassa} min={1} />
                 </Field>
-                <Field label="Densidade da pasta (g/cm³)" hint="Pastas alimentares: 0,8–1,2. Padrão 1,0.">
-                  <NumInput value={densidade} onChange={setDensidade} step="0.1" min={0.5} max={2} />
+                <Field label="Densidade da pasta" hint="Maioria das pastas alimentares: deixe em 1,0.">
+                  <div className="flex items-center gap-2">
+                    <NumInput value={densidade} onChange={setDensidade} step="0.1" min={0.5} max={2} />
+                    <span className="text-xs text-[#58413c]">g/cm³</span>
+                  </div>
                 </Field>
               </div>
             )}
 
             {tamanhoMode === 'calorias' && (
               <div className="space-y-4">
-                <Field label="Meta calórica (kcal)">
-                  <NumInput value={calorias} onChange={setCalorias} min={10} />
+                <Field label="Quantas calorias deve ter a peça?">
+                  <div className="flex items-center gap-2">
+                    <NumInput value={calorias} onChange={setCalorias} min={10} />
+                    <span className="text-xs text-[#58413c]">kcal</span>
+                  </div>
                 </Field>
-                <Field label="Energia da formulação (kcal/100g)" hint="Veja na tabela nutricional da formulação.">
-                  <NumInput value={kcalPer100g} onChange={setKcalPer100g} min={10} />
+                <Field label="Calorias da sua formulação (por 100g)" hint="Veja na tabela nutricional da formulação.">
+                  <div className="flex items-center gap-2">
+                    <NumInput value={kcalPer100g} onChange={setKcalPer100g} min={10} />
+                    <span className="text-xs text-[#58413c]">kcal/100g</span>
+                  </div>
                 </Field>
-                <Field label="Densidade da pasta (g/cm³)">
-                  <NumInput value={densidade} onChange={setDensidade} step="0.1" min={0.5} />
+                <Field label="Densidade da pasta">
+                  <div className="flex items-center gap-2">
+                    <NumInput value={densidade} onChange={setDensidade} step="0.1" min={0.5} />
+                    <span className="text-xs text-[#58413c]">g/cm³</span>
+                  </div>
                 </Field>
               </div>
             )}
@@ -346,12 +364,12 @@ export default function ParametrosPage() {
             {tamanhoMode === 'manual' && (
               <div className="space-y-4">
                 {formato === 'cubo' ? (
-                  <Field label="Aresta do cubo (mm)">
+                  <Field label="Tamanho do lado (mm)">
                     <NumInput value={manualLado} onChange={setManualLado} min={5} />
                   </Field>
                 ) : (
                   <div className="flex gap-4">
-                    <Field label="Diâmetro (mm)">
+                    <Field label="Largura (mm)">
                       <NumInput value={manualDiam} onChange={setManualDiam} min={5} />
                     </Field>
                     <Field label="Altura (mm)">
@@ -362,122 +380,140 @@ export default function ParametrosPage() {
               </div>
             )}
 
-            {/* Preview das dimensões */}
-            <DimPreview
-              formato={formato}
-              dims={dims}
-              massaG={tamanhoMode === 'massa' ? parseFloat(massa) : tamanhoMode === 'calorias' ? caloriesToMassG(parseFloat(calorias)||200, parseFloat(kcalPer100g)||200) : null}
-            />
-
+            {/* Preview */}
+            <div className="mt-5 p-3 bg-[#003223]/5 border border-[#003223]/10 rounded-xl flex flex-wrap gap-5 text-sm">
+              <Stat label={formato === 'cubo' ? 'Lado' : 'Largura'} val={`${dims.diametro} mm`} />
+              {formato !== 'cubo' && <Stat label="Altura" val={`${dims.altura} mm`} />}
+              <Stat label="Volume" val={`${(formato === 'cilindro' ? Math.PI * (dims.diametro / 2) ** 2 * dims.altura / 1000 : dims.diametro ** 3 / 1000).toFixed(1)} cm³`} />
+              {tamanhoMode !== 'manual' && (
+                <Stat label="Peso"
+                  val={`${(tamanhoMode === 'massa' ? parseFloat(massa) : caloriesToMassG(parseFloat(calorias) || 200, parseFloat(kcalPer100g) || 200)).toFixed(1)} g`}
+                />
+              )}
+            </div>
             <NavButtons />
           </div>
         )}
 
-        {/* ── Passo 3: Seringa ── */}
+        {/* ── 3. Seringa + Máquina ── */}
         {passo === 'seringa' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Qual seringa você está usando?</h2>
-            <p className="text-xs text-[#58413c] mb-5">O diâmetro define o curso do pistão por mm de percurso impresso.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {SYRINGES.map(s => {
-                const e = calcEPerMm(ponteira, s.diameter_mm)
-                const pistao = pistonSpeedMmS(ponteira, s.diameter_mm, printSpeed)
-                return (
-                  <button key={s.volume_ml} onClick={() => setSeringa(s.volume_ml as 10 | 60)}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      seringa === s.volume_ml
-                        ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20'
-                        : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'
-                    }`}>
-                    <p className="text-sm font-semibold">{s.label}</p>
-                    <p className="text-xs text-[#58413c] mt-0.5">Ø{s.diameter_mm}mm · área {s.area_mm2.toFixed(0)} mm²</p>
-                    <div className="mt-2.5 pt-2.5 border-t border-[#e5d9c1] space-y-1 text-xs">
-                      <p>E/mm = <span className="font-mono font-semibold text-[#003223]">{e.toFixed(5)}</span> mm pistão/mm</p>
-                      <p className="text-[#58413c]">Pistão a {printSpeed}mm/s → <span className="font-mono">{pistao.toFixed(4)}</span> mm/s</p>
-                      <p className="text-[#58413c]">Fluxo = <span className="font-mono">{flowRateMm3s(ponteira, printSpeed).toFixed(2)}</span> mm³/s</p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex gap-2">
-              <Info size={13} className="text-amber-500 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-800">
-                Seringa maior → pistão avança menos por mm → mais controle para pastas viscosas. Seringa menor → mais sensível → melhor para pastas fluidas.
-              </p>
-            </div>
-            <NavButtons />
-          </div>
-        )}
-
-        {/* ── Passo 4: Ponteira ── */}
-        {passo === 'ponteira' && (
-          <div>
-            <h2 className="text-base font-semibold mb-1">Qual a ponteira (nozzle)?</h2>
-            <p className="text-xs text-[#58413c] mb-5">Guia de cores para luerlock. A granulometria dos ingredientes define o mínimo recomendado.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {PONTEIRAS.map(p => {
-                const e = calcEPerMm(p.value, syringeSpec.diameter_mm)
-                return (
-                  <button key={p.value} onClick={() => setPonteira(p.value)}
-                    className={`flex items-start gap-3 p-3 rounded-xl border text-left transition-all ${
-                      ponteira === p.value
-                        ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20'
-                        : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'
-                    }`}>
-                    <div className={`w-3.5 h-3.5 rounded-full flex-shrink-0 mt-0.5 ${p.cor}`} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{p.label} <span className="text-xs text-[#58413c] font-normal">· {p.corLabel}</span></p>
-                      <p className="text-xs text-[#58413c]">{p.desc}</p>
-                      <p className="text-xs font-mono text-[#003223] mt-0.5">E/mm: {e.toFixed(5)}</p>
-                      {!p.luerlock && <p className="text-xs text-amber-600">Sem luerlock</p>}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-            <NavButtons />
-          </div>
-        )}
-
-        {/* ── Passo 5: Resolução ── */}
-        {passo === 'resolucao' && (
-          <div>
-            <h2 className="text-base font-semibold mb-1">Qual a resolução de impressão?</h2>
-            <p className="text-xs text-[#58413c] mb-5">Define a altura de camada (% do diâmetro da ponteira) e a velocidade de impressão.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {RESOLUCOES.map(r => {
-                const lh = parseFloat((ponteira * r.fator).toFixed(2))
-                const spd = r.id === 'alta' ? 8 : r.id === 'balanceado' ? 15 : 22
-                return (
-                  <button key={r.id} onClick={() => setResolucao(r.id)}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      resolucao === r.id
-                        ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20'
-                        : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'
-                    }`}>
-                    <p className="text-sm font-semibold">{r.label}</p>
-                    <p className="text-xs text-[#58413c] mt-0.5">{r.desc}</p>
-                    <div className="mt-2.5 pt-2 border-t border-[#e5d9c1] text-xs space-y-0.5">
-                      <p className="text-[#003223]">Camada: <span className="font-semibold">{lh} mm</span></p>
-                      <p className="text-[#58413c]">Vel: {spd} mm/s</p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-            <NavButtons />
-          </div>
-        )}
-
-        {/* ── Passo 6: Formulação ── */}
-        {passo === 'formulacao' && (
-          <div>
-            <h2 className="text-base font-semibold mb-1">Formulação e ajustes finais</h2>
-            <p className="text-xs text-[#58413c] mb-5">Vincule a formulação para rastreabilidade e ajuste a calibração e temperatura.</p>
+            <h2 className="text-base font-semibold mb-1">Qual o seu equipamento?</h2>
+            <p className="text-xs text-[#58413c] mb-5">Selecione sua impressora e a seringa que está montada.</p>
 
             <div className="mb-5">
-              <label className="text-xs font-medium text-[#211b0c] block mb-1.5">Formulação</label>
+              <p className="text-xs font-medium text-[#211b0c] mb-2">Impressora</p>
+              <div className="grid grid-cols-2 gap-2">
+                {MACHINES.map(m => (
+                  <button key={m.id} onClick={() => setMachine(m.id as MachineId)}
+                    className={`p-3 rounded-xl border text-left transition-all ${machine === m.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
+                    <p className="text-sm font-semibold">{m.label}</p>
+                    <p className="text-xs text-[#58413c] mt-0.5">Morphê Food Printer</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium text-[#211b0c] mb-2">Seringa</p>
+              <div className="grid grid-cols-2 gap-3">
+                {SYRINGES.map(s => (
+                  <button key={s.volume_ml} onClick={() => setSeringa(s.volume_ml as 10 | 60)}
+                    className={`p-4 rounded-xl border text-left transition-all ${seringa === s.volume_ml ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
+                    <p className="text-2xl font-bold text-[#003223] mb-1">{s.volume_ml}<span className="text-sm font-normal ml-0.5">mL</span></p>
+                    <p className="text-xs text-[#58413c]">{s.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <NavButtons />
+          </div>
+        )}
+
+        {/* ── 4. Ponteira ── */}
+        {passo === 'ponteira' && (
+          <div>
+            <h2 className="text-base font-semibold mb-1">Qual ponteira você vai usar?</h2>
+            <p className="text-xs text-[#58413c] mb-5">As cores correspondem às tampas coloridas das seringas com luerlock.</p>
+
+            {/* Sugestão da MIA */}
+            <div className="mb-5 p-3 bg-[#003223]/5 border border-[#003223]/10 rounded-xl">
+              <p className="text-xs font-semibold text-[#003223] mb-2 flex items-center gap-1.5">
+                <Sparkles size={12} /> Sugestão da MIA — como é sua pasta?
+              </p>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {TIPOS_PASTA.map(t => (
+                  <button key={t.id} onClick={() => setTipoPasta(t.id)}
+                    className={`px-3 py-1 rounded-full text-xs transition-colors ${tipoPasta === t.id ? 'bg-[#003223] text-white' : 'bg-white border border-[#e5d9c1] text-[#58413c] hover:border-[#003223]/30'}`}>
+                    {t.emoji} {t.label}
+                  </button>
+                ))}
+              </div>
+              {tipoPasta && (
+                <div className="flex gap-1.5 mt-2">
+                  <Info size={12} className="text-[#003223] flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-[#003223]">
+                    {TIPOS_PASTA.find(t => t.id === tipoPasta)?.dica}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {PONTEIRAS.map(p => {
+                const sugerida = TIPOS_PASTA.find(t => t.id === tipoPasta)?.ponteira === p.value
+                return (
+                  <button key={p.value} onClick={() => setPonteira(p.value)}
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${ponteira === p.value ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
+                    <div className={`w-4 h-4 rounded-full flex-shrink-0 ${p.cor}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium">{p.label} <span className="text-xs text-[#58413c] font-normal">· {p.corLabel}</span></p>
+                        {sugerida && <span className="text-[10px] bg-[#003223] text-white px-1.5 py-0.5 rounded-full">sugerida</span>}
+                      </div>
+                      {!p.luerlock && <p className="text-xs text-amber-600 mt-0.5">Sem luerlock</p>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            <NavButtons />
+          </div>
+        )}
+
+        {/* ── 5. Qualidade ── */}
+        {passo === 'qualidade' && (
+          <div>
+            <h2 className="text-base font-semibold mb-1">Qual a qualidade de impressão?</h2>
+            <p className="text-xs text-[#58413c] mb-5">Quanto mais fina, mais detalhada e mais lenta.</p>
+            <div className="grid grid-cols-3 gap-3">
+              {QUALIDADES.map(q => {
+                const lh = parseFloat((ponteira * q.fator).toFixed(2))
+                return (
+                  <button key={q.id} onClick={() => setQualidade(q.id)}
+                    className={`p-4 rounded-xl border text-left transition-all ${qualidade === q.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
+                    <p className="text-sm font-semibold">{q.label}</p>
+                    <p className="text-xs text-[#58413c] mt-0.5 mb-2">{q.desc}</p>
+                    <div className="border-t border-[#e5d9c1] pt-2 text-xs">
+                      <p className="text-[#003223] font-medium">Camada: {lh} mm</p>
+                      <p className="text-[#58413c]">Velocidade {q.velDesc}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            <NavButtons />
+          </div>
+        )}
+
+        {/* ── 6. Ajustes finais ── */}
+        {passo === 'ajustes' && (
+          <div>
+            <h2 className="text-base font-semibold mb-1">Ajustes finais</h2>
+            <p className="text-xs text-[#58413c] mb-5">Opcionais — vincule sua formulação e ajuste conforme necessário.</p>
+
+            <div className="mb-5">
+              <label className="text-xs font-medium text-[#211b0c] block mb-1.5">Formulação (opcional)</label>
               <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}
                 className="w-full bg-white border border-[#e5d9c1] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30">
                 <option value="">Sem formulação (teste de parâmetros)</option>
@@ -486,43 +522,49 @@ export default function ParametrosPage() {
             </div>
 
             <div className="mb-5">
-              <label className="text-xs font-medium text-[#211b0c] block mb-1.5">Temperatura de impressão (opcional)</label>
+              <label className="text-xs font-medium text-[#211b0c] block mb-1.5">Temperatura (opcional)</label>
               <div className="flex items-center gap-2">
-                <NumInput value={temperatura} onChange={setTemperatura} placeholder="ex: 60" />
+                <input type="number" value={temperatura} onChange={e => setTemperatura(e.target.value)}
+                  placeholder="ex: 60"
+                  className="w-28 bg-white border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
                 <span className="text-xs text-[#58413c]">°C — vazio = temperatura ambiente</span>
               </div>
             </div>
 
-            <div className="mb-5">
+            {/* Ajuste de fluxo — explicação simples */}
+            <div className="mb-5 p-4 bg-white border border-[#e5d9c1] rounded-xl">
               <div className="flex justify-between mb-1.5">
-                <label className="text-xs font-medium text-[#211b0c]">Fator de calibração</label>
-                <span className="text-xs font-mono font-semibold text-[#003223]">{fatorCalib}%</span>
+                <label className="text-xs font-medium text-[#211b0c]">Ajuste de fluxo</label>
+                <span className={`text-xs font-semibold ${ajusteFluxo === 0 ? 'text-[#58413c]' : ajusteFluxo < 0 ? 'text-amber-600' : 'text-[#003223]'}`}>
+                  {ajusteFluxo === 0 ? 'Padrão' : ajusteFluxo > 0 ? `+${ajusteFluxo}% material` : `${ajusteFluxo}% material`}
+                </span>
               </div>
-              <input type="range" min={70} max={130} value={fatorCalib} onChange={e => setFatorCalib(parseInt(e.target.value))}
-                className="w-full accent-[#003223]" />
-              <p className="text-xs text-[#58413c] mt-1">
-                Padrão 100% = E calculado geometricamente ({ePerMmTeorico.toFixed(5)} mm/mm).
-                Aumente se falta material; reduza se excessivo.
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] text-[#58413c] w-16 text-right">Menos</span>
+                <input type="range" min={-30} max={30} step={5} value={ajusteFluxo}
+                  onChange={e => setAjusteFluxo(parseInt(e.target.value))}
+                  className="flex-1 accent-[#003223]" />
+                <span className="text-[10px] text-[#58413c] w-12">Mais</span>
+              </div>
+              <p className="text-xs text-[#58413c] flex gap-1.5">
+                <Info size={11} className="flex-shrink-0 mt-0.5" />
+                A pasta saiu em excesso? Arraste para esquerda. Faltou material na peça? Arraste para direita. Dexe no centro para o cálculo padrão.
               </p>
             </div>
 
             {/* Resumo */}
             <div className="p-4 bg-white border border-[#e5d9c1] rounded-xl text-xs">
-              <p className="font-semibold mb-2.5">Resumo</p>
+              <p className="font-semibold mb-2.5">Resumo antes de gerar</p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                 {[
-                  ['Formato', FORMATOS.find(f => f.id === formato)?.label ?? formato],
-                  ['Dimensões', `${dims.diametro}mm × ${dims.altura}mm`],
-                  ['Seringa', `${seringa}mL (Ø${syringeSpec.diameter_mm}mm)`],
-                  ['Ponteira', `Ø${ponteira}mm`],
-                  ['Camada', `${layerHeight}mm (${resolucaoSpec.label})`],
-                  ['Velocidade', `${printSpeed} mm/s`],
-                  ['E/mm efetivo', ePerMmEfetivo.toFixed(6)],
+                  ['Formato', formatoSpec?.label ?? formato],
+                  ['Dimensões', `${dims.diametro} × ${dims.altura} mm`],
+                  ['Impressora', MACHINES.find(m => m.id === machine)?.label ?? '—'],
+                  ['Seringa', `${seringa} mL`],
+                  ['Ponteira', `${ponteira} mm`],
+                  ['Camada', `${layerHeight} mm (${qualSpec.label})`],
                 ].map(([k, v]) => (
-                  <>
-                    <span key={`k-${k}`} className="text-[#58413c]">{k}</span>
-                    <span key={`v-${k}`} className="font-medium font-mono text-[#211b0c]">{v}</span>
-                  </>
+                  <><span key={`k-${k}`} className="text-[#58413c]">{k}</span><span key={`v-${k}`} className="font-medium">{v}</span></>
                 ))}
               </div>
             </div>
@@ -536,8 +578,8 @@ export default function ParametrosPage() {
           <div>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-base font-semibold">Parâmetros gerados ✓</h2>
-                <p className="text-xs text-[#58413c]">{formulacaoNome} · {FORMATOS.find(f => f.id === formato)?.label} {dims.diametro}×{dims.altura}mm</p>
+                <h2 className="text-base font-semibold">Pronto! ✓</h2>
+                <p className="text-xs text-[#58413c]">{formulacaoNome} · {formatoSpec?.label} {dims.diametro}×{dims.altura}mm</p>
               </div>
               <button onClick={() => setPasso('formato')}
                 className="text-xs text-[#58413c] hover:text-[#211b0c] flex items-center gap-1 border border-[#e5d9c1] px-3 py-1.5 rounded-lg transition-colors">
@@ -545,31 +587,30 @@ export default function ParametrosPage() {
               </button>
             </div>
 
-            {/* 3D Viewer */}
+            {/* Viewer 3D */}
             <div className="mb-4 bg-white border border-[#e5d9c1] rounded-2xl overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e5d9c1] flex justify-between items-center">
-                <span className="text-xs font-medium">Visualização 3D — {FORMATOS.find(f => f.id === formato)?.label}</span>
+                <span className="text-xs font-medium">Visualização 3D — {formatoSpec?.label}</span>
                 <span className="text-xs text-[#58413c]">Arraste · Scroll</span>
               </div>
               <ShapePreview
                 formato={formato as 'cilindro' | 'cubo'}
                 diametro={dims.diametro}
                 altura={dims.altura}
+                stlPath={formatoSpec?.stl ?? undefined}
               />
             </div>
 
-            {/* Parâmetros */}
+            {/* Parâmetros — só o que importa */}
             <div className="bg-white border border-[#e5d9c1] rounded-2xl p-4 mb-4">
-              <h3 className="text-xs font-semibold mb-3 flex items-center gap-1.5">
-                <SlidersHorizontal size={12} className="text-[#003223]" /> Parâmetros
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs mb-3">
+              <h3 className="text-xs font-semibold mb-3">Parâmetros configurados</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {[
-                  ['Ponteira', `Ø${ponteira} mm`],
-                  ['Camada', `${layerHeight} mm`],
-                  ['Camadas', `${Math.ceil(dims.altura / layerHeight)}`],
-                  ['Velocidade', `${printSpeed} mm/s`],
-                  ['Seringa', `${seringa}mL Ø${syringeSpec.diameter_mm}mm`],
+                  ['Ponteira', `${ponteira} mm`],
+                  ['Altura de camada', `${layerHeight} mm`],
+                  ['Total de camadas', `${Math.ceil(dims.altura / layerHeight)}`],
+                  ['Velocidade', qualSpec.label],
+                  ['Seringa', `${seringa} mL`],
                   ['Temperatura', temperatura ? `${temperatura}°C` : 'Ambiente'],
                 ].map(([label, val]) => (
                   <div key={label} className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-2.5">
@@ -579,35 +620,17 @@ export default function ParametrosPage() {
                 ))}
               </div>
 
-              {/* E breakdown */}
-              <div className="p-3 bg-[#003223]/5 border border-[#003223]/10 rounded-xl text-xs space-y-1">
-                <p className="font-semibold text-[#211b0c] mb-1">Fator de extrusão — deslocamento positivo</p>
-                <p className="font-mono text-[#58413c]">
-                  E/mm = (Ø{ponteira} / Ø{syringeSpec.diameter_mm})² = <span className="text-[#003223] font-semibold">{ePerMmTeorico.toFixed(6)}</span>
+              {ajusteFluxo !== 0 && (
+                <p className="text-xs text-[#58413c] mt-3 flex gap-1.5">
+                  <Info size={11} className="flex-shrink-0 mt-0.5" />
+                  Ajuste de fluxo aplicado: {ajusteFluxo > 0 ? `+${ajusteFluxo}%` : `${ajusteFluxo}%`}
                 </p>
-                <p className="font-mono text-[#58413c]">
-                  × calibração {fatorCalib}% = <span className="text-[#003223] font-bold">{ePerMmEfetivo.toFixed(6)}</span> mm pistão/mm percurso
-                </p>
-                <p className="text-[#58413c]">
-                  Vel. pistão a {printSpeed}mm/s: <span className="font-mono">{pistonSpeedMmS(ponteira, syringeSpec.diameter_mm, printSpeed).toFixed(4)}</span> mm/s
-                </p>
-              </div>
-
-              {/* Calibração ajustável no resultado */}
-              <div className="mt-3">
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs font-medium">Ajustar calibração</span>
-                  <span className="text-xs font-mono font-semibold text-[#003223]">{fatorCalib}%</span>
-                </div>
-                <input type="range" min={70} max={130} value={fatorCalib}
-                  onChange={e => { setFatorCalib(parseInt(e.target.value)); regenerarGCode() }}
-                  className="w-full accent-[#003223]" />
-              </div>
+              )}
 
               <div className="flex gap-2 mt-4">
                 <button onClick={exportarIni}
                   className="flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-3 py-1.5 rounded-lg transition-colors">
-                  <Download size={11} /> PrusaSlicer (.ini)
+                  <Download size={11} /> Config PrusaSlicer (.ini)
                 </button>
               </div>
             </div>
@@ -615,7 +638,7 @@ export default function ParametrosPage() {
             {/* GCode */}
             <div className="bg-white border border-[#e5d9c1] rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-semibold">GCode</h3>
+                <h3 className="text-xs font-semibold">GCode gerado</h3>
                 <div className="flex gap-2">
                   <button onClick={() => setShowGcode(v => !v)}
                     className="text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-2.5 py-1.5 rounded-md transition-colors">
@@ -624,20 +647,20 @@ export default function ParametrosPage() {
                   <button onClick={copiarGcode}
                     className="flex items-center gap-1 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-2.5 py-1.5 rounded-md transition-colors">
                     {copiado ? <CheckCheck size={11} className="text-green-500" /> : <Copy size={11} />}
-                    {copiado ? 'Copiado' : 'Copiar'}
+                    {copiado ? 'Copiado!' : 'Copiar'}
                   </button>
                   <button onClick={baixarGcode}
                     className="flex items-center gap-1 text-xs bg-[#003223] hover:bg-[#004d35] text-white px-3 py-1.5 rounded-md transition-colors">
-                    <Download size={11} /> .gcode
+                    <Download size={11} /> Baixar .gcode
                   </button>
                 </div>
               </div>
               {showGcode ? (
-                <pre className="text-xs text-[#58413c] bg-[#fff8f1] rounded-lg p-4 overflow-x-auto max-h-80 leading-relaxed font-mono">{gcode}</pre>
+                <pre className="text-xs text-[#58413c] bg-[#fff8f1] rounded-lg p-4 overflow-x-auto max-h-80 font-mono leading-relaxed">{gcode}</pre>
               ) : (
                 <div className="text-xs text-[#58413c] bg-[#fff8f1] rounded-lg p-3 font-mono">
-                  {gcode.split('\n').slice(0, 12).join('\n')}
-                  <span className="text-[#bfc9c2] block mt-1">… {gcode.split('\n').length} linhas</span>
+                  {gcode.split('\n').slice(0, 8).join('\n')}
+                  <span className="text-[#bfc9c2] block mt-1">… {gcode.split('\n').length} linhas — clique "Ver código" para expandir</span>
                 </div>
               )}
             </div>
@@ -649,7 +672,7 @@ export default function ParametrosPage() {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers UI reutilizáveis
+// Helpers
 // ---------------------------------------------------------------------------
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
@@ -667,29 +690,10 @@ function NumInput({ value, onChange, min, max, step, placeholder }: {
   min?: number; max?: number; step?: string; placeholder?: string
 }) {
   return (
-    <input
-      type="number" value={value} onChange={e => onChange(e.target.value)}
+    <input type="number" value={value} onChange={e => onChange(e.target.value)}
       min={min} max={max} step={step} placeholder={placeholder}
       className="w-36 bg-white border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30"
     />
-  )
-}
-
-function DimPreview({ formato, dims, massaG }: {
-  formato: string
-  dims: { diametro: number; altura: number }
-  massaG: number | null
-}) {
-  const volCm3 = formato === 'cilindro'
-    ? Math.PI * (dims.diametro / 2) ** 2 * dims.altura / 1000
-    : dims.diametro ** 3 / 1000
-  return (
-    <div className="mt-5 p-3 bg-[#003223]/5 border border-[#003223]/10 rounded-xl flex flex-wrap gap-5 text-sm">
-      <Stat label={formato === 'cubo' ? 'Aresta' : 'Diâmetro'} val={`${dims.diametro} mm`} />
-      {formato !== 'cubo' && <Stat label="Altura" val={`${dims.altura} mm`} />}
-      <Stat label="Volume est." val={`${volCm3.toFixed(1)} cm³`} />
-      {massaG !== null && <Stat label="Massa est." val={`${massaG.toFixed(1)} g`} />}
-    </div>
   )
 }
 

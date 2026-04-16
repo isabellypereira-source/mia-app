@@ -10,22 +10,44 @@
 
 export const SYRINGES = [
   {
-    label: '10 mL — Ø15 mm',
+    label: '10 mL',
+    desc: 'Para pastas fluidas e formulações com pouco volume',
     volume_ml: 10,
     diameter_mm: 15,
     radius_mm: 7.5,
-    area_mm2: Math.PI * 7.5 * 7.5,   // ≈ 176.71 mm²
+    area_mm2: Math.PI * 7.5 * 7.5,
   },
   {
-    label: '60 mL — Ø30 mm',
+    label: '60 mL',
+    desc: 'Para pastas densas e produções com maior volume',
     volume_ml: 60,
     diameter_mm: 30,
     radius_mm: 15,
-    area_mm2: Math.PI * 15 * 15,      // ≈ 706.86 mm²
+    area_mm2: Math.PI * 15 * 15,
   },
 ] as const
 
 export type SyringeVolume = (typeof SYRINGES)[number]['volume_ml']
+
+/**
+ * Impressoras Morphê disponíveis.
+ * steps_per_mm: configuração de firmware do eixo E (pistão).
+ * O GCode em si usa E em mm — o firmware converte para passos.
+ */
+export const MACHINES = [
+  {
+    id: 'bioender_pro',
+    label: 'Bioender PRO',
+    steps_per_mm: 930,
+  },
+  {
+    id: 'vitalink',
+    label: 'Vitalink',
+    steps_per_mm: 93,
+  },
+] as const
+
+export type MachineId = (typeof MACHINES)[number]['id']
 
 /**
  * E por mm de percurso de impressão (curso do pistão em mm).
