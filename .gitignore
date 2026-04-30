@@ -33,3 +33,5 @@ Thumbs.db
 
 # MCP config (pode conter credenciais)
 .mcp.json
+
+.vercel

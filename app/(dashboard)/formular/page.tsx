@@ -1,9 +1,10 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink } from 'lucide-react'
+import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap } from 'lucide-react'
+import { gerarSTL, baixarSTL } from '@/lib/prusa-integration'
 
-type Modo = 'escolha' | 'wizard_app' | 'wizard_tendencias' | 'wizard_ingredientes' | 'wizard_processando' | 'wizard_resultado' | 'input' | 'validar'
+type Modo = 'escolha' | 'wizard_app' | 'wizard_tendencias' | 'wizard_ingredientes' | 'wizard_processando' | 'wizard_resultado' | 'input' | 'validar' | 'stl_gerando' | 'stl_pronto'
 
 interface Ingrediente {
   nome: string
@@ -61,6 +62,9 @@ export default function FormularPage() {
   const [validando, setValidando] = useState(false)
   const [validacao, setValidacao] = useState<string | null>(null)
   const [salvando, setSalvando] = useState(false)
+  const [stlLoading, setStlLoading] = useState(false)
+  const [stlResult, setStlResult] = useState<{ url: string; filename: string; metadata?: { volume_mm3: number; peso_estimado_g: number; tempo_impressao_estimado_min: number; forma: string } } | null>(null)
+  const [stlError, setStlError] = useState<string | null>(null)
 
   function toggleTendencia(t: string) {
     setTendencias(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
@@ -177,6 +181,42 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
     })
     setSalvando(false)
     router.push('/formulacoes')
+  }
+
+  async function gerarSTLHandler() {
+    setStlError(null)
+    setStlResult(null)
+    setStlLoading(true)
+    setModo('stl_gerando')
+
+    const formula = {
+      nome: nomeFormulacao,
+      aplicacao,
+      ingredientes: ingredientes.filter(i => i.nome.trim()).map(i => ({ nome: i.nome, percentual: parseFloat(i.percentual) || 0 })),
+    }
+
+    const result = await gerarSTL(formula)
+    setStlLoading(false)
+
+    if (result.success && result.stlUrl) {
+      setStlResult({
+        url: result.stlUrl,
+        filename: result.filename || 'modelo.stl',
+        metadata: result.metadata,
+      })
+      setModo('stl_pronto')
+    } else {
+      setStlError(result.error || 'Erro ao gerar STL')
+      setModo('validar')
+    }
+  }
+
+  async function baixarSTLHandler() {
+    if (!stlResult) return
+    const success = await baixarSTL(stlResult.url, stlResult.filename)
+    if (!success) {
+      setStlError('Erro ao baixar arquivo STL')
+    }
   }
 
   // ─── TELA INICIAL ─────────────────────────────────────────────
@@ -369,6 +409,118 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
     </div>
   )
 
+  // ─── STL: GERANDO ─────────────────────────────────────────────
+  if (modo === 'stl_gerando') return (
+    <div className="h-full flex items-center justify-center p-6" style={{ background: '#fff8f1' }}>
+      <div className="text-center max-w-sm animate-slide-up">
+        <div className="relative mx-auto w-20 h-20 mb-6">
+          <div className="w-20 h-20 rounded-full border-2 border-[#e5d9c1] bg-white flex items-center justify-center shadow-tonal">
+            <Zap size={32} style={{ color: '#003223' }} className="animate-pulse" />
+          </div>
+          <div className="absolute top-0 right-0 w-4 h-4 rounded-full animate-bounce" style={{ background: '#c8ee4f' }} />
+        </div>
+        <h2 className="font-display font-bold text-xl mb-2" style={{ color: '#003223' }}>Gerando STL 3D...</h2>
+        <p className="text-sm font-sans mb-6" style={{ color: '#58413c' }}>Calculando geometria e volume</p>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {['Forma do objeto', 'Densidade material', 'Dimensões'].map((s, i) => (
+            <span key={s} className="px-3 py-1 rounded-full text-xs font-sans border"
+              style={{ borderColor: i === 0 ? '#003223' : '#e5d9c1', color: i === 0 ? '#003223' : '#707974', background: 'white' }}>{s}</span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
+  // ─── STL: PRONTO ──────────────────────────────────────────────
+  if (modo === 'stl_pronto') return (
+    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+      <div className="px-8 py-5 border-b" style={{ background: '#fff2da', borderColor: '#e5d9c1' }}>
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
+          <button onClick={() => setModo('validar')}
+            className="text-xs font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>← Voltar</button>
+          <h1 className="font-display font-bold text-lg" style={{ color: '#003223' }}>STL Gerado com Sucesso</h1>
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-8 py-6 space-y-4">
+        {stlError && (
+          <div className="p-4 rounded-2xl bg-red-50 border-l-4 border-red-500">
+            <p className="text-sm font-sans" style={{ color: '#7f1d1d' }}>{stlError}</p>
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl shadow-tonal p-6 text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#f0f9ff' }}>
+            <Download size={28} style={{ color: '#003223' }} />
+          </div>
+          <h2 className="font-display font-bold text-lg mb-2" style={{ color: '#003223' }}>
+            {stlResult?.filename}
+          </h2>
+          <p className="text-sm font-sans mb-6" style={{ color: '#58413c' }}>Seu arquivo STL está pronto para download</p>
+
+          {stlResult?.metadata && (
+            <div className="grid grid-cols-2 gap-3 mb-6 p-4 rounded-xl" style={{ background: '#f9edd4' }}>
+              <div>
+                <p className="text-xs font-sans" style={{ color: '#707974' }}>Volume</p>
+                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
+                  {(stlResult.metadata.volume_mm3 / 1000).toFixed(1)} cm³
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-sans" style={{ color: '#707974' }}>Peso Estimado</p>
+                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
+                  {stlResult.metadata.peso_estimado_g.toFixed(1)}g
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-sans" style={{ color: '#707974' }}>Tempo de Impressão</p>
+                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
+                  ~{stlResult.metadata.tempo_impressao_estimado_min}min
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-sans" style={{ color: '#707974' }}>Forma</p>
+                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
+                  {stlResult.metadata.forma}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button onClick={baixarSTLHandler}
+            className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl text-sm font-display font-semibold transition-colors hover:opacity-90"
+            style={{ background: '#003223', color: 'white' }}>
+            <Download size={16} /> Baixar STL
+          </button>
+        </div>
+
+        <div className="bg-[#f9edd4] rounded-2xl p-6 border-l-4" style={{ borderColor: '#003223' }}>
+          <div className="flex items-start gap-3">
+            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#003223' }}>
+              <span className="material-symbols-outlined text-white" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>info</span>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-display font-bold text-sm" style={{ color: '#003223' }}>Próximos passos</h3>
+              <p className="text-sm font-sans leading-relaxed" style={{ color: '#58413c' }}>
+                1. Abra o PrusaSlicer em seu computador<br />
+                2. Importe este arquivo STL (File → Open)<br />
+                3. Configure os parâmetros de impressão<br />
+                4. Exporte o G-code<br />
+                5. Faça upload do G-code aqui para registrar o experimento
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <button onClick={() => setModo('validar')}
+          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-display font-semibold transition-colors"
+          style={{ background: '#003223', color: 'white' }}>
+          <ArrowRight size={16} /> Voltar à Formulação
+        </button>
+      </div>
+    </div>
+  )
+
   // ─── WIZARD: RESULTADO / INPUT MANUAL ────────────────────────
   if (modo === 'wizard_resultado' || modo === 'input' || modo === 'validar') {
     const isWizard = modo === 'wizard_resultado'
@@ -471,6 +623,14 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               style={{ background: '#003223', color: 'white' }}>
               <Sparkles size={14} /> {validando ? 'Validando...' : 'Validar com MIA'}
+            </button>
+          )}
+
+          {modo === 'validar' && (
+            <button onClick={gerarSTLHandler} disabled={stlLoading || !ingredientes.some(i => i.nome.trim())}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              style={{ background: '#003223', color: 'white' }}>
+              <Zap size={14} /> {stlLoading ? 'Gerando...' : 'Gerar STL 3D'}
             </button>
           )}
         </div>
