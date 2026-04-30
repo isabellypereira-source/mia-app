@@ -13,14 +13,25 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('agent_stl_queue')
-    .select('id, stl_url, filename, formula_config, created_at')
+    .select('id, storage_path, filename, formula_config, created_at')
     .eq('user_id', user.id)
     .is('opened_at', null)
     .order('created_at', { ascending: false })
     .limit(5)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data ?? [])
+
+  // Gerar URLs assinadas (1 hora) para cada item — nunca expõe URL pública
+  const items = await Promise.all(
+    (data ?? []).map(async (item) => {
+      const { data: signed } = await supabaseAdmin.storage
+        .from('mia-stl')
+        .createSignedUrl(item.storage_path, 3600)
+      return { ...item, stl_url: signed?.signedUrl ?? null }
+    })
+  )
+
+  return NextResponse.json(items.filter(i => i.stl_url))
 }
 
 export async function PATCH(req: NextRequest) {

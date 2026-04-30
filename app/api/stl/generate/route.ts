@@ -73,7 +73,8 @@ export async function POST(req: NextRequest) {
       if (token) {
         await supabase.from('agent_stl_queue').insert({
           user_id: user.id,
-          stl_url: publicUrl.publicUrl,
+          storage_path: storagePath,
+          stl_url: storagePath,
           filename,
           formula_config: formula,
         })
