@@ -4,6 +4,7 @@ import {
   TestTube2, Plus, CheckCircle, XCircle, AlertCircle, Sparkles,
   ChevronDown, ChevronUp, Calendar, Trash2, Download, Send, Loader2, Wifi,
 } from 'lucide-react'
+import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
 interface Formulacao { id: string; nome: string }
 interface ChatMsg { role: 'user' | 'assistant'; content: string }
@@ -264,6 +265,7 @@ function RegistrarResultado({ exp, formulacoes, onSalvo }: {
 // ---------------------------------------------------------------------------
 
 export default function ExperimentosPage() {
+  const { connected: agentConnected, lastSeen: agentLastSeen } = useAgentConnected()
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [experimentos, setExperimentos] = useState<Experimento[]>([])
   const [novoAberto, setNovoAberto] = useState(false)
@@ -382,6 +384,19 @@ export default function ExperimentosPage() {
       </div>
 
       <div className="max-w-2xl mx-auto px-8 py-6 space-y-4">
+
+        {agentConnected && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+            style={{ background: 'rgba(0,50,35,0.04)', borderColor: 'rgba(0,50,35,0.15)' }}>
+            <Wifi size={15} style={{ color: '#003223' }} />
+            <span className="text-sm font-sans font-medium" style={{ color: '#003223' }}>Slicer conectado ✓</span>
+            {agentLastSeen && (
+              <span className="text-xs ml-auto" style={{ color: '#707974' }}>
+                Última atividade: {new Date(agentLastSeen).toLocaleString('pt-BR')}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Formulário manual */}
         {novoAberto && (

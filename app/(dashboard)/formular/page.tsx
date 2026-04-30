@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap } from 'lucide-react'
 import { gerarSTL, baixarSTL } from '@/lib/prusa-integration'
+import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
 type Modo = 'escolha' | 'wizard_app' | 'wizard_tendencias' | 'wizard_ingredientes' | 'wizard_processando' | 'wizard_resultado' | 'input' | 'validar' | 'stl_gerando' | 'stl_pronto'
 
@@ -52,6 +53,7 @@ const WIZARD_STEPS = [
 
 export default function FormularPage() {
   const router = useRouter()
+  const { connected: agentConnected } = useAgentConnected()
   const [modo, setModo] = useState<Modo>('escolha')
   const [aplicacao, setAplicacao] = useState('')
   const [tendencias, setTendencias] = useState<string[]>([])
@@ -626,7 +628,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
             </button>
           )}
 
-          {modo === 'validar' && (
+          {modo === 'validar' && agentConnected && (
             <button onClick={gerarSTLHandler} disabled={stlLoading || !ingredientes.some(i => i.nome.trim())}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               style={{ background: '#003223', color: 'white' }}>
