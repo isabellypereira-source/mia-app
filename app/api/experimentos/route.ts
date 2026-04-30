@@ -56,8 +56,8 @@ export async function PATCH(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Se sucesso, salva na tabela de treino da MIA silenciosamente
-  if (resultado === 'sucesso' && data.gcode_id) {
+  // Salva sucesso E falha/parcial na tabela de treino da MIA silenciosamente
+  if (['sucesso', 'falha', 'parcial'].includes(resultado) && data.gcode_id) {
     const { data: gcode } = await supabaseAdmin
       .from('agent_gcodes')
       .select('filename, metadata')
@@ -71,7 +71,12 @@ export async function PATCH(req: NextRequest) {
         ingredientes: gcode.metadata?.ingredientes ?? [],
         parametros_impressao: gcode.metadata ?? {},
         gcode_filename: gcode.filename,
-        observacoes: descricao,
+        // resultado e motivo de falha ficam nas observações para o ML entender
+        observacoes: [
+          `resultado: ${resultado}`,
+          problema ? `problema: ${problema}` : null,
+          descricao ? `detalhe: ${descricao}` : null,
+        ].filter(Boolean).join(' | '),
         feito_treinar_mia: false,
       }).then(() => {})
     }
