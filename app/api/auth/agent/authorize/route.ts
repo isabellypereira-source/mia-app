@@ -12,10 +12,10 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
 
-  const { port } = await req.json()
-  if (!port) return NextResponse.json({ error: 'port obrigatório' }, { status: 400 })
+  const { code } = await req.json()
+  if (!code) return NextResponse.json({ error: 'code obrigatório' }, { status: 400 })
 
-  // Gera token permanente para este usuário
+  // Cria token permanente para este usuário
   const { data, error } = await supabaseAdmin
     .from('agent_tokens')
     .insert({ user_id: user.id })
@@ -24,5 +24,10 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  return NextResponse.json({ token: data.token })
+  // Guarda na tabela de pendentes para o agente buscar via polling
+  await supabaseAdmin
+    .from('pending_agent_auths')
+    .insert({ code, token: data.token })
+
+  return NextResponse.json({ ok: true })
 }

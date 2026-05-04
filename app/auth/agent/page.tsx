@@ -1,14 +1,14 @@
 'use client'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 function AuthAgentContent() {
   const params = useSearchParams()
-  const port = params.get('port')
+  const code = params.get('code')
   const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
   const [erro, setErro] = useState('')
-  const router = useRouter()
 
   async function autorizar() {
     setLoading(true)
@@ -18,21 +18,20 @@ function AuthAgentContent() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) {
-        router.push(`/login?redirect=/auth/agent?port=${port}`)
+        window.location.href = `/login?redirect=${encodeURIComponent('/auth/agent?code=' + code)}`
         return
       }
 
       const res = await fetch('/api/auth/agent/authorize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ port }),
+        body: JSON.stringify({ code }),
       })
 
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
 
-      // Redireciona para o agent local que está escutando
-      window.location.href = `http://localhost:${port}/auth?token=${data.token}`
+      setDone(true)
     } catch (e: unknown) {
       setErro(e instanceof Error ? e.message : 'Erro ao autorizar')
       setLoading(false)
@@ -48,32 +47,45 @@ function AuthAgentContent() {
           </div>
         </div>
 
-        <h1 className="text-lg font-semibold text-center text-[#211b0c] mb-1">
-          Sincronização com o Slicer
-        </h1>
-        <p className="text-sm text-[#58413c] text-center mb-6">
-          O agent local quer acesso à sua conta para sincronizar seus experimentos de impressão.
-        </p>
+        {done ? (
+          <>
+            <h1 className="text-lg font-semibold text-center text-[#211b0c] mb-2">
+              ✅ Autorizado!
+            </h1>
+            <p className="text-sm text-[#58413c] text-center">
+              Pode fechar esta aba. O agente foi conectado à sua conta.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-lg font-semibold text-center text-[#211b0c] mb-1">
+              Sincronização com o Slicer
+            </h1>
+            <p className="text-sm text-[#58413c] text-center mb-6">
+              O agent local quer acesso à sua conta para sincronizar seus experimentos de impressão.
+            </p>
 
-        {erro && (
-          <p className="text-xs text-red-500 text-center mb-4">{erro}</p>
+            {erro && (
+              <p className="text-xs text-red-500 text-center mb-4">{erro}</p>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={autorizar}
+                disabled={loading || !code}
+                className="w-full bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+              >
+                {loading ? 'Autorizando...' : 'Autorizar'}
+              </button>
+              <button
+                onClick={() => window.close()}
+                className="w-full text-sm text-[#58413c] hover:text-[#211b0c] py-2.5 border border-[#e5d9c1] rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </>
         )}
-
-        <div className="flex flex-col gap-2">
-          <button
-            onClick={autorizar}
-            disabled={loading || !port}
-            className="w-full bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
-          >
-            {loading ? 'Autorizando...' : 'Autorizar'}
-          </button>
-          <button
-            onClick={() => window.close()}
-            className="w-full text-sm text-[#58413c] hover:text-[#211b0c] py-2.5 border border-[#e5d9c1] rounded-lg transition-colors"
-          >
-            Cancelar
-          </button>
-        </div>
       </div>
     </div>
   )
