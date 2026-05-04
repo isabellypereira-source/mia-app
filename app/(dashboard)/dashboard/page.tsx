@@ -13,7 +13,10 @@ import {
   Lightbulb,
   Microscope,
   FileDown,
+  Wifi,
+  WifiOff,
 } from 'lucide-react'
+import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
 interface Formulacao {
   id: string
@@ -59,6 +62,7 @@ function formatarData(iso: string) {
 }
 
 export default function DashboardPage() {
+  const { connected: agentConnected, lastSeen: agentLastSeen, loading: agentLoading } = useAgentConnected()
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [qtdExperimentos, setQtdExperimentos] = useState(0)
   const [carregando, setCarregando] = useState(true)
@@ -107,6 +111,31 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-6 space-y-5">
+
+        {/* Status do agente Slicer */}
+        {!agentLoading && (
+          agentConnected ? (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+              style={{ background: 'rgba(0,50,35,0.04)', borderColor: 'rgba(0,50,35,0.15)' }}>
+              <Wifi size={15} style={{ color: '#003223' }} />
+              <span className="text-sm font-sans font-medium" style={{ color: '#003223' }}>Slicer conectado ✓</span>
+              {agentLastSeen && (
+                <span className="text-xs ml-auto" style={{ color: '#707974' }}>
+                  Última atividade: {new Date(agentLastSeen).toLocaleString('pt-BR')}
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
+              style={{ background: 'rgba(88,65,60,0.04)', borderColor: 'rgba(88,65,60,0.15)' }}>
+              <WifiOff size={15} style={{ color: '#707974' }} />
+              <span className="text-sm font-sans" style={{ color: '#707974' }}>Aguardando conexão do Slicer</span>
+              <a href="https://mia-app-isabellypereira-6813s-projects.vercel.app" className="text-xs ml-auto underline" style={{ color: '#58413c' }}>
+                Instalar agente
+              </a>
+            </div>
+          )
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
