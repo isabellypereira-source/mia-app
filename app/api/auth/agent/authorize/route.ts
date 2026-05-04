@@ -25,9 +25,11 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   // Guarda na tabela de pendentes para o agente buscar via polling
-  await supabaseAdmin
+  const { error: pendingError } = await supabaseAdmin
     .from('pending_agent_auths')
     .insert({ code, token: data.token })
+
+  if (pendingError) return NextResponse.json({ error: pendingError.message }, { status: 500 })
 
   return NextResponse.json({ ok: true })
 }
