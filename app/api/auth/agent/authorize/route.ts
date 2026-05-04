@@ -24,10 +24,11 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Guarda na tabela de pendentes para o agente buscar via polling
+  // Guarda na tabela de pendentes para o agente buscar via polling (expires em 5 min)
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString()
   const { error: pendingError } = await supabaseAdmin
     .from('pending_agent_auths')
-    .insert({ code, token: data.token })
+    .insert({ code, token: data.token, expires_at: expiresAt })
 
   if (pendingError) return NextResponse.json({ error: pendingError.message }, { status: 500 })
 
