@@ -12,171 +12,369 @@ interface Formulacao {
 
 const PROTOCOLOS_CARACTERIZACAO = [
   {
-    id: 'reologia',
-    titulo: 'Protocolo de Análise Reológica',
-    descricao: 'Medição de viscosidade, índice de comportamento e tensão de escoamento.',
-    conteudo: `PROTOCOLO DE ANÁLISE REOLÓGICA
-MIA by Morphê Foods — v1.0
+    id: 'colapso_filamento',
+    titulo: 'Teste de Colapso de Filamento',
+    descricao: 'Avaliação de sustentação estrutural por análise de pontes sobre vãos de 1 a 6 mm.',
+    referencia: 'Sviech et al., 2025',
+    conteudo: `TESTE DE COLAPSO DE FILAMENTO PARA IMPRESSÃO 3D DE ALIMENTOS
+Versão: 1.0  |  Emissão: Abril/2026  |  Referência: Sviech et al., 2025
 
-EQUIPAMENTO: Reômetro rotacional ou viscosímetro Brookfield LV/RV/HA.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PROCEDIMENTO:
-1. Calibrar o equipamento com fluido de referência.
-2. Ajustar temperatura para 25 °C (banho termostático).
-3. Usar spindle adequado à faixa de viscosidade esperada.
-4. Medir viscosidade nas rotações: 1, 5, 10, 50, 100 rpm.
-5. Aguardar 60 s de equilíbrio antes de cada leitura.
-6. Repetir em triplicata. Calcular média e desvio padrão.
+1. OBJETIVO
+Avaliar a capacidade de sustentação e estabilidade estrutural de formulações alimentícias para impressão 3D, por meio da análise do comportamento de um filamento extrudado sobre vãos livres.
 
-CÁLCULOS:
-- Índice de comportamento (n): n = log(η₁₀₀/η₁) / log(100)
-- Índice de consistência (K): K = η / (γ̇^(n-1))
-- n < 1 → pseudoplástico (favorável para extrusão 3D)
-- n = 1 → newtoniano
-- n > 1 → dilatante
+2. PRINCÍPIO DO MÉTODO
+O teste consiste na deposição de um único filamento sobre uma plataforma contendo pilares com diferentes espaçamentos. O material forma pontes suspensas, permitindo avaliar sua capacidade de resistir à deformação gravitacional. A deflexão do filamento está diretamente relacionada a propriedades reológicas como tensão de escoamento, coesão estrutural e recuperação tixotrópica.
 
-EXPRESSÃO DOS RESULTADOS:
-Reportar: viscosidade aparente (mPa·s), n, K, tensão de escoamento (Pa), temperatura (°C).`,
+3. GEOMETRIA DA PONTE DE COLAPSO
+Plataforma com 6 pilares paralelos de altura uniforme, separados por vãos de distâncias crescentes (1, 2, 3, 4, 5 e 6 mm). A geometria padronizada garante reprodutibilidade do ensaio e permite comparação direta entre formulações.
+
+4. PROCEDIMENTO EXPERIMENTAL
+1. Carregar a formulação na impressora.
+2. Posicionar a plataforma de teste na mesa de impressão.
+3. Ajustar parâmetros de impressão (velocidade de extrusão, temperatura, diâmetro do bico, altura de camada).
+4. Extrudar um único filamento sobre os pilares, formando pontes sobre os vãos.
+5. Garantir que o filamento atravesse todos os espaçamentos em uma única deposição contínua.
+6. Registrar imagens imediatamente após a impressão, evitando influência do tempo na deformação.
+
+5. ANÁLISE DOS RESULTADOS
+Determinação das áreas (ImageJ/Fiji com escala calibrada):
+• At = área teórica = região ideal do filamento sem deformação (linha reta entre pilares)
+• Ar = área real = região efetivamente ocupada pelo filamento impresso, incluindo curvatura do colapso
+
+Cálculo do Fator de Colapso:
+    Cf (%) = (At / Ar) × 100
+
+Calcular individualmente para cada vão e cada replicata. Registrar média e desvio padrão por vão e formulação.
+
+6. INTERPRETAÇÃO DOS RESULTADOS
+• Cf próximo a 0%: colapso total — material muito fluido, baixa viscosidade ou tensão de escoamento
+• Cf entre 20% e 70%: sustentação parcial — estrutura moderadamente estável, pode exigir ajuste
+• Cf > 70%: ausência de colapso significativo, ponte estável — ideal para impressão 3D
+
+Cf elevado → maior tensão de escoamento e melhor recuperação tixotrópica.
+Cf reduzido → necessita reformulação com agentes estruturantes (hidrocolóides, amidos, proteínas).
+
+7. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
+Mínimo de 3 repetições independentes por formulação, mantendo os mesmos parâmetros de impressão. Resultados expressos como média ± desvio padrão.
+
+8. OBSERVAÇÕES IMPORTANTES
+• Garantir consistência na extrusão (evitar pulsação)
+• Controlar a temperatura ambiente durante o teste
+• Padronizar o tempo entre impressão e captura de imagem
+• Evitar vibrações na mesa durante o procedimento
+
+9. REFERÊNCIA
+Sviech, F., Silva, M. F., Goldbeck, R., Andreola, K., & Prata, A. S. (2025). Rheology and prebiotic activity of Ora-pro-Nobis for the development of functional ingredients by 3D food printing. Food Bioscience, 72, 107519. https://doi.org/10.1016/j.fbio.2025.107519`,
   },
   {
-    id: 'precisao_dimensional',
-    titulo: 'Protocolo de Precisão Dimensional',
-    descricao: 'Avaliação da fidelidade geométrica do objeto impresso vs. STL.',
-    conteudo: `PROTOCOLO DE PRECISÃO DIMENSIONAL
-MIA by Morphê Foods — v1.0
+    id: 'tpa_cooking_loss',
+    titulo: 'TPA + Perda de Massa no Cozimento',
+    descricao: 'Análise de Perfil de Textura por dupla compressão e perda de massa após cozimento.',
+    referencia: 'Demircan et al., 2023',
+    conteudo: `ANÁLISE DE PERFIL DE TEXTURA (TPA) E PERDA DE MASSA NO COZIMENTO
+PARA IMPRESSÃO 3D DE ALIMENTOS
+Versão: 1.0  |  Emissão: Abril/2026  |  Referência: Demircan et al., 2023
 
-EQUIPAMENTO: Paquímetro digital (resolução 0,01 mm).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PROCEDIMENTO:
-1. Imprimir o modelo STL de referência com os parâmetros registrados.
-2. Aguardar 10 min para estabilização da peça.
-3. Medir largura (X), comprimento (Y) e altura (Z) em 3 pontos distintos cada.
-4. Calcular média e desvio padrão por eixo.
-5. Comparar com as dimensões nominais do STL.
+1. OBJETIVO
+Avaliar as propriedades texturais e a estabilidade estrutural de formulações alimentícias impressas em 3D, por meio da Análise de Perfil de Textura (TPA) e da determinação da perda de massa durante o cozimento.
 
-CÁLCULO DO ERRO DIMENSIONAL:
-Erro (%) = |Dreal - DSTL| / DSTL × 100
+2. PRINCÍPIO DO MÉTODO
 
-CRITÉRIOS DE ACEITAÇÃO:
-- Erro < 5%: excelente
-- 5–10%: aceitável
-- > 10%: necessita ajuste de parâmetros
+Análise de Perfil de Textura (TPA):
+A TPA simula mecanicamente o processo de mastigação, permitindo obter parâmetros como dureza, coesividade, elasticidade, gomosidade e mastigabilidade. Esses parâmetros estão diretamente relacionados à estrutura interna do material e sua aceitabilidade sensorial.
 
-EXPRESSÃO DOS RESULTADOS:
-Reportar: dimensões nominais e reais (mm), erro por eixo (%), desvio padrão.`,
+Perda de massa no cozimento (Cooking Loss):
+Avalia a capacidade da matriz alimentar em reter água e outros constituintes durante o tratamento térmico. A liberação de líquidos está associada à estabilidade da rede estrutural formada por proteínas, polissacarídeos e outros componentes.
+
+3. EQUIPAMENTO
+Analisador de textura TA.XT Plus (Stable Micro Systems, UK)
+Sonda cilíndrica de alumínio com base plana (P/35R, diâmetro 45 mm)
+
+4. CONDIÇÕES DAS AMOSTRAS
+Análises devem ser realizadas em:
+• Amostras cruas
+• Amostras assadas (10 minutos a 180 °C)
+
+5. PROCEDIMENTO EXPERIMENTAL — TPA
+
+Parâmetros sugeridos:
+• Velocidade pré-teste: 10 mm/s
+• Velocidade de teste: 18 mm/s
+• Velocidade pós-teste: 18 mm/s
+• Força de disparo (trigger): 0,049 N
+• Deformação: 80%
+
+Procedimento:
+1. Posicionar a amostra centralizada no equipamento.
+2. Realizar dupla compressão (ciclo TPA).
+3. Registrar parâmetros texturais.
+4. Repetir para todas as amostras.
+
+6. PARÂMETROS AVALIADOS (TPA)
+• Dureza (Hardness)
+• Coesividade (Cohesiveness)
+• Elasticidade (Springiness)
+• Gomosidade (Gumminess)
+• Mastigabilidade (Chewiness)
+
+7. PROCEDIMENTO PARA PERDA DE MASSA NO COZIMENTO
+1. Pesar a amostra antes do cozimento (M₀).
+2. Assar as amostras (~10 minutos a 180 °C).
+3. Resfriar até temperatura ambiente (~25 °C).
+4. Remover excesso de líquido com papel absorvente.
+5. Pesar novamente a amostra (Ma).
+
+Cálculo:
+    CL (%) = ((M₀ - Ma) / M₀) × 100
+
+Onde M₀ = massa inicial (g) e Ma = massa após cozimento (g).
+
+8. INTERPRETAÇÃO DOS RESULTADOS
+
+TPA — refletem a integridade estrutural da matriz:
+• Alta dureza → estrutura mais rígida
+• Alta coesividade → maior integridade interna
+• Alta elasticidade → maior recuperação após deformação
+• Alta mastigabilidade → maior energia para mastigação
+
+Formulações com bom desempenho estrutural apresentam equilíbrio entre dureza e coesividade, sem comportamento excessivamente rígido ou frágil.
+
+Cooking Loss — capacidade de retenção de água:
+• CL elevado → baixa retenção, estrutura instável
+• CL intermediário → retenção moderada
+• CL baixo → alta estabilidade e retenção de água
+
+Valores reduzidos de CL geralmente associados à maior interação entre proteínas e hidrocolóides.
+
+9. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
+• TPA: mínimo de 5 repetições (quintuplicata)
+• Cooking Loss: mínimo de 3 repetições
+• Resultados expressos como média ± desvio padrão
+
+10. OBSERVAÇÕES IMPORTANTES
+• Padronizar tamanho e geometria das amostras
+• Controlar temperatura antes da análise
+• Evitar desidratação antes da pesagem final
+• Garantir contato uniforme da sonda no TPA
+• Manter consistência no tempo entre preparo e análise
+
+11. REFERÊNCIA
+Demircan, E., Aydar, E. F., Mertdinç, Z., Kasapoğlu, K. N., & Özçelik, B. (2023). 3D printable vegan plant-based meat analogue: Fortification with three different mushrooms, investigation of printability, and characterization. Food Research International, 173(Part 1). https://doi.org/10.1016/j.foodres.2023.113259`,
   },
   {
-    id: 'indice_colapso',
-    titulo: 'Protocolo de Índice de Colapso',
-    descricao: 'Quantificação da perda de altura estrutural ao longo do tempo.',
-    conteudo: `PROTOCOLO DE ÍNDICE DE COLAPSO
-MIA by Morphê Foods — v1.0
+    id: 'sinerese',
+    titulo: 'Sinérese (Congelamento-Descongelamento)',
+    descricao: 'Avaliação da estabilidade estrutural após estresse térmico por ciclo de congelamento.',
+    referencia: 'Xie et al., 2022',
+    conteudo: `ANÁLISE DE SINÉRESE POR CICLO DE CONGELAMENTO-DESCONGELAMENTO
+Versão: 1.0  |  Emissão: Abril/2026  |  Referência: Xie et al., 2022
 
-EQUIPAMENTO: Paquímetro digital ou câmera com régua de referência.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PROCEDIMENTO:
-1. Medir a altura imediatamente após a impressão (H₀).
-2. Manter a peça em temperatura ambiente.
-3. Medir altura nos tempos: 10, 30 e 60 min.
-4. Fotografar lateralmente com régua em cada medição.
-5. Repetir em triplicata.
+1. OBJETIVO
+Avaliar a estabilidade estrutural e a capacidade de retenção de água de formulações alimentícias impressas em 3D submetidas a ciclos de congelamento e descongelamento, por meio da determinação da sinérese.
 
-CÁLCULO:
-IC(t) (%) = (H₀ - Hₜ) / H₀ × 100
+2. PRINCÍPIO DO MÉTODO
+A sinérese corresponde à liberação de água da matriz alimentar após aplicação de estresses físicos, como congelamento e descongelamento. Está diretamente relacionada à integridade da rede estrutural formada por proteínas e hidrocolóides.
 
-INTERPRETAÇÃO:
-- IC < 5%: excelente estabilidade
-- IC 5–15%: moderada
-- IC > 15%: necessita aumento de agente gelificante
+Durante o congelamento, a formação de cristais de gelo pode causar danos à estrutura do gel, promovendo separação de fases. Após o descongelamento, formulações menos estáveis apresentam maior liberação de água, refletindo menor capacidade de retenção hídrica.
 
-EXPRESSÃO DOS RESULTADOS:
-Reportar: H₀ (mm), H₁₀, H₃₀, H₆₀ (mm), IC por tempo (%).`,
+3. GEOMETRIA DAS AMOSTRAS
+Amostras impressas em forma de cilindros padronizados:
+• Diâmetro: 20 mm
+• Altura: 10 mm
+
+A padronização geométrica é essencial para garantir comparabilidade entre formulações.
+
+4. PROCEDIMENTO EXPERIMENTAL
+1. Imprimir as amostras cilíndricas com dimensões padronizadas.
+2. Pesar imediatamente após a impressão (W₀).
+3. Submeter ao congelamento a -18 °C por 24 horas.
+4. Transferir para ambiente a 25 °C e descongelar por 8 horas.
+5. Após descongelamento, remover suavemente o excesso de líquido superficial (sem pressionar a amostra).
+6. Pesar novamente as amostras (Wa).
+
+Cálculo da sinérese:
+    Syneresis (%) = ((W₀ - Wa) / W₀) × 100
+
+Onde W₀ = massa após impressão (g) e Wa = massa após o ciclo de congelamento-descongelamento (g).
+
+5. INTERPRETAÇÃO DOS RESULTADOS
+A sinérese é um indicador direto da estabilidade da matriz alimentar frente ao estresse térmico:
+
+• Sinérese elevada: alta liberação de água, estrutura instável, baixa interação entre componentes
+• Sinérese intermediária: estabilidade moderada, estrutura parcialmente preservada
+• Baixa sinérese: alta retenção de água, estrutura estável, boa interação entre proteínas e hidrocolóides
+
+Formulações contendo hidrocolóides (mucilagem de ora-pro-nóbis, goma guar, goma xantana) tendem a apresentar menor sinérese devido à maior capacidade de retenção de água e formação de redes estruturais resistentes ao dano causado pelo gelo.
+
+6. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
+• Mínimo de 3 repetições independentes por formulação
+• Resultados expressos como média ± desvio padrão
+
+7. OBSERVAÇÕES IMPORTANTES
+• Padronizar o tempo entre impressão e pesagem inicial
+• Evitar perda de umidade antes da primeira pesagem
+• Não aplicar pressão ao remover o líquido após descongelamento
+• Garantir controle rigoroso de temperatura durante congelamento e descongelamento
+• Evitar variações no tamanho e geometria das amostras
+
+8. REFERÊNCIA
+Xie, F., Ren, X., Wu, H., Zhang, H., Wu, Y., Song, Z., & Ai, L. (2022). Pectins of different resources influence cold storage properties of corn starch gels: Structure-property relationships. Food Hydrocolloids, 124(Part A), 107287. https://doi.org/10.1016/j.foodhyd.2021.107287`,
   },
   {
-    id: 'tpa',
-    titulo: 'Protocolo de Análise de Textura (TPA)',
-    descricao: 'Perfil de textura por dupla compressão — dureza, coesividade, elasticidade.',
-    conteudo: `PROTOCOLO DE ANÁLISE DE TEXTURA INSTRUMENTAL (TPA)
-MIA by Morphê Foods — v1.0
+    id: 'fidelidade_dimensional',
+    titulo: 'Fidelidade Dimensional',
+    descricao: 'Comparação da área medida vs. nominal por análise de imagem em estrutura quadrada padronizada.',
+    referencia: 'Versão própria MIA',
+    conteudo: `ANÁLISE DE FIDELIDADE DIMENSIONAL (%) EM IMPRESSÃO 3D DE ALIMENTOS
+Versão: 1.0  |  Emissão: Abril/2026
 
-EQUIPAMENTO: Texturômetro TA-XT Plus ou equivalente. Sonda P/36R (cilíndrica, 36 mm).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CONDIÇÕES:
-- Velocidade pré-teste: 1,0 mm/s
-- Velocidade de teste: 1,0 mm/s
-- Velocidade pós-teste: 1,0 mm/s
-- Deformação: 50% da altura da amostra
-- Tempo entre ciclos: 5 s
-- Temperatura: 25 °C
+1. OBJETIVO
+Avaliar a precisão geométrica de estruturas impressas em 3D, por meio da comparação entre as dimensões do modelo projetado (CAD) e do objeto impresso, utilizando a métrica de fidelidade dimensional.
 
-PROCEDIMENTO:
-1. Posicionar a amostra centralizada sob a sonda.
-2. Executar dupla compressão automaticamente.
-3. Registrar curva força × tempo.
-4. Repetir em 5 amostras.
+2. PRINCÍPIO DO MÉTODO
+A fidelidade dimensional representa o grau de correspondência entre a geometria planejada no modelo digital e a estrutura final impressa. Desvios podem ocorrer devido a propriedades reológicas da formulação, parâmetros de impressão e comportamento de extrusão.
 
-PARÂMETROS CALCULADOS AUTOMATICAMENTE:
-- Dureza (N): pico da 1ª compressão
-- Coesividade: Área₂ / Área₁
-- Elasticidade: D₂ / D₁
-- Mastigabilidade (N): Dureza × Coesividade × Elasticidade
-- Adesividade (N·s): área negativa entre compressões
+A análise compara a área interna de uma estrutura geométrica padronizada com sua área nominal, permitindo quantificar a precisão do processo.
 
-EXPRESSÃO DOS RESULTADOS:
-Reportar média ± desvio padrão para cada parâmetro.`,
+3. GEOMETRIA DO MODELO
+Estrutura quadrada com:
+• Dimensões externas: 22 × 22 mm
+• Área interna de cada unidade quadrada: 22,56 mm²
+
+A padronização permite comparação direta entre diferentes condições de impressão.
+
+4. PARÂMETROS SUGERIDOS DE IMPRESSÃO
+• Diâmetro do bico: 0,6 mm
+• Velocidades de impressão: 2,5; 5,0; 10,0; 15,0 mm/s
+• Vazão de extrusão: ajustada proporcionalmente à velocidade
+• Demais parâmetros: padrão do software de fatiamento
+
+5. PROCEDIMENTO EXPERIMENTAL
+1. Desenvolver o modelo geométrico no software de fatiamento.
+2. Configurar parâmetros de impressão.
+3. Imprimir amostras nas diferentes velocidades estabelecidas.
+4. Ajustar vazão de extrusão proporcional à velocidade.
+5. Produzir amostras em triplicata para cada condição.
+6. Capturar imagens sob condições padronizadas (iluminação, distância, enquadramento).
+
+6. DETERMINAÇÃO DAS ÁREAS
+Análise de imagem com software adequado (ex.: ImageJ), com calibração de escala.
+• Área nominal (An): 22,56 mm²
+• Área medida (Am): obtida da imagem da amostra impressa
+
+7. CÁLCULO DA FIDELIDADE DIMENSIONAL
+    Fidelidade Dimensional (%) = (Am / An) × 100
+
+Onde Am = área medida da estrutura impressa (mm²) e An = área nominal do modelo (mm²).
+
+8. INTERPRETAÇÃO DOS RESULTADOS
+• Valores próximos de 100%: alta precisão dimensional
+• Valores muito superiores a 100%: excesso de material (over-extrusion), possível baixa viscosidade ou alta vazão
+• Valores muito inferiores a 100%: subextrusão ou colapso estrutural, possível alta viscosidade ou baixa vazão
+
+A fidelidade dimensional está diretamente relacionada ao equilíbrio entre propriedades reológicas da formulação e parâmetros de processo, especialmente velocidade de impressão e vazão de extrusão.
+
+9. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
+• 3 repetições independentes por condição experimental
+• Resultados expressos como média ± desvio padrão
+
+10. OBSERVAÇÕES IMPORTANTES
+• Padronizar rigorosamente as condições de captura de imagem
+• Garantir calibração correta da escala no software de análise
+• Evitar deformações durante a remoção da amostra da base
+• Controlar a consistência da extrusão durante a impressão
+• Avaliar possíveis efeitos de espalhamento do material após deposição`,
   },
   {
-    id: 'overhang',
-    titulo: 'Protocolo de Ângulo de Impressão (Overhang)',
-    descricao: 'Avaliação da capacidade de imprimir estruturas em balanço.',
-    conteudo: `PROTOCOLO DE ÂNGULO DE IMPRESSÃO (OVERHANG)
-MIA by Morphê Foods — v1.0
+    id: 'precisao_impressao',
+    titulo: 'Precisão de Impressão + Altura Máxima',
+    descricao: 'Acurácia dimensional de cubos e altura máxima de cilindros ocos antes do colapso.',
+    referencia: 'Demircan et al., 2023; Cheng et al., 2024',
+    conteudo: `ANÁLISE DE PRECISÃO DE IMPRESSÃO (%) E ALTURA MÁXIMA IMPRIMÍVEL
+EM IMPRESSÃO 3D DE ALIMENTOS
+Versão: 1.0  |  Emissão: Abril/2026  |  Referências: Demircan et al., 2023; Cheng et al., 2024
 
-MODELO STL: Escada de overhang com ângulos: 15°, 30°, 45°, 60°, 75° (cada degrau = 10 mm).
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PROCEDIMENTO:
-1. Imprimir o modelo de teste com os parâmetros padrão.
-2. Fotografar lateralmente a 90° do eixo de impressão.
-3. Para cada ângulo, medir o afastamento do plano teórico.
-4. Registrar o ângulo máximo sem deformação visível.
-5. Registrar o ângulo de início de colapso.
+1. OBJETIVO
+Avaliar a precisão geométrica e a capacidade de construção em altura de formulações alimentícias impressas em 3D, por meio da análise da acurácia dimensional de estruturas cúbicas e da determinação da altura máxima imprimível.
 
-MEDIÇÃO:
-- Usar paquímetro ou análise de imagem (ImageJ).
-- Deformação (mm): distância entre posição real e teórica.
+2. PRINCÍPIO DO MÉTODO
 
-INTERPRETAÇÃO:
-- Ângulo máximo > 45°: excelente capacidade de overhang
-- 30–45°: boa
-- < 30°: necessita ajuste de formulação/velocidade
+Precisão de impressão:
+Representa o grau de correspondência entre as dimensões planejadas no modelo digital e as dimensões reais da estrutura impressa. Considera desvios em altura e comprimento, refletindo a estabilidade do empilhamento de camadas e a qualidade da deposição do material.
 
-EXPRESSÃO DOS RESULTADOS:
-Reportar ângulo máximo suportado (°), ângulo de início de colapso (°), deformação por ângulo (mm).`,
-  },
-  {
-    id: 'cor',
-    titulo: 'Protocolo de Análise de Cor (CIELab)',
-    descricao: 'Medição objetiva de cor pelo sistema L*, a*, b*.',
-    conteudo: `PROTOCOLO DE ANÁLISE DE COR (CIELab)
-MIA by Morphê Foods — v1.0
+Altura máxima imprimível:
+Indica a capacidade da formulação em sustentar múltiplas camadas sem colapso estrutural, diretamente influenciada pelas propriedades reológicas e resistência mecânica do material após deposição. É feita uma impressão em formato de cilindro oco até que o objeto colapse.
 
-EQUIPAMENTO: Colorímetro ou espectrofotômetro. Iluminante D65, observador 10°.
+3. GEOMETRIA DOS MODELOS
 
-PROCEDIMENTO:
-1. Calibrar com placa branca e preta padrão.
-2. Medir a superfície da amostra em 5 pontos distintos.
-3. Registrar L*, a*, b* para cada ponto.
-4. Calcular média e desvio padrão.
-5. Calcular ΔE em relação à referência (se disponível).
+Modelo cúbico (precisão de impressão):
+• Dimensões: 15 × 15 × 15 mm
+• Número de camadas: 13
+• Densidade de impressão: 70%
 
-CÁLCULO ΔE:
-ΔE = √[(ΔL*)² + (Δa*)² + (Δb*)²]
-ΔE < 1: diferença imperceptível
-ΔE 1–3: diferença pequena
-ΔE > 3: diferença perceptível
+Modelo cilíndrico (altura máxima):
+• Diâmetro: 28 mm
+• Estrutura oca
 
-EXPRESSÃO DOS RESULTADOS:
-Reportar: L* (0–100), a* (-128 a +127), b* (-128 a +127), Croma = √(a*²+b*²), ΔE (se aplicável).`,
+4. PARÂMETROS SUGERIDOS DE IMPRESSÃO
+• Diâmetro do bico: 1,2 mm
+• Velocidade de impressão: 2,5 mm/s
+• Velocidade de retração: 2,5 mm/s
+• Densidade de preenchimento: 70%
+
+5. CÁLCULO DA PRECISÃO DE IMPRESSÃO
+
+    PA (%) = (1/3) × {[1 - |h₁ - h₂|/h₂] + [1 - |h₃ - h₂|/h₂] + [1 - |l₁ - l₂|/l₂]} × 100
+
+Dimensões obtidas por análise de imagem:
+• l₁ = comprimento da base
+• h₁ = altura da borda
+• h₃ = altura do centro
+
+Valores de referência do modelo:
+• h₂ = altura nominal (15 mm)
+• l₂ = comprimento nominal (15 mm)
+
+6. INTERPRETAÇÃO DOS RESULTADOS
+
+Precisão de Impressão (PA):
+• PA% próxima de 100%: alta fidelidade dimensional, impressão precisa e estável
+• PA% baixa: desvios geométricos com possível colapso parcial, sobre-extrusão ou inconsistência de deposição
+
+Diretamente associada à capacidade de empilhamento das camadas e ao equilíbrio entre viscosidade, tensão de escoamento e parâmetros de processo.
+
+Altura Máxima Imprimível:
+• Maior número de camadas: melhor capacidade de sustentação estrutural, alta resistência ao colapso
+• Menor número de camadas: estrutura instável, baixa capacidade de suporte vertical
+
+Complementa a análise de printabilidade, especialmente em estruturas tridimensionais complexas.
+
+7. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
+• Precisão de impressão: mínimo 3 repetições
+• Altura máxima imprimível: 5 repetições
+• Resultados expressos como média ± desvio padrão
+
+8. OBSERVAÇÕES IMPORTANTES
+• Padronizar as condições de captura de imagem
+• Garantir calibração da escala no software de análise
+• Evitar deformações durante a remoção das amostras
+• Monitorar a estabilidade da extrusão durante toda a impressão
+• Avaliar visualmente o início do colapso estrutural na análise de altura
+
+9. REFERÊNCIAS
+Cheng, Y., Chen, Y., Gao, W., Kang, X., Sui, J., Yu, B., Guo, L., Zhao, L., Yuan, C., & Cui, B. (2024). Investigation of the mechanism of gelatin to enhance 3D printing accuracy of corn starch gel: From perspective of phase morphological changes. International Journal of Biological Macromolecules, 254, 127323. https://doi.org/10.1016/j.ijbiomac.2023.127323
+
+Demircan, E., Aydar, E. F., Mertdinç, Z., Kasapoğlu, K. N., & Özçelik, B. (2023). 3D printable vegan plant-based meat analogue: Fortification with three different mushrooms, investigation of printability, and characterization. Food Research International, 173(Part 1). https://doi.org/10.1016/j.foodres.2023.113259`,
   },
 ]
 
@@ -289,7 +487,6 @@ export default function ProtocolosPage() {
     if (!form) return
     setBaixando(tipo)
 
-    // Tenta API de export (PDF), senão gera TXT
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
@@ -315,9 +512,18 @@ export default function ProtocolosPage() {
     setBaixando(null)
   }
 
-  function baixarProtocoloCaracterizacao(p: typeof PROTOCOLOS_CARACTERIZACAO[0]) {
+  function baixarProtocoloCaracterizacao(p: typeof PROTOCOLOS_CARACTERIZACAO[number]) {
     setBaixando(p.id)
     downloadTxt(p.conteudo, `protocolo_${p.id}_mia.txt`)
+    setTimeout(() => setBaixando(null), 500)
+  }
+
+  function baixarTodosProtocolos() {
+    setBaixando('all')
+    const conteudo = PROTOCOLOS_CARACTERIZACAO.map(p =>
+      `${'═'.repeat(80)}\n${p.titulo.toUpperCase()}\n${'═'.repeat(80)}\n\n${p.conteudo}\n\n`
+    ).join('\n')
+    downloadTxt(conteudo, 'protocolos_caracterizacao_completo_mia.txt')
     setTimeout(() => setBaixando(null), 500)
   }
 
@@ -326,11 +532,10 @@ export default function ProtocolosPage() {
       <div className="section-alt border-b border-[#e5d9c1] px-8 py-6 mb-6">
         <h1 className="text-2xl font-bold">Protocolos</h1>
         <p className="text-sm text-[#58413c] mt-1">
-          Baixe documentos gerados: protocolos de caracterização, POP e ficha técnica.
+          Baixe protocolos metodológicos e documentos por formulação.
         </p>
       </div>
-      <div className="max-w-2xl mx-auto px-8">
-        <div className="mb-6">
+      <div className="max-w-2xl mx-auto px-8 mb-6">
 
         {/* Documentos por formulação */}
         <div className="mb-6">
@@ -370,7 +575,7 @@ export default function ProtocolosPage() {
               {
                 tipo: 'pop' as const,
                 titulo: 'POP',
-                desc: 'Procedimento Operacional Padrão para replicação do processo de preparo e impressão.',
+                desc: 'Procedimento Operacional Padrão para replicação do processo.',
                 icon: FileText,
               },
             ].map(doc => (
@@ -395,37 +600,49 @@ export default function ProtocolosPage() {
 
         {/* Protocolos de caracterização */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Microscope size={15} className="text-[#003223]" />
-            <h2 className="text-sm font-semibold">Protocolos de caracterização</h2>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Microscope size={15} className="text-[#003223]" />
+              <h2 className="text-sm font-semibold">Protocolos de caracterização</h2>
+            </div>
+            <button
+              onClick={baixarTodosProtocolos}
+              disabled={baixando === 'all'}
+              className="flex items-center gap-1.5 text-xs bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white px-3 py-1.5 rounded-md transition-colors"
+            >
+              <Download size={11} />
+              {baixando === 'all' ? '...' : 'Baixar todos'}
+            </button>
           </div>
           <p className="text-xs text-[#58413c] mb-4">
-            Protocolos metodológicos para todas as análises disponíveis na aba Caracterização.
+            Cinco protocolos validados por literatura científica. Baixe individualmente ou todos em um único arquivo.
           </p>
 
           <div className="space-y-2">
             {PROTOCOLOS_CARACTERIZACAO.map(p => (
-              <div key={p.id} className="bg-white rounded-2xl shadow-tonal p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <FileDown size={15} className="text-[#58413c] flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium">{p.titulo}</p>
-                    <p className="text-xs text-[#58413c] truncate">{p.descricao}</p>
+              <div key={p.id} className="bg-white rounded-2xl shadow-tonal p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <FileDown size={15} className="text-[#58413c] flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{p.titulo}</p>
+                      <p className="text-xs text-[#58413c] leading-relaxed mt-0.5">{p.descricao}</p>
+                      <p className="text-[10px] text-[#707974] mt-1.5 italic">Ref.: {p.referencia}</p>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => baixarProtocoloCaracterizacao(p)}
+                    disabled={baixando === p.id}
+                    className="flex items-center gap-1.5 flex-shrink-0 text-xs bg-[#fff8f1] border border-[#e5d9c1] hover:border-[#003223]/30 hover:text-[#003223] text-[#58413c] px-3 py-1.5 rounded-md transition-colors"
+                  >
+                    <Download size={11} />
+                    {baixando === p.id ? '...' : 'Baixar'}
+                  </button>
                 </div>
-                <button
-                  onClick={() => baixarProtocoloCaracterizacao(p)}
-                  disabled={baixando === p.id}
-                  className="flex items-center gap-1.5 flex-shrink-0 text-xs bg-[#fff8f1] border border-[#e5d9c1] hover:border-[#e5d9c1] hover:text-[#003223] text-[#58413c] px-3 py-1.5 rounded-md transition-colors"
-                >
-                  <Download size={11} />
-                  {baixando === p.id ? '...' : 'Baixar'}
-                </button>
               </div>
             ))}
           </div>
         </div>
-      </div>
       </div>
     </div>
   )
