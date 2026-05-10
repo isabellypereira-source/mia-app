@@ -392,12 +392,12 @@ function PesquisarArxiv() {
       <div className="bg-white rounded-2xl border border-[#e5d9c1] p-5">
         <h2 className="font-semibold text-sm mb-1">Pesquisar artigos científicos</h2>
         <p className="text-xs text-[#58413c] mb-4">
-          Busca no arXiv dentro do contexto de impressão 3D de alimentos. Digite qualquer tema — a busca é automaticamente direcionada para este domínio.
+          Busca no <strong>OpenAlex</strong> (300M+ artigos científicos com DOI). Termos em português são traduzidos automaticamente para inglês e contextualizados em ciência de alimentos / impressão 3D.
         </p>
         <div className="flex gap-2">
           <input value={q} onChange={e => setQ(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && buscar()}
-            placeholder="ex: purê de batata, proteína de ervilha, xantana..."
+            placeholder="ex: purê de batata, proteína de ervilha, goma xantana..."
             className="flex-1 bg-[#fff8f1] border border-[#e5d9c1] rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
           <button onClick={buscar} disabled={!q.trim() || loading}
             className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm px-4 py-2 rounded-xl transition-colors">
@@ -405,7 +405,6 @@ function PesquisarArxiv() {
             {loading ? 'Buscando…' : 'Buscar'}
           </button>
         </div>
-        <p className="text-[10px] text-[#bfc9c2] mt-2">A query &quot;{q ? q + ' ' : ''}3D food printing&quot; é enviada ao arXiv automaticamente.</p>
       </div>
 
       {results.length > 0 && (
@@ -419,10 +418,24 @@ function PesquisarArxiv() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold leading-snug mb-1">{entry.title}</h3>
-                    <p className="text-xs text-[#58413c]">{entry.authors} · {entry.published}</p>
-                    {entry.categories && (
-                      <span className="inline-block text-[10px] font-mono bg-[rgba(0,50,35,0.06)] text-[#003223] px-1.5 py-0.5 rounded border border-[#e5d9c1] mt-1">{entry.categories}</span>
+                    <p className="text-xs text-[#58413c]">
+                      {entry.authors}
+                      {entry.published && ' · ' + entry.published}
+                      {typeof entry.citacoes === 'number' && entry.citacoes > 0 && (
+                        <span className="text-[#707974]"> · {entry.citacoes} citações</span>
+                      )}
+                    </p>
+                    {entry.journal && (
+                      <p className="text-[11px] text-[#707974] italic mt-0.5">{entry.journal}</p>
                     )}
+                    <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                      {entry.categories && (
+                        <span className="text-[10px] bg-[rgba(0,50,35,0.06)] text-[#003223] px-2 py-0.5 rounded border border-[#e5d9c1]">{entry.categories}</span>
+                      )}
+                      {entry.doi && (
+                        <span className="text-[10px] font-mono text-[#707974]">DOI: {entry.doi}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5 flex-shrink-0">
                     <a href={entry.link} target="_blank" rel="noopener noreferrer"
