@@ -392,7 +392,7 @@ function PesquisarArxiv() {
       <div className="bg-white rounded-2xl border border-[#e5d9c1] p-5">
         <h2 className="font-semibold text-sm mb-1">Pesquisar artigos científicos</h2>
         <p className="text-xs text-[#58413c] mb-4">
-          Busca no <strong>OpenAlex</strong> (300M+ artigos científicos com DOI). Termos em português são traduzidos automaticamente para inglês e contextualizados em ciência de alimentos / impressão 3D.
+          Busca paralela em <strong>OpenAlex + PubMed + CrossRef + Tavily + Exa</strong> (cobertura completa de ciência de alimentos). Termos em português são traduzidos automaticamente.
         </p>
         <div className="flex gap-2">
           <input value={q} onChange={e => setQ(e.target.value)}
@@ -429,7 +429,22 @@ function PesquisarArxiv() {
                       <p className="text-[11px] text-[#707974] italic mt-0.5">{entry.journal}</p>
                     )}
                     <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
-                      {entry.categories && (
+                      {(() => {
+                        const cores: Record<string, { bg: string; fg: string; label: string }> = {
+                          openalex: { bg: '#e8f4ec', fg: '#003223', label: 'OpenAlex' },
+                          pubmed: { bg: '#e6f0ff', fg: '#1d4e89', label: 'PubMed' },
+                          crossref: { bg: '#fff2da', fg: '#7a4f00', label: 'CrossRef' },
+                          tavily: { bg: '#f0e6ff', fg: '#4a1d89', label: 'Tavily' },
+                          exa: { bg: '#ffe6f0', fg: '#891d4e', label: 'Exa' },
+                        }
+                        const c = cores[entry.source] ?? cores.openalex
+                        return (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded border" style={{ background: c.bg, color: c.fg, borderColor: c.fg + '30' }}>
+                            {c.label}
+                          </span>
+                        )
+                      })()}
+                      {entry.categories && entry.categories !== 'Tavily web' && entry.categories !== 'Exa neural' && entry.categories !== 'PubMed' && entry.categories !== 'CrossRef' && (
                         <span className="text-[10px] bg-[rgba(0,50,35,0.06)] text-[#003223] px-2 py-0.5 rounded border border-[#e5d9c1]">{entry.categories}</span>
                       )}
                       {entry.doi && (

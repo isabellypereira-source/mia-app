@@ -11,7 +11,7 @@ export interface ArxivEntry {
   doi?: string
   journal?: string
   citacoes?: number
-  source: 'openalex' | 'pubmed' | 'crossref'
+  source: 'openalex' | 'pubmed' | 'crossref' | 'tavily' | 'exa'
 }
 
 // ─── Tradução PT→EN de termos comuns ────────────────────────────────
@@ -253,6 +253,123 @@ async function buscarCrossref(query: string, max: number): Promise<ArxivEntry[]>
   })
 }
 
+// ─── Tavily (academic web search) ───────────────────────────────────
+interface TavilyResult {
+  title?: string
+  url?: string
+  content?: string
+  score?: number
+  published_date?: string
+}
+
+async function buscarTavily(query: string, max: number): Promise<ArxivEntry[]> {
+  const apiKey = process.env.TAVILY_API_KEY
+  if (!apiKey) return []
+
+  const resp = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      api_key: apiKey,
+      query,
+      search_depth: 'advanced',
+      max_results: max,
+      include_domains: [
+        'pubmed.ncbi.nlm.nih.gov',
+        'sciencedirect.com',
+        'springer.com',
+        'wiley.com',
+        'mdpi.com',
+        'nature.com',
+        'tandfonline.com',
+        'frontiersin.org',
+        'researchgate.net',
+        'scholar.google.com',
+      ],
+    }),
+  })
+  if (!resp.ok) return []
+
+  const json = (await resp.json()) as { results?: TavilyResult[] }
+  const results = json.results ?? []
+
+  return results.map((r, i): ArxivEntry => {
+    const title = r.title ?? '(sem título)'
+    const summary = (r.content ?? '').replace(/\s+/g, ' ').trim().slice(0, 600)
+    const url = r.url ?? ''
+    const published = (r.published_date ?? '').slice(0, 10)
+    // Tenta extrair journal pela URL
+    let journal = ''
+    try {
+      const host = new URL(url).hostname.replace('www.', '')
+      journal = host
+    } catch { /* ignore */ }
+
+    return {
+      id: `tavily:${url || i}`,
+      title,
+      authors: '',
+      summary: summary || 'Sem snippet disponível.',
+      published,
+      link: url,
+      categories: 'Tavily web',
+      journal,
+      source: 'tavily' as const,
+    }
+  })
+}
+
+// ─── Exa (neural semantic search) ───────────────────────────────────
+interface ExaResult {
+  title?: string
+  url?: string
+  publishedDate?: string
+  author?: string
+  text?: string
+}
+
+async function buscarExa(query: string, max: number): Promise<ArxivEntry[]> {
+  const apiKey = process.env.EXA_API_KEY
+  if (!apiKey) return []
+
+  const resp = await fetch('https://api.exa.ai/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey },
+    body: JSON.stringify({
+      query,
+      numResults: max,
+      type: 'neural',
+      category: 'research paper',
+      contents: { text: { maxCharacters: 500 } },
+    }),
+  })
+  if (!resp.ok) return []
+
+  const json = (await resp.json()) as { results?: ExaResult[] }
+  const results = json.results ?? []
+
+  return results.map((r, i): ArxivEntry => {
+    const title = r.title ?? '(sem título)'
+    const url = r.url ?? ''
+    const summary = (r.text ?? '').replace(/\s+/g, ' ').trim().slice(0, 600)
+    const published = (r.publishedDate ?? '').slice(0, 10)
+    let journal = ''
+    try { journal = new URL(url).hostname.replace('www.', '') } catch { /* ignore */ }
+
+    return {
+      id: `exa:${url || i}`,
+      title,
+      authors: r.author ?? '',
+      summary: summary || 'Sem texto disponível.',
+      published,
+      link: url,
+      categories: 'Exa neural',
+      journal,
+      source: 'exa' as const,
+    }
+  })
+}
+
 // ─── Handler principal ──────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const qRaw = req.nextUrl.searchParams.get('q') ?? ''
@@ -265,11 +382,13 @@ export async function GET(req: NextRequest) {
   const temFood = /food|extrusion|printing|rheology|hydrocolloid|gel/.test(qTraduzido)
   const query = temFood ? qTraduzido : `${qTraduzido} food`
 
-  // Busca em paralelo nas 3 fontes
-  const [openalex, pubmed, crossref] = await Promise.all([
+  // Busca em paralelo em todas as fontes (Tavily/Exa só se API key existir)
+  const [openalex, pubmed, crossref, tavily, exa] = await Promise.all([
     buscarOpenAlex(query, max).catch(() => []),
     buscarPubmed(query, max).catch(() => []),
     buscarCrossref(query, max).catch(() => []),
+    buscarTavily(query, max).catch(() => []),
+    buscarExa(query, max).catch(() => []),
   ])
 
   // Filtra áreas claramente irrelevantes
@@ -279,13 +398,14 @@ export async function GET(req: NextRequest) {
     return !AREAS_BANIDAS.test(haystack)
   }
 
-  const todos = [...openalex, ...pubmed, ...crossref].filter(limparEntry)
+  const todos = [...openalex, ...pubmed, ...crossref, ...tavily, ...exa].filter(limparEntry)
 
-  // Deduplica por DOI
+  // Deduplica por DOI ou URL/título normalizado
   const seen = new Set<string>()
+  const normTitulo = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 80)
   const unicos: ArxivEntry[] = []
   for (const e of todos) {
-    const key = e.doi?.toLowerCase() ?? e.id
+    const key = e.doi?.toLowerCase() ?? `t:${normTitulo(e.title)}`
     if (seen.has(key)) continue
     seen.add(key)
     unicos.push(e)
@@ -300,5 +420,5 @@ export async function GET(req: NextRequest) {
     return scoreB - scoreA
   })
 
-  return NextResponse.json(unicos.slice(0, 20))
+  return NextResponse.json(unicos.slice(0, 25))
 }
