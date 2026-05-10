@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
+import { createElement } from 'react'
 import { renderToStream } from '@react-pdf/renderer'
 import { ProtocoloPDF } from '@/lib/protocolos/pdf'
 import { getProtocolo } from '@/lib/protocolos/data'
 
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function GET(
   _req: Request,
@@ -15,7 +17,7 @@ export async function GET(
     return NextResponse.json({ error: 'Protocolo não encontrado' }, { status: 404 })
   }
 
-  const stream = await renderToStream(<ProtocoloPDF p={protocolo} />)
+  const stream = await renderToStream(createElement(ProtocoloPDF, { p: protocolo }))
 
   // Converter Node Readable -> Web ReadableStream
   const webStream = new ReadableStream({
