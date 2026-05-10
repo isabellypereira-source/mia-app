@@ -230,7 +230,7 @@ async function buscarCrossref(query: string, max: number): Promise<ArxivEntry[]>
     const title = it.title?.[0] ?? '(sem título)'
     const authorsList = (it.author ?? []).slice(0, 3).map(a => `${a.given ?? ''} ${a.family ?? ''}`.trim()).filter(Boolean)
     const authors = authorsList.join(', ') + ((it.author?.length ?? 0) > 3 ? ' et al.' : '')
-    const journal = it.['container-title']?.[0] ?? ''
+    const journal = it['container-title']?.[0] ?? ''
     const yearArr = it.issued?.['date-parts']?.[0]
     const published = yearArr ? yearArr.slice(0, 3).map(n => String(n).padStart(2, '0')).join('-') : ''
     const doi = it.DOI
