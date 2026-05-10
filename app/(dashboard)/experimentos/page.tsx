@@ -42,6 +42,16 @@ const PROBLEMAS = [
   'Outro',
 ]
 
+// Limpa code blocks JSON e formatação de cards estruturados de respostas antigas
+function limparTextoMia(texto: string): string {
+  return texto
+    .replace(/```json[\s\S]*?```/g, '')           // remove blocos ```json ... ```
+    .replace(/```[\s\S]*?```/g, '')                // remove qualquer code block
+    .replace(/\{"__type"[\s\S]*?\}\s*$/gm, '')     // remove cards inline
+    .replace(/\n{3,}/g, '\n\n')                    // colapsa quebras de linha
+    .trim()
+}
+
 function DiagnosticoChat({ exp }: { exp: Experimento }) {
   const [msgs, setMsgs] = useState<ChatMsg[]>(exp.chat ?? [])
   const [input, setInput] = useState('')
@@ -80,7 +90,7 @@ function DiagnosticoChat({ exp }: { exp: Experimento }) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMsgs }),
+        body: JSON.stringify({ messages: apiMsgs, plainText: true }),
       })
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
@@ -130,7 +140,9 @@ function DiagnosticoChat({ exp }: { exp: Experimento }) {
             <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
               m.role === 'user' ? 'bg-[#003223] text-white rounded-br-sm' : 'bg-white border border-[#e5d9c1] text-[#211b0c] rounded-bl-sm'
             }`}>
-              {m.content || <span className="opacity-40">...</span>}
+              {m.content
+                ? (m.role === 'assistant' ? limparTextoMia(m.content) : m.content)
+                : <span className="opacity-40">...</span>}
             </div>
           </div>
         ))}
