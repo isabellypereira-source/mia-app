@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { FileDown, Download, FileText, FlaskConical, Microscope, BookOpen } from 'lucide-react'
+import { Download, FileText, FlaskConical, Microscope, BookOpen, ChevronDown, ExternalLink } from 'lucide-react'
 
 interface Formulacao {
   id: string
@@ -10,373 +10,384 @@ interface Formulacao {
   created_at: string
 }
 
-const PROTOCOLOS_CARACTERIZACAO = [
+interface Secao { titulo: string; conteudo: string | string[] }
+interface Referencia { autores: string; ano: number; titulo: string; revista: string; doi?: string }
+interface Protocolo {
+  id: string
+  titulo: string
+  descricao: string
+  versao: string
+  emissao: string
+  diagrama: React.ReactNode
+  secoes: Secao[]
+  formulas: { label: string; expr: string }[]
+  referencias: Referencia[]
+}
+
+// ─── DIAGRAMAS SVG ──────────────────────────────────────────────────
+
+function DiagramaColapso() {
+  return (
+    <svg viewBox="0 0 320 130" className="w-full max-w-md">
+      <rect x="0" y="105" width="320" height="20" fill="#fff2da" />
+      {/* 6 pilares */}
+      {[0, 1, 2, 3, 4, 5].map(i => {
+        const x = 30 + i * (i + 1) * 4 + i * 30
+        return <rect key={i} x={x} y="50" width="14" height="55" fill="#003223" />
+      })}
+      {/* Filamento curvo (pontes com colapso crescente) */}
+      <path
+        d="M 30 50 Q 60 56 90 50 Q 130 64 168 50 Q 215 78 250 50 Q 290 95 320 50"
+        stroke="#c8ee4f" strokeWidth="3.5" fill="none"
+      />
+      {/* Labels de vão */}
+      {['1','2','3','4','5','6'].map((mm, i) => {
+        const x = 30 + i * (i + 1) * 4 + i * 30 + 18
+        return (
+          <text key={i} x={x} y="125" fontSize="9" fill="#58413c" textAnchor="middle">
+            {mm}mm
+          </text>
+        )
+      })}
+    </svg>
+  )
+}
+
+function DiagramaTPA() {
+  return (
+    <svg viewBox="0 0 240 140" className="w-full max-w-xs">
+      {/* Sonda cilíndrica */}
+      <rect x="100" y="10" width="40" height="35" fill="#003223" rx="2" />
+      <line x1="120" y1="45" x2="120" y2="58" stroke="#003223" strokeWidth="2" strokeDasharray="3,3" />
+      <text x="155" y="32" fontSize="9" fill="#58413c">Sonda P/35R</text>
+      <text x="155" y="44" fontSize="8" fill="#707974">∅ 45 mm</text>
+      {/* Amostra cilíndrica */}
+      <ellipse cx="120" cy="80" rx="60" ry="8" fill="#fff2da" stroke="#58413c" strokeWidth="1" />
+      <rect x="60" y="80" width="120" height="35" fill="#fff8f1" stroke="#58413c" strokeWidth="1" />
+      <ellipse cx="120" cy="115" rx="60" ry="8" fill="#fff8f1" stroke="#58413c" strokeWidth="1" />
+      {/* Setas de compressão */}
+      <path d="M 120 56 L 120 75 M 116 70 L 120 75 L 124 70" stroke="#c8ee4f" strokeWidth="2" fill="none" />
+      <text x="10" y="100" fontSize="9" fill="#58413c">Deformação</text>
+      <text x="10" y="112" fontSize="9" fill="#58413c">80%</text>
+    </svg>
+  )
+}
+
+function DiagramaSinerese() {
+  return (
+    <svg viewBox="0 0 240 140" className="w-full max-w-xs">
+      {/* Cilindro impresso */}
+      <ellipse cx="80" cy="40" rx="35" ry="6" fill="#fff2da" stroke="#58413c" strokeWidth="1" />
+      <rect x="45" y="40" width="70" height="60" fill="#fff8f1" stroke="#58413c" strokeWidth="1" />
+      <ellipse cx="80" cy="100" rx="35" ry="6" fill="#fff8f1" stroke="#58413c" strokeWidth="1" />
+      <text x="50" y="125" fontSize="9" fill="#58413c">∅ 20 × 10 mm</text>
+      {/* Setas de processo */}
+      <path d="M 130 70 L 165 70 M 160 66 L 165 70 L 160 74" stroke="#003223" strokeWidth="1.5" fill="none" />
+      <text x="135" y="65" fontSize="8" fill="#003223">-18°C / 24h</text>
+      <text x="135" y="80" fontSize="8" fill="#003223">25°C / 8h</text>
+      {/* Cilindro pós ciclo + gota */}
+      <ellipse cx="200" cy="42" rx="30" ry="5" fill="#fff2da" stroke="#58413c" strokeWidth="1" />
+      <rect x="170" y="42" width="60" height="55" fill="#fff8f1" stroke="#58413c" strokeWidth="1" />
+      <ellipse cx="200" cy="97" rx="30" ry="5" fill="#fff8f1" stroke="#58413c" strokeWidth="1" />
+      <circle cx="216" cy="108" r="4" fill="#516600" opacity="0.6" />
+      <circle cx="206" cy="113" r="3" fill="#516600" opacity="0.5" />
+    </svg>
+  )
+}
+
+function DiagramaFidelidade() {
+  return (
+    <svg viewBox="0 0 200 200" className="w-full max-w-xs">
+      <rect x="20" y="20" width="160" height="160" fill="none" stroke="#003223" strokeWidth="2" />
+      {/* Grid interno (unidades de 22.56mm²) */}
+      {[0, 1, 2].map(r => [0, 1, 2].map(c => (
+        <rect
+          key={`${r}-${c}`}
+          x={30 + c * 50} y={30 + r * 50} width="40" height="40"
+          fill="#fff2da" stroke="#58413c" strokeWidth="0.7"
+        />
+      )))}
+      <text x="100" y="195" fontSize="10" fill="#58413c" textAnchor="middle">22 × 22 mm</text>
+      <text x="100" y="14" fontSize="9" fill="#707974" textAnchor="middle">unidade interna ≈ 22,56 mm²</text>
+    </svg>
+  )
+}
+
+function DiagramaPrecisao() {
+  return (
+    <svg viewBox="0 0 320 160" className="w-full max-w-md">
+      {/* Cubo (precisão) */}
+      <g>
+        <polygon points="30,30 100,30 100,100 30,100" fill="#fff8f1" stroke="#003223" strokeWidth="1.5" />
+        <polygon points="30,30 50,15 120,15 100,30" fill="#fff2da" stroke="#003223" strokeWidth="1.5" />
+        <polygon points="100,30 120,15 120,85 100,100" fill="#f9edd4" stroke="#003223" strokeWidth="1.5" />
+        <text x="65" y="120" fontSize="9" fill="#58413c" textAnchor="middle">Cubo 15×15×15 mm</text>
+        <text x="65" y="132" fontSize="8" fill="#707974" textAnchor="middle">precisão (PA)</text>
+      </g>
+      {/* Cilindro oco (altura máxima) */}
+      <g>
+        <ellipse cx="240" cy="30" rx="40" ry="7" fill="#fff2da" stroke="#003223" strokeWidth="1.5" />
+        <line x1="200" y1="30" x2="200" y2="100" stroke="#003223" strokeWidth="1.5" />
+        <line x1="280" y1="30" x2="280" y2="100" stroke="#003223" strokeWidth="1.5" />
+        <ellipse cx="240" cy="100" rx="40" ry="7" fill="#fff8f1" stroke="#003223" strokeWidth="1.5" />
+        <ellipse cx="240" cy="30" rx="30" ry="5" fill="#fff8f1" stroke="#58413c" strokeWidth="0.7" />
+        <text x="240" y="120" fontSize="9" fill="#58413c" textAnchor="middle">Cilindro oco ∅ 28 mm</text>
+        <text x="240" y="132" fontSize="8" fill="#707974" textAnchor="middle">altura máxima</text>
+      </g>
+    </svg>
+  )
+}
+
+// ─── PROTOCOLOS ─────────────────────────────────────────────────────
+
+const PROTOCOLOS: Protocolo[] = [
   {
     id: 'colapso_filamento',
     titulo: 'Teste de Colapso de Filamento',
     descricao: 'Avaliação de sustentação estrutural por análise de pontes sobre vãos de 1 a 6 mm.',
-    referencia: 'Sviech et al., 2025',
-    conteudo: `TESTE DE COLAPSO DE FILAMENTO PARA IMPRESSÃO 3D DE ALIMENTOS
-Versão: 1.0  |  Emissão: Abril/2026  |  Referência: Sviech et al., 2025
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. OBJETIVO
-Avaliar a capacidade de sustentação e estabilidade estrutural de formulações alimentícias para impressão 3D, por meio da análise do comportamento de um filamento extrudado sobre vãos livres.
-
-2. PRINCÍPIO DO MÉTODO
-O teste consiste na deposição de um único filamento sobre uma plataforma contendo pilares com diferentes espaçamentos. O material forma pontes suspensas, permitindo avaliar sua capacidade de resistir à deformação gravitacional. A deflexão do filamento está diretamente relacionada a propriedades reológicas como tensão de escoamento, coesão estrutural e recuperação tixotrópica.
-
-3. GEOMETRIA DA PONTE DE COLAPSO
-Plataforma com 6 pilares paralelos de altura uniforme, separados por vãos de distâncias crescentes (1, 2, 3, 4, 5 e 6 mm). A geometria padronizada garante reprodutibilidade do ensaio e permite comparação direta entre formulações.
-
-4. PROCEDIMENTO EXPERIMENTAL
-1. Carregar a formulação na impressora.
-2. Posicionar a plataforma de teste na mesa de impressão.
-3. Ajustar parâmetros de impressão (velocidade de extrusão, temperatura, diâmetro do bico, altura de camada).
-4. Extrudar um único filamento sobre os pilares, formando pontes sobre os vãos.
-5. Garantir que o filamento atravesse todos os espaçamentos em uma única deposição contínua.
-6. Registrar imagens imediatamente após a impressão, evitando influência do tempo na deformação.
-
-5. ANÁLISE DOS RESULTADOS
-Determinação das áreas (ImageJ/Fiji com escala calibrada):
-• At = área teórica = região ideal do filamento sem deformação (linha reta entre pilares)
-• Ar = área real = região efetivamente ocupada pelo filamento impresso, incluindo curvatura do colapso
-
-Cálculo do Fator de Colapso:
-    Cf (%) = (At / Ar) × 100
-
-Calcular individualmente para cada vão e cada replicata. Registrar média e desvio padrão por vão e formulação.
-
-6. INTERPRETAÇÃO DOS RESULTADOS
-• Cf próximo a 0%: colapso total — material muito fluido, baixa viscosidade ou tensão de escoamento
-• Cf entre 20% e 70%: sustentação parcial — estrutura moderadamente estável, pode exigir ajuste
-• Cf > 70%: ausência de colapso significativo, ponte estável — ideal para impressão 3D
-
-Cf elevado → maior tensão de escoamento e melhor recuperação tixotrópica.
-Cf reduzido → necessita reformulação com agentes estruturantes (hidrocolóides, amidos, proteínas).
-
-7. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
-Mínimo de 3 repetições independentes por formulação, mantendo os mesmos parâmetros de impressão. Resultados expressos como média ± desvio padrão.
-
-8. OBSERVAÇÕES IMPORTANTES
-• Garantir consistência na extrusão (evitar pulsação)
-• Controlar a temperatura ambiente durante o teste
-• Padronizar o tempo entre impressão e captura de imagem
-• Evitar vibrações na mesa durante o procedimento
-
-9. REFERÊNCIA
-Sviech, F., Silva, M. F., Goldbeck, R., Andreola, K., & Prata, A. S. (2025). Rheology and prebiotic activity of Ora-pro-Nobis for the development of functional ingredients by 3D food printing. Food Bioscience, 72, 107519. https://doi.org/10.1016/j.fbio.2025.107519`,
+    versao: '1.0',
+    emissao: 'Abril/2026',
+    diagrama: <DiagramaColapso />,
+    secoes: [
+      { titulo: 'Objetivo', conteudo: 'Avaliar a capacidade de sustentação e estabilidade estrutural de formulações alimentícias para impressão 3D, por meio da análise do comportamento de um filamento extrudado sobre vãos livres.' },
+      { titulo: 'Princípio do método', conteudo: 'O teste consiste na deposição de um único filamento sobre uma plataforma contendo pilares com diferentes espaçamentos. O material forma pontes suspensas, permitindo avaliar sua capacidade de resistir à deformação gravitacional. A deflexão do filamento está diretamente relacionada a propriedades reológicas como tensão de escoamento, coesão estrutural e recuperação tixotrópica.' },
+      { titulo: 'Geometria da ponte de colapso', conteudo: 'Plataforma com 6 pilares paralelos de altura uniforme, separados por vãos de distâncias crescentes (1, 2, 3, 4, 5 e 6 mm). A geometria padronizada garante reprodutibilidade do ensaio e permite comparação direta entre formulações.' },
+      { titulo: 'Procedimento experimental', conteudo: [
+        'Carregar a formulação na impressora.',
+        'Posicionar a plataforma de teste na mesa de impressão.',
+        'Ajustar parâmetros de impressão (velocidade de extrusão, temperatura, diâmetro do bico, altura de camada).',
+        'Extrudar um único filamento sobre os pilares, formando pontes sobre os vãos.',
+        'Garantir que o filamento atravesse todos os espaçamentos em uma única deposição contínua.',
+        'Registrar imagens imediatamente após a impressão, evitando influência do tempo na deformação.',
+      ]},
+      { titulo: 'Análise dos resultados', conteudo: 'Determinação das áreas via ImageJ/Fiji com escala calibrada. At = área teórica (linha reta entre pilares). Ar = área real ocupada pelo filamento, incluindo curvatura do colapso. Calcular individualmente para cada vão e cada replicata. Registrar média e desvio padrão.' },
+      { titulo: 'Interpretação dos resultados', conteudo: [
+        'Cf próximo a 0%: colapso total — material muito fluido, baixa viscosidade.',
+        'Cf entre 20% e 70%: sustentação parcial — pode exigir ajuste na formulação.',
+        'Cf > 70%: ponte estável — ideal para impressão 3D.',
+        'Cf elevado → maior tensão de escoamento e melhor recuperação tixotrópica.',
+        'Cf reduzido → reformular com hidrocolóides, amidos ou proteínas.',
+      ]},
+      { titulo: 'Repetições e tratamento estatístico', conteudo: 'Mínimo 3 repetições independentes por formulação, mesmos parâmetros de impressão. Resultados expressos como média ± desvio padrão.' },
+      { titulo: 'Observações importantes', conteudo: [
+        'Garantir consistência na extrusão (evitar pulsação).',
+        'Controlar a temperatura ambiente durante o teste.',
+        'Padronizar o tempo entre impressão e captura de imagem.',
+        'Evitar vibrações na mesa durante o procedimento.',
+      ]},
+    ],
+    formulas: [
+      { label: 'Fator de Colapso', expr: 'Cf (%) = (At / Ar) × 100' },
+    ],
+    referencias: [
+      { autores: 'Sviech, F., Silva, M. F., Goldbeck, R., Andreola, K., & Prata, A. S.', ano: 2025, titulo: 'Rheology and prebiotic activity of Ora-pro-Nobis for the development of functional ingredients by 3D food printing', revista: 'Food Bioscience, 72, 107519', doi: '10.1016/j.fbio.2025.107519' },
+    ],
   },
   {
     id: 'tpa_cooking_loss',
     titulo: 'TPA + Perda de Massa no Cozimento',
     descricao: 'Análise de Perfil de Textura por dupla compressão e perda de massa após cozimento.',
-    referencia: 'Demircan et al., 2023',
-    conteudo: `ANÁLISE DE PERFIL DE TEXTURA (TPA) E PERDA DE MASSA NO COZIMENTO
-PARA IMPRESSÃO 3D DE ALIMENTOS
-Versão: 1.0  |  Emissão: Abril/2026  |  Referência: Demircan et al., 2023
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. OBJETIVO
-Avaliar as propriedades texturais e a estabilidade estrutural de formulações alimentícias impressas em 3D, por meio da Análise de Perfil de Textura (TPA) e da determinação da perda de massa durante o cozimento.
-
-2. PRINCÍPIO DO MÉTODO
-
-Análise de Perfil de Textura (TPA):
-A TPA simula mecanicamente o processo de mastigação, permitindo obter parâmetros como dureza, coesividade, elasticidade, gomosidade e mastigabilidade. Esses parâmetros estão diretamente relacionados à estrutura interna do material e sua aceitabilidade sensorial.
-
-Perda de massa no cozimento (Cooking Loss):
-Avalia a capacidade da matriz alimentar em reter água e outros constituintes durante o tratamento térmico. A liberação de líquidos está associada à estabilidade da rede estrutural formada por proteínas, polissacarídeos e outros componentes.
-
-3. EQUIPAMENTO
-Analisador de textura TA.XT Plus (Stable Micro Systems, UK)
-Sonda cilíndrica de alumínio com base plana (P/35R, diâmetro 45 mm)
-
-4. CONDIÇÕES DAS AMOSTRAS
-Análises devem ser realizadas em:
-• Amostras cruas
-• Amostras assadas (10 minutos a 180 °C)
-
-5. PROCEDIMENTO EXPERIMENTAL — TPA
-
-Parâmetros sugeridos:
-• Velocidade pré-teste: 10 mm/s
-• Velocidade de teste: 18 mm/s
-• Velocidade pós-teste: 18 mm/s
-• Força de disparo (trigger): 0,049 N
-• Deformação: 80%
-
-Procedimento:
-1. Posicionar a amostra centralizada no equipamento.
-2. Realizar dupla compressão (ciclo TPA).
-3. Registrar parâmetros texturais.
-4. Repetir para todas as amostras.
-
-6. PARÂMETROS AVALIADOS (TPA)
-• Dureza (Hardness)
-• Coesividade (Cohesiveness)
-• Elasticidade (Springiness)
-• Gomosidade (Gumminess)
-• Mastigabilidade (Chewiness)
-
-7. PROCEDIMENTO PARA PERDA DE MASSA NO COZIMENTO
-1. Pesar a amostra antes do cozimento (M₀).
-2. Assar as amostras (~10 minutos a 180 °C).
-3. Resfriar até temperatura ambiente (~25 °C).
-4. Remover excesso de líquido com papel absorvente.
-5. Pesar novamente a amostra (Ma).
-
-Cálculo:
-    CL (%) = ((M₀ - Ma) / M₀) × 100
-
-Onde M₀ = massa inicial (g) e Ma = massa após cozimento (g).
-
-8. INTERPRETAÇÃO DOS RESULTADOS
-
-TPA — refletem a integridade estrutural da matriz:
-• Alta dureza → estrutura mais rígida
-• Alta coesividade → maior integridade interna
-• Alta elasticidade → maior recuperação após deformação
-• Alta mastigabilidade → maior energia para mastigação
-
-Formulações com bom desempenho estrutural apresentam equilíbrio entre dureza e coesividade, sem comportamento excessivamente rígido ou frágil.
-
-Cooking Loss — capacidade de retenção de água:
-• CL elevado → baixa retenção, estrutura instável
-• CL intermediário → retenção moderada
-• CL baixo → alta estabilidade e retenção de água
-
-Valores reduzidos de CL geralmente associados à maior interação entre proteínas e hidrocolóides.
-
-9. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
-• TPA: mínimo de 5 repetições (quintuplicata)
-• Cooking Loss: mínimo de 3 repetições
-• Resultados expressos como média ± desvio padrão
-
-10. OBSERVAÇÕES IMPORTANTES
-• Padronizar tamanho e geometria das amostras
-• Controlar temperatura antes da análise
-• Evitar desidratação antes da pesagem final
-• Garantir contato uniforme da sonda no TPA
-• Manter consistência no tempo entre preparo e análise
-
-11. REFERÊNCIA
-Demircan, E., Aydar, E. F., Mertdinç, Z., Kasapoğlu, K. N., & Özçelik, B. (2023). 3D printable vegan plant-based meat analogue: Fortification with three different mushrooms, investigation of printability, and characterization. Food Research International, 173(Part 1). https://doi.org/10.1016/j.foodres.2023.113259`,
+    versao: '1.0',
+    emissao: 'Abril/2026',
+    diagrama: <DiagramaTPA />,
+    secoes: [
+      { titulo: 'Objetivo', conteudo: 'Avaliar as propriedades texturais e a estabilidade estrutural de formulações alimentícias impressas em 3D, por meio da Análise de Perfil de Textura (TPA) e da determinação da perda de massa durante o cozimento.' },
+      { titulo: 'Princípio — TPA', conteudo: 'A TPA simula mecanicamente o processo de mastigação, permitindo obter parâmetros como dureza, coesividade, elasticidade, gomosidade e mastigabilidade. Esses parâmetros estão diretamente relacionados à estrutura interna do material e sua aceitabilidade sensorial.' },
+      { titulo: 'Princípio — Cooking Loss', conteudo: 'Avalia a capacidade da matriz alimentar em reter água e outros constituintes durante o tratamento térmico. A liberação de líquidos está associada à estabilidade da rede estrutural formada por proteínas, polissacarídeos e outros componentes.' },
+      { titulo: 'Equipamento', conteudo: 'Analisador de textura TA.XT Plus (Stable Micro Systems, UK). Sonda cilíndrica de alumínio com base plana (P/35R, diâmetro 45 mm).' },
+      { titulo: 'Condições das amostras', conteudo: ['Amostras cruas.', 'Amostras assadas (10 minutos a 180 °C).'] },
+      { titulo: 'Parâmetros TPA sugeridos', conteudo: [
+        'Velocidade pré-teste: 10 mm/s',
+        'Velocidade de teste: 18 mm/s',
+        'Velocidade pós-teste: 18 mm/s',
+        'Força de disparo (trigger): 0,049 N',
+        'Deformação: 80%',
+      ]},
+      { titulo: 'Parâmetros avaliados (TPA)', conteudo: [
+        'Dureza (Hardness)',
+        'Coesividade (Cohesiveness)',
+        'Elasticidade (Springiness)',
+        'Gomosidade (Gumminess)',
+        'Mastigabilidade (Chewiness)',
+      ]},
+      { titulo: 'Procedimento — Cooking Loss', conteudo: [
+        'Pesar a amostra antes do cozimento (M₀).',
+        'Assar (~10 minutos a 180 °C).',
+        'Resfriar até temperatura ambiente (~25 °C).',
+        'Remover excesso de líquido com papel absorvente.',
+        'Pesar novamente (Ma).',
+      ]},
+      { titulo: 'Interpretação — TPA', conteudo: [
+        'Alta dureza → estrutura mais rígida.',
+        'Alta coesividade → maior integridade interna.',
+        'Alta elasticidade → maior recuperação após deformação.',
+        'Alta mastigabilidade → maior energia para mastigação.',
+        'Bom desempenho: equilíbrio entre dureza e coesividade, sem rigidez excessiva.',
+      ]},
+      { titulo: 'Interpretação — Cooking Loss', conteudo: [
+        'CL elevado → baixa retenção, estrutura instável.',
+        'CL intermediário → retenção moderada.',
+        'CL baixo → alta estabilidade e retenção de água.',
+      ]},
+      { titulo: 'Repetições e tratamento estatístico', conteudo: 'TPA: mínimo 5 repetições (quintuplicata). Cooking Loss: mínimo 3 repetições. Resultados expressos como média ± desvio padrão.' },
+      { titulo: 'Observações importantes', conteudo: [
+        'Padronizar tamanho e geometria das amostras.',
+        'Controlar temperatura antes da análise.',
+        'Evitar desidratação antes da pesagem final.',
+        'Garantir contato uniforme da sonda no TPA.',
+        'Manter consistência no tempo entre preparo e análise.',
+      ]},
+    ],
+    formulas: [
+      { label: 'Coesividade', expr: 'Coes = Área₂ / Área₁' },
+      { label: 'Elasticidade', expr: 'Elast = D₂ / D₁' },
+      { label: 'Gomosidade', expr: 'Gom = Dureza × Coes' },
+      { label: 'Mastigabilidade', expr: 'Mast = Gom × Elast' },
+      { label: 'Cooking Loss', expr: 'CL (%) = ((M₀ - Ma) / M₀) × 100' },
+    ],
+    referencias: [
+      { autores: 'Demircan, E., Aydar, E. F., Mertdinç, Z., Kasapoğlu, K. N., & Özçelik, B.', ano: 2023, titulo: '3D printable vegan plant-based meat analogue: Fortification with three different mushrooms, investigation of printability, and characterization', revista: 'Food Research International, 173(Part 1)', doi: '10.1016/j.foodres.2023.113259' },
+    ],
   },
   {
     id: 'sinerese',
     titulo: 'Sinérese (Congelamento-Descongelamento)',
     descricao: 'Avaliação da estabilidade estrutural após estresse térmico por ciclo de congelamento.',
-    referencia: 'Xie et al., 2022',
-    conteudo: `ANÁLISE DE SINÉRESE POR CICLO DE CONGELAMENTO-DESCONGELAMENTO
-Versão: 1.0  |  Emissão: Abril/2026  |  Referência: Xie et al., 2022
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. OBJETIVO
-Avaliar a estabilidade estrutural e a capacidade de retenção de água de formulações alimentícias impressas em 3D submetidas a ciclos de congelamento e descongelamento, por meio da determinação da sinérese.
-
-2. PRINCÍPIO DO MÉTODO
-A sinérese corresponde à liberação de água da matriz alimentar após aplicação de estresses físicos, como congelamento e descongelamento. Está diretamente relacionada à integridade da rede estrutural formada por proteínas e hidrocolóides.
-
-Durante o congelamento, a formação de cristais de gelo pode causar danos à estrutura do gel, promovendo separação de fases. Após o descongelamento, formulações menos estáveis apresentam maior liberação de água, refletindo menor capacidade de retenção hídrica.
-
-3. GEOMETRIA DAS AMOSTRAS
-Amostras impressas em forma de cilindros padronizados:
-• Diâmetro: 20 mm
-• Altura: 10 mm
-
-A padronização geométrica é essencial para garantir comparabilidade entre formulações.
-
-4. PROCEDIMENTO EXPERIMENTAL
-1. Imprimir as amostras cilíndricas com dimensões padronizadas.
-2. Pesar imediatamente após a impressão (W₀).
-3. Submeter ao congelamento a -18 °C por 24 horas.
-4. Transferir para ambiente a 25 °C e descongelar por 8 horas.
-5. Após descongelamento, remover suavemente o excesso de líquido superficial (sem pressionar a amostra).
-6. Pesar novamente as amostras (Wa).
-
-Cálculo da sinérese:
-    Syneresis (%) = ((W₀ - Wa) / W₀) × 100
-
-Onde W₀ = massa após impressão (g) e Wa = massa após o ciclo de congelamento-descongelamento (g).
-
-5. INTERPRETAÇÃO DOS RESULTADOS
-A sinérese é um indicador direto da estabilidade da matriz alimentar frente ao estresse térmico:
-
-• Sinérese elevada: alta liberação de água, estrutura instável, baixa interação entre componentes
-• Sinérese intermediária: estabilidade moderada, estrutura parcialmente preservada
-• Baixa sinérese: alta retenção de água, estrutura estável, boa interação entre proteínas e hidrocolóides
-
-Formulações contendo hidrocolóides (mucilagem de ora-pro-nóbis, goma guar, goma xantana) tendem a apresentar menor sinérese devido à maior capacidade de retenção de água e formação de redes estruturais resistentes ao dano causado pelo gelo.
-
-6. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
-• Mínimo de 3 repetições independentes por formulação
-• Resultados expressos como média ± desvio padrão
-
-7. OBSERVAÇÕES IMPORTANTES
-• Padronizar o tempo entre impressão e pesagem inicial
-• Evitar perda de umidade antes da primeira pesagem
-• Não aplicar pressão ao remover o líquido após descongelamento
-• Garantir controle rigoroso de temperatura durante congelamento e descongelamento
-• Evitar variações no tamanho e geometria das amostras
-
-8. REFERÊNCIA
-Xie, F., Ren, X., Wu, H., Zhang, H., Wu, Y., Song, Z., & Ai, L. (2022). Pectins of different resources influence cold storage properties of corn starch gels: Structure-property relationships. Food Hydrocolloids, 124(Part A), 107287. https://doi.org/10.1016/j.foodhyd.2021.107287`,
+    versao: '1.0',
+    emissao: 'Abril/2026',
+    diagrama: <DiagramaSinerese />,
+    secoes: [
+      { titulo: 'Objetivo', conteudo: 'Avaliar a estabilidade estrutural e a capacidade de retenção de água de formulações alimentícias impressas em 3D submetidas a ciclos de congelamento e descongelamento, por meio da determinação da sinérese.' },
+      { titulo: 'Princípio do método', conteudo: 'A sinérese corresponde à liberação de água da matriz alimentar após aplicação de estresses físicos. Durante o congelamento, a formação de cristais de gelo pode causar danos à estrutura do gel, promovendo separação de fases. Após o descongelamento, formulações menos estáveis apresentam maior liberação de água, refletindo menor capacidade de retenção hídrica.' },
+      { titulo: 'Geometria das amostras', conteudo: ['Diâmetro: 20 mm', 'Altura: 10 mm', 'Padronização essencial para garantir comparabilidade entre formulações.'] },
+      { titulo: 'Procedimento experimental', conteudo: [
+        'Imprimir as amostras cilíndricas com dimensões padronizadas.',
+        'Pesar imediatamente após a impressão (W₀).',
+        'Submeter ao congelamento a -18 °C por 24 horas.',
+        'Transferir para ambiente a 25 °C e descongelar por 8 horas.',
+        'Após descongelamento, remover suavemente o excesso de líquido superficial (sem pressionar).',
+        'Pesar novamente as amostras (Wa).',
+      ]},
+      { titulo: 'Interpretação dos resultados', conteudo: [
+        'Sinérese elevada: alta liberação de água, estrutura instável, baixa interação entre componentes.',
+        'Sinérese intermediária: estabilidade moderada, estrutura parcialmente preservada.',
+        'Baixa sinérese: alta retenção de água, estrutura estável, boa interação proteínas-hidrocolóides.',
+        'Hidrocolóides como mucilagem de ora-pro-nóbis, goma guar e xantana tendem a apresentar menor sinérese.',
+      ]},
+      { titulo: 'Repetições e tratamento estatístico', conteudo: 'Mínimo 3 repetições independentes por formulação. Resultados expressos como média ± desvio padrão.' },
+      { titulo: 'Observações importantes', conteudo: [
+        'Padronizar o tempo entre impressão e pesagem inicial.',
+        'Evitar perda de umidade antes da primeira pesagem.',
+        'Não aplicar pressão ao remover o líquido após descongelamento.',
+        'Garantir controle rigoroso de temperatura.',
+        'Evitar variações no tamanho e geometria das amostras.',
+      ]},
+    ],
+    formulas: [
+      { label: 'Sinérese', expr: 'Syneresis (%) = ((W₀ - Wa) / W₀) × 100' },
+    ],
+    referencias: [
+      { autores: 'Xie, F., Ren, X., Wu, H., Zhang, H., Wu, Y., Song, Z., & Ai, L.', ano: 2022, titulo: 'Pectins of different resources influence cold storage properties of corn starch gels: Structure-property relationships', revista: 'Food Hydrocolloids, 124(Part A), 107287', doi: '10.1016/j.foodhyd.2021.107287' },
+    ],
   },
   {
     id: 'fidelidade_dimensional',
     titulo: 'Fidelidade Dimensional',
     descricao: 'Comparação da área medida vs. nominal por análise de imagem em estrutura quadrada padronizada.',
-    referencia: 'Versão própria MIA',
-    conteudo: `ANÁLISE DE FIDELIDADE DIMENSIONAL (%) EM IMPRESSÃO 3D DE ALIMENTOS
-Versão: 1.0  |  Emissão: Abril/2026
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. OBJETIVO
-Avaliar a precisão geométrica de estruturas impressas em 3D, por meio da comparação entre as dimensões do modelo projetado (CAD) e do objeto impresso, utilizando a métrica de fidelidade dimensional.
-
-2. PRINCÍPIO DO MÉTODO
-A fidelidade dimensional representa o grau de correspondência entre a geometria planejada no modelo digital e a estrutura final impressa. Desvios podem ocorrer devido a propriedades reológicas da formulação, parâmetros de impressão e comportamento de extrusão.
-
-A análise compara a área interna de uma estrutura geométrica padronizada com sua área nominal, permitindo quantificar a precisão do processo.
-
-3. GEOMETRIA DO MODELO
-Estrutura quadrada com:
-• Dimensões externas: 22 × 22 mm
-• Área interna de cada unidade quadrada: 22,56 mm²
-
-A padronização permite comparação direta entre diferentes condições de impressão.
-
-4. PARÂMETROS SUGERIDOS DE IMPRESSÃO
-• Diâmetro do bico: 0,6 mm
-• Velocidades de impressão: 2,5; 5,0; 10,0; 15,0 mm/s
-• Vazão de extrusão: ajustada proporcionalmente à velocidade
-• Demais parâmetros: padrão do software de fatiamento
-
-5. PROCEDIMENTO EXPERIMENTAL
-1. Desenvolver o modelo geométrico no software de fatiamento.
-2. Configurar parâmetros de impressão.
-3. Imprimir amostras nas diferentes velocidades estabelecidas.
-4. Ajustar vazão de extrusão proporcional à velocidade.
-5. Produzir amostras em triplicata para cada condição.
-6. Capturar imagens sob condições padronizadas (iluminação, distância, enquadramento).
-
-6. DETERMINAÇÃO DAS ÁREAS
-Análise de imagem com software adequado (ex.: ImageJ), com calibração de escala.
-• Área nominal (An): 22,56 mm²
-• Área medida (Am): obtida da imagem da amostra impressa
-
-7. CÁLCULO DA FIDELIDADE DIMENSIONAL
-    Fidelidade Dimensional (%) = (Am / An) × 100
-
-Onde Am = área medida da estrutura impressa (mm²) e An = área nominal do modelo (mm²).
-
-8. INTERPRETAÇÃO DOS RESULTADOS
-• Valores próximos de 100%: alta precisão dimensional
-• Valores muito superiores a 100%: excesso de material (over-extrusion), possível baixa viscosidade ou alta vazão
-• Valores muito inferiores a 100%: subextrusão ou colapso estrutural, possível alta viscosidade ou baixa vazão
-
-A fidelidade dimensional está diretamente relacionada ao equilíbrio entre propriedades reológicas da formulação e parâmetros de processo, especialmente velocidade de impressão e vazão de extrusão.
-
-9. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
-• 3 repetições independentes por condição experimental
-• Resultados expressos como média ± desvio padrão
-
-10. OBSERVAÇÕES IMPORTANTES
-• Padronizar rigorosamente as condições de captura de imagem
-• Garantir calibração correta da escala no software de análise
-• Evitar deformações durante a remoção da amostra da base
-• Controlar a consistência da extrusão durante a impressão
-• Avaliar possíveis efeitos de espalhamento do material após deposição`,
+    versao: '1.0',
+    emissao: 'Abril/2026',
+    diagrama: <DiagramaFidelidade />,
+    secoes: [
+      { titulo: 'Objetivo', conteudo: 'Avaliar a precisão geométrica de estruturas impressas em 3D, por meio da comparação entre as dimensões do modelo projetado (CAD) e do objeto impresso, utilizando a métrica de fidelidade dimensional.' },
+      { titulo: 'Princípio do método', conteudo: 'A fidelidade dimensional representa o grau de correspondência entre a geometria planejada no modelo digital e a estrutura final impressa. Desvios podem ocorrer devido a propriedades reológicas da formulação, parâmetros de impressão e comportamento de extrusão.' },
+      { titulo: 'Geometria do modelo', conteudo: ['Dimensões externas: 22 × 22 mm', 'Área interna de cada unidade quadrada: 22,56 mm²', 'Padronização permite comparação direta entre condições.'] },
+      { titulo: 'Parâmetros sugeridos de impressão', conteudo: [
+        'Diâmetro do bico: 0,6 mm',
+        'Velocidades testadas: 2,5; 5,0; 10,0; 15,0 mm/s',
+        'Vazão de extrusão: ajustada proporcionalmente à velocidade',
+        'Demais parâmetros: padrão do software de fatiamento',
+      ]},
+      { titulo: 'Procedimento experimental', conteudo: [
+        'Desenvolver o modelo geométrico no software de fatiamento.',
+        'Configurar parâmetros de impressão.',
+        'Imprimir amostras nas diferentes velocidades estabelecidas.',
+        'Ajustar vazão proporcional à velocidade.',
+        'Produzir amostras em triplicata para cada condição.',
+        'Capturar imagens sob condições padronizadas.',
+      ]},
+      { titulo: 'Interpretação dos resultados', conteudo: [
+        'Próximo de 100%: alta precisão dimensional.',
+        'Muito superior a 100%: over-extrusion (excesso de material), baixa viscosidade ou alta vazão.',
+        'Muito inferior a 100%: subextrusão ou colapso, alta viscosidade ou baixa vazão.',
+      ]},
+      { titulo: 'Repetições e tratamento estatístico', conteudo: '3 repetições independentes por condição. Resultados expressos como média ± desvio padrão.' },
+      { titulo: 'Observações importantes', conteudo: [
+        'Padronizar rigorosamente a captura de imagem.',
+        'Garantir calibração da escala no software de análise.',
+        'Evitar deformações durante a remoção da base.',
+        'Controlar a consistência da extrusão.',
+        'Avaliar efeitos de espalhamento após deposição.',
+      ]},
+    ],
+    formulas: [
+      { label: 'Fidelidade Dimensional', expr: 'FD (%) = (Am / An) × 100' },
+    ],
+    referencias: [],
   },
   {
     id: 'precisao_impressao',
     titulo: 'Precisão de Impressão + Altura Máxima',
     descricao: 'Acurácia dimensional de cubos e altura máxima de cilindros ocos antes do colapso.',
-    referencia: 'Demircan et al., 2023; Cheng et al., 2024',
-    conteudo: `ANÁLISE DE PRECISÃO DE IMPRESSÃO (%) E ALTURA MÁXIMA IMPRIMÍVEL
-EM IMPRESSÃO 3D DE ALIMENTOS
-Versão: 1.0  |  Emissão: Abril/2026  |  Referências: Demircan et al., 2023; Cheng et al., 2024
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. OBJETIVO
-Avaliar a precisão geométrica e a capacidade de construção em altura de formulações alimentícias impressas em 3D, por meio da análise da acurácia dimensional de estruturas cúbicas e da determinação da altura máxima imprimível.
-
-2. PRINCÍPIO DO MÉTODO
-
-Precisão de impressão:
-Representa o grau de correspondência entre as dimensões planejadas no modelo digital e as dimensões reais da estrutura impressa. Considera desvios em altura e comprimento, refletindo a estabilidade do empilhamento de camadas e a qualidade da deposição do material.
-
-Altura máxima imprimível:
-Indica a capacidade da formulação em sustentar múltiplas camadas sem colapso estrutural, diretamente influenciada pelas propriedades reológicas e resistência mecânica do material após deposição. É feita uma impressão em formato de cilindro oco até que o objeto colapse.
-
-3. GEOMETRIA DOS MODELOS
-
-Modelo cúbico (precisão de impressão):
-• Dimensões: 15 × 15 × 15 mm
-• Número de camadas: 13
-• Densidade de impressão: 70%
-
-Modelo cilíndrico (altura máxima):
-• Diâmetro: 28 mm
-• Estrutura oca
-
-4. PARÂMETROS SUGERIDOS DE IMPRESSÃO
-• Diâmetro do bico: 1,2 mm
-• Velocidade de impressão: 2,5 mm/s
-• Velocidade de retração: 2,5 mm/s
-• Densidade de preenchimento: 70%
-
-5. CÁLCULO DA PRECISÃO DE IMPRESSÃO
-
-    PA (%) = (1/3) × {[1 - |h₁ - h₂|/h₂] + [1 - |h₃ - h₂|/h₂] + [1 - |l₁ - l₂|/l₂]} × 100
-
-Dimensões obtidas por análise de imagem:
-• l₁ = comprimento da base
-• h₁ = altura da borda
-• h₃ = altura do centro
-
-Valores de referência do modelo:
-• h₂ = altura nominal (15 mm)
-• l₂ = comprimento nominal (15 mm)
-
-6. INTERPRETAÇÃO DOS RESULTADOS
-
-Precisão de Impressão (PA):
-• PA% próxima de 100%: alta fidelidade dimensional, impressão precisa e estável
-• PA% baixa: desvios geométricos com possível colapso parcial, sobre-extrusão ou inconsistência de deposição
-
-Diretamente associada à capacidade de empilhamento das camadas e ao equilíbrio entre viscosidade, tensão de escoamento e parâmetros de processo.
-
-Altura Máxima Imprimível:
-• Maior número de camadas: melhor capacidade de sustentação estrutural, alta resistência ao colapso
-• Menor número de camadas: estrutura instável, baixa capacidade de suporte vertical
-
-Complementa a análise de printabilidade, especialmente em estruturas tridimensionais complexas.
-
-7. REPETIÇÕES E TRATAMENTO ESTATÍSTICO
-• Precisão de impressão: mínimo 3 repetições
-• Altura máxima imprimível: 5 repetições
-• Resultados expressos como média ± desvio padrão
-
-8. OBSERVAÇÕES IMPORTANTES
-• Padronizar as condições de captura de imagem
-• Garantir calibração da escala no software de análise
-• Evitar deformações durante a remoção das amostras
-• Monitorar a estabilidade da extrusão durante toda a impressão
-• Avaliar visualmente o início do colapso estrutural na análise de altura
-
-9. REFERÊNCIAS
-Cheng, Y., Chen, Y., Gao, W., Kang, X., Sui, J., Yu, B., Guo, L., Zhao, L., Yuan, C., & Cui, B. (2024). Investigation of the mechanism of gelatin to enhance 3D printing accuracy of corn starch gel: From perspective of phase morphological changes. International Journal of Biological Macromolecules, 254, 127323. https://doi.org/10.1016/j.ijbiomac.2023.127323
-
-Demircan, E., Aydar, E. F., Mertdinç, Z., Kasapoğlu, K. N., & Özçelik, B. (2023). 3D printable vegan plant-based meat analogue: Fortification with three different mushrooms, investigation of printability, and characterization. Food Research International, 173(Part 1). https://doi.org/10.1016/j.foodres.2023.113259`,
+    versao: '1.0',
+    emissao: 'Abril/2026',
+    diagrama: <DiagramaPrecisao />,
+    secoes: [
+      { titulo: 'Objetivo', conteudo: 'Avaliar a precisão geométrica e a capacidade de construção em altura de formulações alimentícias impressas em 3D, por meio da análise da acurácia dimensional de estruturas cúbicas e da determinação da altura máxima imprimível.' },
+      { titulo: 'Princípio — Precisão', conteudo: 'Representa o grau de correspondência entre as dimensões planejadas no modelo digital e as dimensões reais da estrutura impressa. Considera desvios em altura e comprimento, refletindo a estabilidade do empilhamento de camadas.' },
+      { titulo: 'Princípio — Altura Máxima', conteudo: 'Indica a capacidade da formulação em sustentar múltiplas camadas sem colapso estrutural, diretamente influenciada pelas propriedades reológicas. É feita uma impressão em formato de cilindro oco até que o objeto colapse.' },
+      { titulo: 'Geometria — cubo (precisão)', conteudo: ['Dimensões: 15 × 15 × 15 mm', 'Número de camadas: 13', 'Densidade de impressão: 70%'] },
+      { titulo: 'Geometria — cilindro (altura máxima)', conteudo: ['Diâmetro: 28 mm', 'Estrutura oca'] },
+      { titulo: 'Parâmetros sugeridos de impressão', conteudo: [
+        'Diâmetro do bico: 1,2 mm',
+        'Velocidade de impressão: 2,5 mm/s',
+        'Velocidade de retração: 2,5 mm/s',
+        'Densidade de preenchimento: 70%',
+      ]},
+      { titulo: 'Dimensões medidas (análise de imagem)', conteudo: [
+        'l₁: comprimento da base',
+        'h₁: altura da borda',
+        'h₃: altura do centro',
+        'h₂: altura nominal (referência)',
+        'l₂: comprimento nominal (referência)',
+      ]},
+      { titulo: 'Interpretação — Precisão (PA)', conteudo: [
+        'PA% próxima de 100%: alta fidelidade dimensional, impressão precisa e estável.',
+        'PA% baixa: desvios geométricos com possível colapso parcial, sobre-extrusão ou inconsistência de deposição.',
+      ]},
+      { titulo: 'Interpretação — Altura Máxima', conteudo: [
+        'Maior número de camadas: melhor sustentação estrutural, alta resistência ao colapso.',
+        'Menor número de camadas: estrutura instável, baixa capacidade de suporte vertical.',
+      ]},
+      { titulo: 'Repetições e tratamento estatístico', conteudo: 'Precisão: mínimo 3 repetições. Altura máxima: 5 repetições. Resultados expressos como média ± desvio padrão.' },
+      { titulo: 'Observações importantes', conteudo: [
+        'Padronizar as condições de captura de imagem.',
+        'Garantir calibração da escala no software de análise.',
+        'Evitar deformações durante a remoção das amostras.',
+        'Monitorar a estabilidade da extrusão.',
+        'Avaliar visualmente o início do colapso na análise de altura.',
+      ]},
+    ],
+    formulas: [
+      { label: 'Precisão de Impressão (PA)', expr: 'PA (%) = (1/3) × { [1 - |h₁-h₂|/h₂] + [1 - |h₃-h₂|/h₂] + [1 - |l₁-l₂|/l₂] } × 100' },
+    ],
+    referencias: [
+      { autores: 'Cheng, Y., Chen, Y., Gao, W., Kang, X., Sui, J., Yu, B., Guo, L., Zhao, L., Yuan, C., & Cui, B.', ano: 2024, titulo: 'Investigation of the mechanism of gelatin to enhance 3D printing accuracy of corn starch gel: From perspective of phase morphological changes', revista: 'International Journal of Biological Macromolecules, 254, 127323', doi: '10.1016/j.ijbiomac.2023.127323' },
+      { autores: 'Demircan, E., Aydar, E. F., Mertdinç, Z., Kasapoğlu, K. N., & Özçelik, B.', ano: 2023, titulo: '3D printable vegan plant-based meat analogue: Fortification with three different mushrooms, investigation of printability, and characterization', revista: 'Food Research International, 173(Part 1)', doi: '10.1016/j.foodres.2023.113259' },
+    ],
   },
 ]
+
+// ─── HELPERS ────────────────────────────────────────────────────────
 
 function gerarFichaTecnica(f: Formulacao): string {
   return `FICHA TÉCNICA
@@ -416,27 +427,22 @@ ${f.nome.toUpperCase()}
 MIA by Morphê Foods — gerado em ${new Date().toLocaleDateString('pt-BR')}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-OBJETIVO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Descrever o procedimento padrão de preparo e impressão 3D desta formulação.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-INGREDIENTES (para 100 g de formulação)
+INGREDIENTES (para 100 g)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${f.ingredientes?.map(i => `• ${i.nome}: ${i.percentual} g — ${i.funcao}`).join('\n') ?? 'Não informado'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PREPARO DA FORMULAÇÃO
+PREPARO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Pesar todos os ingredientes em balança analítica.
 2. Hidratar hidrocolóides em água fria por 30 min.
 3. Incorporar demais ingredientes conforme ordem de adição.
-4. Homogeneizar (mixer ou agitação mecânica) por 5 min.
+4. Homogeneizar (mixer ou agitação) por 5 min.
 5. Verificar viscosidade antes de carregar na seringa.
 6. Deixar descansar 15 min para eliminar bolhas.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-PROCESSO DE IMPRESSÃO
+IMPRESSÃO
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Carregar a seringa evitando incorporação de ar.
 2. Purgar até material sair uniformemente.
@@ -445,40 +451,166 @@ PROCESSO DE IMPRESSÃO
 5. Iniciar impressão e monitorar as primeiras camadas.
 6. Registrar na aba Experimentos o resultado obtido.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONTROLE DE QUALIDADE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Verificar uniformidade visual da extrusão
-• Avaliar aderência entre camadas
-• Medir dimensões finais com paquímetro
-• Registrar observações no sistema MIA
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESPONSÁVEL / REVISÃO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Gerado por: MIA — Morphê Foods
-Data: ${new Date().toLocaleDateString('pt-BR')}
-Versão: 1.0`
+Versão: 1.0  |  Data: ${new Date().toLocaleDateString('pt-BR')}`
 }
+
+function protocoloToText(p: Protocolo): string {
+  const linhas: string[] = []
+  linhas.push(p.titulo.toUpperCase())
+  linhas.push(`Versão: ${p.versao}  |  Emissão: ${p.emissao}`)
+  linhas.push('')
+  linhas.push('━'.repeat(70))
+  linhas.push('')
+  for (const sec of p.secoes) {
+    linhas.push(sec.titulo.toUpperCase())
+    if (Array.isArray(sec.conteudo)) {
+      for (const item of sec.conteudo) linhas.push('• ' + item)
+    } else {
+      linhas.push(sec.conteudo)
+    }
+    linhas.push('')
+  }
+  linhas.push('FÓRMULAS')
+  for (const f of p.formulas) linhas.push(`${f.label}: ${f.expr}`)
+  linhas.push('')
+  if (p.referencias.length > 0) {
+    linhas.push('REFERÊNCIAS')
+    for (const r of p.referencias) {
+      linhas.push(`${r.autores} (${r.ano}). ${r.titulo}. ${r.revista}.${r.doi ? ' https://doi.org/' + r.doi : ''}`)
+    }
+  }
+  return linhas.join('\n')
+}
+
+// ─── COMPONENTES ────────────────────────────────────────────────────
+
+function ProtocoloCard({ p, aberto, onToggle, onBaixar, baixando }: {
+  p: Protocolo
+  aberto: boolean
+  onToggle: () => void
+  onBaixar: () => void
+  baixando: boolean
+}) {
+  return (
+    <div className="bg-white rounded-2xl shadow-tonal overflow-hidden">
+      <div className="p-4 flex items-start justify-between gap-4">
+        <button onClick={onToggle} className="flex items-start gap-3 min-w-0 flex-1 text-left">
+          <ChevronDown size={15} className={`text-[#58413c] flex-shrink-0 mt-0.5 transition-transform ${aberto ? 'rotate-180' : ''}`} />
+          <div className="min-w-0">
+            <p className="text-sm font-medium">{p.titulo}</p>
+            <p className="text-xs text-[#58413c] leading-relaxed mt-0.5">{p.descricao}</p>
+            {p.referencias.length > 0 && (
+              <p className="text-[10px] text-[#707974] mt-1.5 italic">
+                Ref.: {p.referencias.map(r => r.autores.split(',')[0] + ' et al., ' + r.ano).join(' · ')}
+              </p>
+            )}
+          </div>
+        </button>
+        <button
+          onClick={onBaixar}
+          disabled={baixando}
+          className="flex items-center gap-1.5 flex-shrink-0 text-xs bg-[#fff8f1] border border-[#e5d9c1] hover:border-[#003223]/30 hover:text-[#003223] text-[#58413c] px-3 py-1.5 rounded-md transition-colors"
+          title="Baixar como TXT"
+        >
+          <Download size={11} />
+          {baixando ? '...' : 'Baixar'}
+        </button>
+      </div>
+
+      {aberto && (
+        <div className="border-t border-[#e5d9c1] px-5 py-5 space-y-5 bg-[#fff8f1]/40">
+          {/* Cabeçalho com versão */}
+          <div className="flex items-center gap-3 flex-wrap text-[10px]">
+            <span className="bg-[rgba(0,50,35,0.08)] text-[#003223] px-2 py-0.5 rounded-full">v{p.versao}</span>
+            <span className="text-[#707974]">Emissão: {p.emissao}</span>
+          </div>
+
+          {/* Diagrama */}
+          <div className="bg-white rounded-xl border border-[#e5d9c1] p-4 flex flex-col items-center">
+            {p.diagrama}
+            <p className="text-[10px] text-[#707974] mt-2 italic text-center">Figura: representação esquemática</p>
+          </div>
+
+          {/* Seções */}
+          {p.secoes.map((sec, i) => (
+            <div key={i}>
+              <h3 className="text-xs font-semibold text-[#003223] uppercase tracking-wide mb-2">{sec.titulo}</h3>
+              {Array.isArray(sec.conteudo) ? (
+                <ul className="space-y-1">
+                  {sec.conteudo.map((item, j) => (
+                    <li key={j} className="text-xs text-[#58413c] leading-relaxed flex gap-2">
+                      <span className="text-[#003223] flex-shrink-0">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-[#58413c] leading-relaxed">{sec.conteudo}</p>
+              )}
+            </div>
+          ))}
+
+          {/* Fórmulas */}
+          {p.formulas.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold text-[#003223] uppercase tracking-wide mb-2">Fórmulas</h3>
+              <div className="space-y-2">
+                {p.formulas.map((f, i) => (
+                  <div key={i} className="bg-white border border-[#e5d9c1] rounded-lg px-3 py-2.5">
+                    <p className="text-[10px] text-[#707974] uppercase tracking-wide mb-1">{f.label}</p>
+                    <p className="text-sm text-[#003223] font-mono">{f.expr}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Referências */}
+          {p.referencias.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold text-[#003223] uppercase tracking-wide mb-2">Referências</h3>
+              <div className="space-y-2">
+                {p.referencias.map((r, i) => (
+                  <div key={i} className="text-xs text-[#58413c] leading-relaxed">
+                    {r.autores} ({r.ano}). <span className="italic">{r.titulo}</span>. {r.revista}.{' '}
+                    {r.doi && (
+                      <a
+                        href={`https://doi.org/${r.doi}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-0.5 text-[#003223] hover:underline"
+                      >
+                        DOI <ExternalLink size={9} />
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── PÁGINA ─────────────────────────────────────────────────────────
 
 export default function ProtocolosPage() {
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [formulacaoId, setFormulacaoId] = useState('')
   const [baixando, setBaixando] = useState<string | null>(null)
+  const [aberto, setAberto] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/formulacoes')
-      .then(r => r.json())
-      .then(data => setFormulacoes(data || []))
+    fetch('/api/formulacoes').then(r => r.json()).then(d => setFormulacoes(d || []))
   }, [])
 
-  function downloadTxt(conteudo: string, nomeArquivo: string) {
+  function downloadTxt(conteudo: string, nome: string) {
     const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url
-    a.download = nomeArquivo
-    a.click()
+    a.href = url; a.download = nome; a.click()
     URL.revokeObjectURL(url)
   }
 
@@ -486,7 +618,6 @@ export default function ProtocolosPage() {
     const form = formulacoes.find(f => f.id === formulacaoId)
     if (!form) return
     setBaixando(tipo)
-
     try {
       const res = await fetch('/api/export', {
         method: 'POST',
@@ -497,33 +628,19 @@ export default function ProtocolosPage() {
         const blob = await res.blob()
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
-        a.href = url
-        a.download = `${tipo === 'ficha' ? 'ficha_tecnica' : 'pop'}_${form.nome.replace(/\s+/g, '_')}.pdf`
-        a.click()
+        a.href = url; a.download = `${tipo === 'ficha' ? 'ficha_tecnica' : 'pop'}_${form.nome.replace(/\s+/g, '_')}.pdf`; a.click()
         URL.revokeObjectURL(url)
-      } else {
-        throw new Error('API indisponível')
-      }
+      } else throw new Error('API indisponível')
     } catch {
       const conteudo = tipo === 'ficha' ? gerarFichaTecnica(form) : gerarPOP(form)
       downloadTxt(conteudo, `${tipo === 'ficha' ? 'ficha_tecnica' : 'pop'}_${form.nome.replace(/\s+/g, '_')}.txt`)
     }
-
     setBaixando(null)
   }
 
-  function baixarProtocoloCaracterizacao(p: typeof PROTOCOLOS_CARACTERIZACAO[number]) {
+  function baixarProtocolo(p: Protocolo) {
     setBaixando(p.id)
-    downloadTxt(p.conteudo, `protocolo_${p.id}_mia.txt`)
-    setTimeout(() => setBaixando(null), 500)
-  }
-
-  function baixarTodosProtocolos() {
-    setBaixando('all')
-    const conteudo = PROTOCOLOS_CARACTERIZACAO.map(p =>
-      `${'═'.repeat(80)}\n${p.titulo.toUpperCase()}\n${'═'.repeat(80)}\n\n${p.conteudo}\n\n`
-    ).join('\n')
-    downloadTxt(conteudo, 'protocolos_caracterizacao_completo_mia.txt')
+    downloadTxt(protocoloToText(p), `protocolo_${p.id}_mia.txt`)
     setTimeout(() => setBaixando(null), 500)
   }
 
@@ -532,13 +649,13 @@ export default function ProtocolosPage() {
       <div className="section-alt border-b border-[#e5d9c1] px-8 py-6 mb-6">
         <h1 className="text-2xl font-bold">Protocolos</h1>
         <p className="text-sm text-[#58413c] mt-1">
-          Baixe protocolos metodológicos e documentos por formulação.
+          Leia ou baixe protocolos metodológicos. Cada protocolo é validado por literatura científica.
         </p>
       </div>
-      <div className="max-w-2xl mx-auto px-8 mb-6">
 
+      <div className="max-w-2xl mx-auto px-8 mb-8">
         {/* Documentos por formulação */}
-        <div className="mb-6">
+        <div className="mb-8">
           <div className="flex items-center gap-2 mb-3">
             <FlaskConical size={15} className="text-[#003223]" />
             <h2 className="text-sm font-semibold">Documentos da formulação</h2>
@@ -552,9 +669,7 @@ export default function ProtocolosPage() {
               className="input-premium focus:ring-[#003223]/30"
             >
               <option value="">Selecione...</option>
-              {formulacoes.map(f => (
-                <option key={f.id} value={f.id}>{f.nome}</option>
-              ))}
+              {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
             </select>
             {formulacoes.length === 0 && (
               <p className="text-xs text-[#58413c] mt-1">
@@ -566,18 +681,8 @@ export default function ProtocolosPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              {
-                tipo: 'ficha' as const,
-                titulo: 'Ficha Técnica',
-                desc: 'Composição, processo, tabela nutricional estimada e informações regulatórias.',
-                icon: BookOpen,
-              },
-              {
-                tipo: 'pop' as const,
-                titulo: 'POP',
-                desc: 'Procedimento Operacional Padrão para replicação do processo.',
-                icon: FileText,
-              },
+              { tipo: 'ficha' as const, titulo: 'Ficha Técnica', desc: 'Composição, processo, tabela nutricional estimada e informações regulatórias.', icon: BookOpen },
+              { tipo: 'pop' as const, titulo: 'POP', desc: 'Procedimento Operacional Padrão para replicação do processo.', icon: FileText },
             ].map(doc => (
               <div key={doc.tipo} className="bg-white rounded-2xl shadow-tonal p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -600,46 +705,24 @@ export default function ProtocolosPage() {
 
         {/* Protocolos de caracterização */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Microscope size={15} className="text-[#003223]" />
-              <h2 className="text-sm font-semibold">Protocolos de caracterização</h2>
-            </div>
-            <button
-              onClick={baixarTodosProtocolos}
-              disabled={baixando === 'all'}
-              className="flex items-center gap-1.5 text-xs bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white px-3 py-1.5 rounded-md transition-colors"
-            >
-              <Download size={11} />
-              {baixando === 'all' ? '...' : 'Baixar todos'}
-            </button>
+          <div className="flex items-center gap-2 mb-3">
+            <Microscope size={15} className="text-[#003223]" />
+            <h2 className="text-sm font-semibold">Protocolos de caracterização</h2>
           </div>
           <p className="text-xs text-[#58413c] mb-4">
-            Cinco protocolos validados por literatura científica. Baixe individualmente ou todos em um único arquivo.
+            Clique em um protocolo para ler o conteúdo completo (figuras, fórmulas e referências). Use o botão Baixar para salvar como arquivo de texto.
           </p>
 
-          <div className="space-y-2">
-            {PROTOCOLOS_CARACTERIZACAO.map(p => (
-              <div key={p.id} className="bg-white rounded-2xl shadow-tonal p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <FileDown size={15} className="text-[#58413c] flex-shrink-0 mt-0.5" />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{p.titulo}</p>
-                      <p className="text-xs text-[#58413c] leading-relaxed mt-0.5">{p.descricao}</p>
-                      <p className="text-[10px] text-[#707974] mt-1.5 italic">Ref.: {p.referencia}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => baixarProtocoloCaracterizacao(p)}
-                    disabled={baixando === p.id}
-                    className="flex items-center gap-1.5 flex-shrink-0 text-xs bg-[#fff8f1] border border-[#e5d9c1] hover:border-[#003223]/30 hover:text-[#003223] text-[#58413c] px-3 py-1.5 rounded-md transition-colors"
-                  >
-                    <Download size={11} />
-                    {baixando === p.id ? '...' : 'Baixar'}
-                  </button>
-                </div>
-              </div>
+          <div className="space-y-3">
+            {PROTOCOLOS.map(p => (
+              <ProtocoloCard
+                key={p.id}
+                p={p}
+                aberto={aberto === p.id}
+                onToggle={() => setAberto(aberto === p.id ? null : p.id)}
+                onBaixar={() => baixarProtocolo(p)}
+                baixando={baixando === p.id}
+              />
             ))}
           </div>
         </div>
