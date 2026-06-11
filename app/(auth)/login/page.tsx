@@ -1,56 +1,17 @@
 'use client'
-import { useState, Suspense, useEffect } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-// ─── Animated number counter ────────────────────────────────────────
-function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
-  const [val, setVal] = useState(0)
-  useEffect(() => {
-    const dur = 1800
-    const start = performance.now()
-    const tick = (now: number) => {
-      const p = Math.min((now - start) / dur, 1)
-      const ease = 1 - Math.pow(1 - p, 3)
-      setVal(Math.round(ease * to))
-      if (p < 1) requestAnimationFrame(tick)
-    }
-    const id = setTimeout(() => requestAnimationFrame(tick), 400)
-    return () => clearTimeout(id)
-  }, [to])
-  return <>{val}{suffix}</>
-}
-
-// ─── Floating orb ───────────────────────────────────────────────────
-function Orb({ size, x, y, color, delay }: { size: number; x: string; y: string; color: string; delay: number }) {
-  return (
-    <div
-      className="absolute rounded-full pointer-events-none"
-      style={{
-        width: size, height: size,
-        left: x, top: y,
-        background: color,
-        filter: 'blur(60px)',
-        opacity: 0.25,
-        animation: `float ${6 + delay}s ease-in-out infinite`,
-        animationDelay: `${delay}s`,
-      }}
-    />
-  )
-}
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const params = useSearchParams()
   const supabase = createClient()
-
-  useEffect(() => { setMounted(true) }, [])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -69,203 +30,256 @@ function LoginForm() {
   }
 
   return (
-    <>
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-24px) scale(1.04); }
-        }
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(32px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .reveal { animation: slide-up 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
-        .fade { animation: fade-in 1s ease forwards; }
-        .delay-1 { animation-delay: 0.1s; opacity: 0; }
-        .delay-2 { animation-delay: 0.22s; opacity: 0; }
-        .delay-3 { animation-delay: 0.34s; opacity: 0; }
-        .delay-4 { animation-delay: 0.46s; opacity: 0; }
-        .delay-5 { animation-delay: 0.58s; opacity: 0; }
-        .btn-morphe {
-          position: relative; overflow: hidden;
-          background: #054a37; color: #fff1d9;
-          border: none; cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn-morphe::after {
-          content: '';
-          position: absolute; inset: 0;
-          background: linear-gradient(135deg, #abd032 0%, transparent 60%);
-          opacity: 0; transition: opacity 0.3s;
-        }
-        .btn-morphe:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(5,74,55,0.3); }
-        .btn-morphe:hover::after { opacity: 0.15; }
-        .btn-morphe:active { transform: translateY(0); }
-        .input-morphe {
-          background: rgba(255,241,217,0.6);
-          border: 1.5px solid rgba(5,74,55,0.12);
-          color: #000;
-          transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-        }
-        .input-morphe::placeholder { color: rgba(5,74,55,0.3); }
-        .input-morphe:focus {
-          outline: none;
-          border-color: #abd032;
-          background: rgba(255,241,217,0.9);
-          box-shadow: 0 0 0 3px rgba(171,208,50,0.15);
-        }
-        .stat-card {
-          backdrop-filter: blur(12px);
-          background: rgba(255,241,217,0.08);
-          border: 1px solid rgba(255,241,217,0.12);
-        }
-      `}</style>
+    <div className="auth-root">
+      <style>{AUTH_CSS}</style>
 
-      <div className="min-h-screen flex" style={{ background: '#fff1d9' }}>
-
-        {/* ── Left panel ── */}
-        <div className="hidden lg:flex flex-col justify-between w-[48%] relative overflow-hidden p-14"
-          style={{ background: '#054a37' }}>
-
-          {/* Orbs */}
-          <Orb size={400} x="-10%" y="-15%" color="#abd032" delay={0} />
-          <Orb size={300} x="50%" y="55%" color="#006e51" delay={2} />
-          <Orb size={200} x="10%" y="70%" color="#abd032" delay={4} />
-
-          {/* Top */}
-          <div className="relative z-10">
-            <div className={`flex items-center gap-3 mb-20 ${mounted ? 'fade' : 'opacity-0'}`}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm"
-                style={{ background: '#abd032', color: '#054a37' }}>M</div>
-              <span className="font-bold text-xl tracking-tight" style={{ color: '#fff1d9' }}>MIA</span>
-              <span className="text-xs px-2 py-0.5 rounded-full ml-1"
-                style={{ background: 'rgba(171,208,50,0.15)', color: '#abd032', border: '1px solid rgba(171,208,50,0.3)' }}>
-                by Morphê Foods
-              </span>
-            </div>
-
-            <h2 className={`font-black leading-none mb-6 ${mounted ? 'reveal delay-1' : 'opacity-0'}`}
-              style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3.2rem)', color: '#fff1d9', letterSpacing: '-0.03em' }}>
-              O laboratório<br />
-              <span style={{ color: '#abd032' }}>molecular</span><br />
-              no seu navegador.
-            </h2>
-
-            <p className={`text-sm leading-relaxed max-w-xs ${mounted ? 'reveal delay-2' : 'opacity-0'}`}
-              style={{ color: 'rgba(255,241,217,0.65)' }}>
-              Formule, analise e imprima alimentos com precisão científica — de hidrocolóides a G-code.
-            </p>
-          </div>
-
-          {/* Stats */}
-          <div className={`relative z-10 ${mounted ? 'reveal delay-3' : 'opacity-0'}`}>
-            <div className="grid grid-cols-3 gap-3 mb-8">
-              {[
-                { n: 50, s: '+', label: 'Formulações' },
-                { n: 12, s: '', label: 'Protocolos' },
-                { n: 99, s: '%', label: 'Precisão' },
-              ].map(({ n, s, label }) => (
-                <div key={label} className="stat-card rounded-2xl px-4 py-4 text-center">
-                  <p className="font-black text-2xl mb-0.5" style={{ color: '#abd032' }}>
-                    {mounted ? <Counter to={n} suffix={s} /> : `0${s}`}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,241,217,0.5)' }}>{label}</p>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#abd032' }} />
-              <span className="text-xs" style={{ color: 'rgba(255,241,217,0.4)' }}>
-                The Living Lab · Morphê Foods
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── Right panel — form ── */}
-        <div className="flex-1 flex items-center justify-center px-6 py-16 relative">
-          {/* Subtle bg texture */}
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(171,208,50,0.06) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(5,74,55,0.05) 0%, transparent 50%)' }} />
-
-          <div className="w-full max-w-sm relative z-10">
-            {/* Mobile logo */}
-            <div className={`lg:hidden text-center mb-10 ${mounted ? 'fade' : 'opacity-0'}`}>
-              <div className="inline-flex items-center gap-2.5 mb-1">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm"
-                  style={{ background: '#054a37', color: '#abd032' }}>M</div>
-                <span className="font-black text-2xl tracking-tight" style={{ color: '#054a37' }}>MIA</span>
-              </div>
-              <p className="text-xs" style={{ color: 'rgba(5,74,55,0.45)' }}>by Morphê Foods</p>
-            </div>
-
-            <h1 className={`font-black mb-1 ${mounted ? 'reveal delay-1' : 'opacity-0'}`}
-              style={{ fontSize: '1.9rem', color: '#054a37', letterSpacing: '-0.03em' }}>
-              Bem-vinda de volta
-            </h1>
-            <p className={`text-sm mb-8 ${mounted ? 'reveal delay-2' : 'opacity-0'}`}
-              style={{ color: 'rgba(5,74,55,0.5)' }}>
-              Entre com sua conta para continuar.
-            </p>
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className={mounted ? 'reveal delay-2' : 'opacity-0'}>
-                <label className="block text-[11px] font-bold uppercase tracking-widest mb-2"
-                  style={{ color: 'rgba(5,74,55,0.5)' }}>Email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                  className="input-morphe w-full rounded-xl px-4 py-3.5 text-sm"
-                  placeholder="seu@email.com" />
-              </div>
-
-              <div className={mounted ? 'reveal delay-3' : 'opacity-0'}>
-                <label className="block text-[11px] font-bold uppercase tracking-widest mb-2"
-                  style={{ color: 'rgba(5,74,55,0.5)' }}>Senha</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
-                  className="input-morphe w-full rounded-xl px-4 py-3.5 text-sm"
-                  placeholder="••••••••" />
-              </div>
-
-              {error && (
-                <div className="rounded-xl px-4 py-3"
-                  style={{ background: 'rgba(250,85,40,0.08)', border: '1px solid rgba(250,85,40,0.25)' }}>
-                  <p className="text-xs" style={{ color: '#fa5528' }}>{error}</p>
-                </div>
-              )}
-
-              <div className={mounted ? 'reveal delay-4' : 'opacity-0'}>
-                <button type="submit" disabled={loading}
-                  className="btn-morphe w-full py-4 rounded-xl font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                      Entrando...
-                    </span>
-                  ) : 'Entrar'}
-                </button>
-              </div>
-            </form>
-
-            <div className={`mt-6 pt-6 ${mounted ? 'reveal delay-5' : 'opacity-0'}`}
-              style={{ borderTop: '1px solid rgba(5,74,55,0.1)' }}>
-              <p className="text-center text-sm" style={{ color: 'rgba(5,74,55,0.5)' }}>
-                Não tem conta?{' '}
-                <Link href="/signup" className="font-bold transition-colors hover:opacity-70"
-                  style={{ color: '#054a37' }}>
-                  Criar grátis →
-                </Link>
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="algae-layer" aria-hidden="true">
+        {ALGAE.map((a, i) => (
+          <svg
+            key={i}
+            className={`algae algae-${i}`}
+            viewBox="0 0 200 600"
+            preserveAspectRatio="xMidYMax meet"
+            style={{
+              left: a.left,
+              right: a.right,
+              bottom: a.bottom,
+              width: a.width,
+              opacity: a.opacity,
+              animationDelay: `${a.delay}s`,
+              animationDuration: `${a.duration}s`,
+            }}
+          >
+            <path d={a.d} fill={a.fill} />
+          </svg>
+        ))}
       </div>
-    </>
+
+      <div className="grain" aria-hidden="true" />
+      <div className="vignette" aria-hidden="true" />
+
+      <main className="auth-shell">
+        <Link href="/" className="auth-brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mia-logo.png" alt="MIA" />
+          <span>MIA</span>
+        </Link>
+
+        <div className="auth-card">
+          <h1>Bem-vinda de volta.</h1>
+          <p className="auth-sub">Continue desenvolvendo suas formulações com a MIA.</p>
+
+          <form onSubmit={handleLogin}>
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="seu@email.com"
+            />
+
+            <label htmlFor="password">Senha</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+            />
+
+            {error && <div className="auth-error">{error}</div>}
+
+            <button type="submit" disabled={loading} className="auth-submit">
+              {loading ? 'Entrando…' : 'Entrar'}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            <span>Não tem conta?</span>{' '}
+            <Link href="/signup">Criar grátis →</Link>
+          </div>
+        </div>
+
+        <p className="auth-tag">Morphê Foods · The Living Lab</p>
+      </main>
+    </div>
   )
 }
 
 export default function LoginPage() {
   return <Suspense><LoginForm /></Suspense>
 }
+
+const ALGAE = [
+  {
+    left: '-40px', right: 'auto', bottom: '-20px', width: '260px', opacity: 0.9, delay: 0, duration: 9,
+    fill: '#abd032',
+    d: 'M70 600 C 70 480, 30 420, 60 320 C 90 220, 40 160, 90 80 C 110 40, 100 10, 130 0 L 160 0 C 130 60, 150 130, 120 200 C 90 280, 130 360, 100 460 C 80 520, 110 560, 100 600 Z',
+  },
+  {
+    left: '60px', right: 'auto', bottom: '-30px', width: '180px', opacity: 0.75, delay: 1.4, duration: 11,
+    fill: '#006e51',
+    d: 'M90 600 C 80 500, 110 420, 80 320 C 50 220, 100 140, 70 60 C 60 30, 80 10, 110 0 L 140 0 C 130 70, 100 140, 130 220 C 160 320, 110 400, 130 500 C 140 560, 120 580, 130 600 Z',
+  },
+  {
+    left: '180px', right: 'auto', bottom: '-15px', width: '160px', opacity: 0.65, delay: 0.6, duration: 13,
+    fill: '#fa5528',
+    d: 'M100 600 C 90 500, 130 440, 100 360 C 70 280, 110 200, 80 120 C 60 60, 90 20, 120 0 L 145 0 C 130 60, 110 130, 140 210 C 170 300, 120 380, 145 470 C 160 530, 140 580, 150 600 Z',
+  },
+  {
+    left: 'auto', right: '-60px', bottom: '-30px', width: '280px', opacity: 0.85, delay: 2.2, duration: 10,
+    fill: '#abd032',
+    d: 'M120 600 C 130 490, 90 420, 130 320 C 170 220, 110 140, 150 60 C 165 30, 145 10, 165 0 L 190 0 C 175 60, 195 130, 160 210 C 130 290, 170 370, 140 460 C 125 520, 145 570, 135 600 Z',
+  },
+  {
+    left: 'auto', right: '40px', bottom: '-20px', width: '200px', opacity: 0.7, delay: 0.9, duration: 12,
+    fill: '#006e51',
+    d: 'M100 600 C 110 510, 80 440, 110 350 C 140 260, 90 180, 130 100 C 145 50, 130 20, 150 0 L 175 0 C 160 50, 180 120, 150 200 C 120 290, 160 370, 130 470 C 115 530, 135 580, 125 600 Z',
+  },
+  {
+    left: 'auto', right: '200px', bottom: '-15px', width: '150px', opacity: 0.55, delay: 1.8, duration: 14,
+    fill: '#fa5528',
+    d: 'M90 600 C 100 500, 70 430, 100 340 C 130 250, 80 170, 120 90 C 135 40, 120 10, 140 0 L 160 0 C 145 50, 165 120, 135 200 C 105 290, 145 370, 115 470 C 100 530, 120 580, 110 600 Z',
+  },
+]
+
+const AUTH_CSS = `
+  .auth-root{
+    --cream:#fff1d9;
+    --green-deep:#03382a;
+    --green-deeper:#022619;
+    --green:#006e51;
+    --green-mid:#196454;
+    --lime:#abd032;
+    --orange:#fa5528;
+    min-height:100vh;width:100%;
+    position:relative;overflow:hidden;
+    background:
+      radial-gradient(ellipse at 50% 0%, #074c39 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, #02261a 0%, transparent 70%),
+      linear-gradient(180deg, #054a37 0%, #033628 60%, #022619 100%);
+    font-family:var(--font-sans),system-ui,sans-serif;
+  }
+  .auth-root *{box-sizing:border-box}
+
+  /* ─── algae layer ─── */
+  .algae-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .algae{
+    position:absolute;
+    height:auto;
+    transform-origin:50% 100%;
+    animation:sway ease-in-out infinite alternate;
+    filter:drop-shadow(0 4px 24px rgba(0,0,0,.25));
+  }
+  @keyframes sway{
+    0%   { transform: rotate(-3deg) translateX(-4px); }
+    50%  { transform: rotate(2deg) translateX(6px); }
+    100% { transform: rotate(-4deg) translateX(-6px); }
+  }
+
+  /* gentle texture overlay */
+  .grain{
+    position:absolute;inset:0;pointer-events:none;
+    background-image:radial-gradient(rgba(255,241,217,.04) 1px, transparent 1px);
+    background-size:3px 3px;
+    mix-blend-mode:overlay;opacity:.4;
+  }
+  .vignette{
+    position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.35) 100%);
+  }
+
+  /* ─── shell ─── */
+  .auth-shell{
+    position:relative;z-index:5;
+    min-height:100vh;width:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:48px 24px;gap:32px;
+  }
+  .auth-brand{
+    display:inline-flex;align-items:center;gap:12px;
+    text-decoration:none;
+    padding:10px 22px 10px 14px;border-radius:999px;
+    background:rgba(255,241,217,.06);
+    border:1px solid rgba(255,241,217,.12);
+    backdrop-filter:blur(8px);
+  }
+  .auth-brand img{width:36px;height:36px;object-fit:contain}
+  .auth-brand span{font-size:17px;font-weight:600;color:var(--cream);letter-spacing:.02em}
+
+  .auth-card{
+    width:100%;max-width:440px;
+    padding:44px 40px 36px;
+    border-radius:28px;
+    background:rgba(255,241,217,.96);
+    backdrop-filter:blur(20px);
+    box-shadow:
+      0 40px 100px -30px rgba(0,0,0,.55),
+      0 0 0 1px rgba(255,241,217,.15);
+  }
+  .auth-card h1{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:36px;line-height:1.05;color:var(--green-deep);margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  .auth-card .auth-sub{
+    font-size:14.5px;line-height:1.5;color:var(--green-mid);margin:0 0 28px;
+  }
+  .auth-card label{
+    display:block;font-size:12px;font-weight:600;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--green-deep);margin:18px 0 8px;
+  }
+  .auth-card input{
+    width:100%;padding:14px 16px;border-radius:12px;
+    background:#fff;color:var(--green-deep);
+    border:1.5px solid rgba(5,74,55,.15);
+    font-family:inherit;font-size:15px;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .auth-card input::placeholder{color:rgba(5,74,55,.35)}
+  .auth-card input:focus{
+    outline:none;border-color:var(--green);
+    box-shadow:0 0 0 4px rgba(6,110,81,.14);
+  }
+  .auth-error{
+    margin-top:16px;padding:10px 14px;border-radius:10px;
+    background:rgba(250,85,40,.08);border:1px solid rgba(250,85,40,.3);
+    color:var(--orange);font-size:13px;
+  }
+  .auth-submit{
+    width:100%;margin-top:24px;padding:15px;border-radius:14px;
+    background:var(--green-deep);color:var(--cream);
+    border:none;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:600;
+    transition:transform .15s ease, box-shadow .25s ease, background .25s ease;
+  }
+  .auth-submit:hover:not(:disabled){
+    transform:translateY(-1px);
+    background:var(--green);
+    box-shadow:0 14px 32px -12px rgba(5,74,55,.6);
+  }
+  .auth-submit:disabled{opacity:.55;cursor:not-allowed}
+  .auth-footer{
+    margin-top:24px;padding-top:22px;text-align:center;
+    border-top:1px solid rgba(5,74,55,.1);
+    font-size:14px;color:var(--green-mid);
+  }
+  .auth-footer a{color:var(--green-deep);font-weight:600;text-decoration:none}
+  .auth-footer a:hover{color:var(--orange)}
+
+  .auth-tag{
+    margin:0;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:rgba(255,241,217,.4);
+  }
+
+  @media (max-width:560px){
+    .auth-card{padding:32px 24px 24px;border-radius:22px}
+    .auth-card h1{font-size:30px}
+    .algae{filter:drop-shadow(0 2px 12px rgba(0,0,0,.25))}
+  }
+`
