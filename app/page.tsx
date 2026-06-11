@@ -173,15 +173,17 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="carousel" onMouseEnter={advance}>
-            {SLIDES.map((s, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img key={s.src} src={s.src} alt={s.caption} className={i === slide ? 'active' : ''} />
-            ))}
-            <div className="dots">
-              {SLIDES.map((_, i) => <span key={i} className={i === slide ? 'active' : ''} />)}
+          <div className="hero-right">
+            <div className="carousel" onMouseEnter={advance}>
+              {SLIDES.map((s, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={s.src} src={s.src} alt={s.caption} className={i === slide ? 'active' : ''} />
+              ))}
+              <div className="dots">
+                {SLIDES.map((_, i) => <span key={i} className={i === slide ? 'active' : ''} />)}
+              </div>
+              <div className="caption">{SLIDES[slide].caption}</div>
             </div>
-            <div className="caption">{SLIDES[slide].caption}</div>
             <div className="floating-card">
               <div className="title">Formulação em análise</div>
               <div className="sub"><span className="live" /> Caracterização reológica · F-074</div>
@@ -361,8 +363,12 @@ const CSS = `
   .landing-root .meta span{display:inline-flex;align-items:center;gap:8px}
   .landing-root .meta .pulse{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(171,208,50,.25);animation:miapulse 2s infinite}
   @keyframes miapulse{50%{box-shadow:0 0 0 9px rgba(171,208,50,0)}}
+  .landing-root .hero-right{
+    display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:end;
+    width:100%;max-width:760px;margin-left:auto;
+  }
   .landing-root .carousel{
-    position:relative;aspect-ratio:4/5;width:100%;max-width:520px;margin-left:auto;
+    position:relative;aspect-ratio:4/5;width:100%;
     border-radius:32px;overflow:hidden;background:var(--green-deep);
     box-shadow:0 40px 80px -30px rgba(5,30,23,.4), 0 0 0 1px rgba(5,74,55,.08);
     cursor:pointer;
@@ -386,11 +392,10 @@ const CSS = `
   .landing-root .carousel .dots span{width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.4);transition:background .3s}
   .landing-root .carousel .dots span.active{background:var(--lime)}
   .landing-root .floating-card{
-    position:absolute;
-    right:-60px;bottom:40%;
     background:#fff;border-radius:22px;padding:26px 28px;
-    box-shadow:0 30px 70px -20px rgba(5,30,23,.45), 0 0 0 1px rgba(5,74,55,.05);
-    z-index:10;width:340px;
+    box-shadow:0 30px 70px -20px rgba(5,30,23,.35), 0 0 0 1px rgba(5,74,55,.06);
+    width:100%;
+    margin-bottom:32px;
     animation:floatCard 6s ease-in-out infinite;
   }
   @keyframes floatCard{50%{transform:translateY(-8px)}}
@@ -403,7 +408,7 @@ const CSS = `
   .landing-root .floating-card .bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--lime))}
   .landing-root .floating-card .bar.b3 i{background:linear-gradient(90deg,var(--orange-soft),var(--orange))}
   @media (max-width:1200px){
-    .landing-root .floating-card{right:-20px;width:300px}
+    .landing-root .hero-right{grid-template-columns:1fr 280px}
   }
   .landing-root section.block{padding:110px 64px;max-width:1480px;margin:0 auto}
   .landing-root section.block.resolve{max-width:none;background:var(--green-deep);color:var(--cream);padding:110px 0}
@@ -529,7 +534,8 @@ const CSS = `
     .landing-root .resolve-grid{grid-template-columns:1fr;gap:14px}
     .landing-root .workflow{grid-template-columns:1fr;gap:30px}
     .landing-root .step::before{display:none}
-    .landing-root .floating-card{right:0}
+    .landing-root .hero-right{grid-template-columns:1fr;gap:18px}
+    .landing-root .floating-card{margin-bottom:0}
     .landing-root .cta-final{padding:80px 24px}
     .landing-root footer{flex-direction:column;gap:10px;padding:30px 24px}
   }
