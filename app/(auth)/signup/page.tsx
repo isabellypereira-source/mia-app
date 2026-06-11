@@ -2,7 +2,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { ArrowRight, Mail } from 'lucide-react'
+
+const ALGAE = [
+  { src: '/algae/55.png', left: '-30px', right: 'auto', bottom: '-30px', width: '230px', duration: 10, delay: 0 },
+  { src: '/algae/54.png', left: '140px', right: 'auto', bottom: '-40px', width: '200px', duration: 12, delay: 1.4 },
+  { src: '/algae/51.png', left: '300px', right: 'auto', bottom: '-25px', width: '170px', duration: 13, delay: 0.6 },
+  { src: '/algae/53.png', left: 'auto', right: '-40px', bottom: '-30px', width: '240px', duration: 11, delay: 2.2 },
+  { src: '/algae/52.png', left: 'auto', right: '130px', bottom: '-35px', width: '190px', duration: 12.5, delay: 0.9 },
+]
 
 export default function SignupPage() {
   const [email, setEmail] = useState('')
@@ -20,7 +27,10 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { nome } },
+      options: {
+        data: { nome },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     })
     if (error) {
       setError(error.message)
@@ -30,111 +40,199 @@ export default function SignupPage() {
     }
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#fff8f1' }}>
-        <div className="bg-white text-center max-w-sm w-full p-10 rounded-2xl shadow-tonal-lg animate-slide-up">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5"
-            style={{ background: 'rgba(0,50,35,0.08)' }}>
-            <Mail size={28} style={{ color: '#003223' }} />
-          </div>
-          <h2 className="font-display font-bold text-xl mb-2" style={{ color: '#003223' }}>Confirme seu email</h2>
-          <p className="text-sm leading-relaxed mb-6 font-sans" style={{ color: '#58413c' }}>
-            Enviamos um link de confirmação para{' '}
-            <strong style={{ color: '#003223' }}>{email}</strong>.
-            Acesse seu email e clique no link para ativar sua conta.
-          </p>
-          <Link href="/login" className="btn-ghost inline-flex items-center gap-2 px-5 py-2.5 text-sm">
-            Voltar ao login <ArrowRight size={14} />
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex" style={{ background: '#fff8f1' }}>
-      {/* Left — decorativo */}
-      <div className="hidden lg:flex flex-col justify-between w-[42%] p-12 relative overflow-hidden"
-        style={{ background: '#003223' }}>
-        <div className="absolute top-[-10%] right-[-10%] w-72 h-72 rounded-full pointer-events-none"
-          style={{ background: 'rgba(200,238,79,0.12)' }} />
-        <div className="relative">
-          <div className="flex items-center gap-2 mb-16">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center font-display font-black text-sm text-white"
-              style={{ background: 'rgba(255,255,255,0.15)' }}>M</div>
-            <span className="font-display font-bold text-lg text-white">MIA</span>
-          </div>
-          <h2 className="font-display font-bold text-white mb-4"
-            style={{ fontSize: '2rem', letterSpacing: '-0.02em' }}>
-            Comece a formular<br />melhor hoje
-          </h2>
-          <p className="font-sans text-sm leading-relaxed" style={{ color: '#b2f0d5' }}>
-            Crie sua conta gratuita e tenha acesso ao laboratório molecular mais avançado para food 3D.
-          </p>
-        </div>
-        <div className="relative">
-          <div className="badge-lime inline-flex">The Living Lab · Morphê Foods</div>
-        </div>
+    <div className="auth-root">
+      <style>{AUTH_CSS}</style>
+
+      <div className="algae-layer" aria-hidden="true">
+        {ALGAE.map((a, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={i}
+            src={a.src}
+            alt=""
+            className="algae"
+            style={{
+              left: a.left,
+              right: a.right,
+              bottom: a.bottom,
+              width: a.width,
+              animationDuration: `${a.duration}s`,
+              animationDelay: `${a.delay}s`,
+            }}
+          />
+        ))}
       </div>
 
-      {/* Right — formulário */}
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-sm animate-slide-up">
-          <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center font-display font-black text-sm text-white"
-                style={{ background: '#003223' }}>M</div>
-              <span className="font-display font-bold text-xl" style={{ color: '#003223' }}>MIA</span>
-            </div>
-            <p className="text-xs font-sans" style={{ color: '#707974' }}>by Morphê Foods</p>
-          </div>
+      <main className="shell">
+        <Link href="/" className="brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mia-logo.png" alt="MIA" />
+          <span>MIA</span>
+        </Link>
 
-          <h1 className="font-display font-bold text-2xl mb-1" style={{ color: '#003223', letterSpacing: '-0.02em' }}>
-            Criar conta grátis
-          </h1>
-          <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>Comece a formular melhor hoje.</p>
+        <div className="card">
+          {!success ? (
+            <>
+              <h1>Crie sua <em>conta grátis.</em></h1>
+              <p className="sub">Leva menos de um minuto pra começar com a MIA.</p>
 
-          <form onSubmit={handleSignup} className="space-y-5">
-            <div>
-              <label className="text-xs font-display font-semibold uppercase tracking-wider block mb-2" style={{ color: '#58413c' }}>Nome</label>
-              <input type="text" value={nome} onChange={e => setNome(e.target.value)} required
-                className="input-premium" placeholder="Seu nome" />
-            </div>
-            <div>
-              <label className="text-xs font-display font-semibold uppercase tracking-wider block mb-2" style={{ color: '#58413c' }}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                className="input-premium" placeholder="seu@email.com" />
-            </div>
-            <div>
-              <label className="text-xs font-display font-semibold uppercase tracking-wider block mb-2" style={{ color: '#58413c' }}>Senha</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8}
-                className="input-premium" placeholder="Mínimo 8 caracteres" />
-            </div>
+              <form onSubmit={handleSignup}>
+                <label htmlFor="nome">Nome</label>
+                <input
+                  id="nome"
+                  type="text"
+                  value={nome}
+                  onChange={e => setNome(e.target.value)}
+                  required
+                  autoComplete="name"
+                  placeholder="Como podemos te chamar"
+                />
 
-            {error && (
-              <div className="rounded-xl px-4 py-3"
-                style={{ background: 'rgba(186,26,26,0.08)', border: '1px solid rgba(186,26,26,0.2)' }}>
-                <p className="text-xs font-sans" style={{ color: '#ba1a1a' }}>{error}</p>
+                <label htmlFor="email">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="seu@email.com"
+                />
+
+                <label htmlFor="password">Senha</label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  placeholder="Mínimo de 8 caracteres"
+                />
+
+                {error && <div className="auth-error">{error}</div>}
+
+                <button type="submit" disabled={loading} className="submit">
+                  {loading ? 'Criando conta…' : 'Criar conta grátis'}
+                </button>
+              </form>
+
+              <div className="card-footer">
+                Já tem conta? <Link href="/login">Entrar</Link>
               </div>
-            )}
-
-            <button type="submit" disabled={loading}
-              className="btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? 'Criando conta...' : (<>Criar conta grátis <ArrowRight size={15} /></>)}
-            </button>
-          </form>
-
-          <div className="divider-gradient my-7" />
-
-          <p className="text-center text-sm font-sans" style={{ color: '#58413c' }}>
-            Já tem conta?{' '}
-            <Link href="/login" className="font-display font-semibold transition-opacity hover:opacity-70" style={{ color: '#003223' }}>
-              Entrar
-            </Link>
-          </p>
+            </>
+          ) : (
+            <>
+              <h1>Confirme seu <em>email.</em></h1>
+              <p className="sub">
+                Enviamos um link de confirmação para <strong style={{ color: '#fff1d9' }}>{email}</strong>. Clique no link para ativar sua conta.
+              </p>
+              <Link href="/login" className="submit" style={{ display: 'block', textAlign: 'center', textDecoration: 'none', marginTop: 24 }}>
+                Voltar para entrar
+              </Link>
+            </>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   )
 }
+
+const AUTH_CSS = `
+  .auth-root{
+    --cream:#fff1d9;
+    --cream-2:#f6e5c5;
+    --green-deep:#03382a;
+    --green:#054a37;
+    --green-mid:#196454;
+    --lime:#abd032;
+    --orange:#fa5528;
+    min-height:100vh;width:100%;position:relative;overflow-x:hidden;
+    font-family:var(--font-sans),system-ui,sans-serif;
+    background:
+      radial-gradient(ellipse at 50% 0%, #fff6e3 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 100%, #f4e2c0 0%, transparent 70%),
+      linear-gradient(180deg, var(--cream) 0%, var(--cream-2) 100%);
+  }
+  .auth-root *{box-sizing:border-box}
+  .algae-layer{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:1}
+  .algae{
+    position:absolute;height:auto;
+    transform-origin:50% 100%;
+    animation:sway ease-in-out infinite alternate;
+    filter:drop-shadow(0 6px 22px rgba(3,56,42,.18));
+  }
+  @keyframes sway{
+    0%   { transform: rotate(-8deg) translateX(-12px); }
+    50%  { transform: rotate(6deg) translateX(14px); }
+    100% { transform: rotate(-9deg) translateX(-14px); }
+  }
+  .shell{
+    position:relative;z-index:5;min-height:100vh;width:100%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:48px 24px;gap:32px;
+  }
+  .brand{
+    display:inline-flex;align-items:center;gap:12px;text-decoration:none;
+    padding:10px 22px 10px 14px;border-radius:999px;
+    background:rgba(5,74,55,.06);
+    border:1px solid rgba(5,74,55,.12);
+    backdrop-filter:blur(8px);
+  }
+  .brand img{width:36px;height:36px;object-fit:contain}
+  .brand span{font-size:17px;font-weight:600;color:var(--green-deep);letter-spacing:.02em}
+  .card{
+    width:100%;max-width:440px;
+    padding:44px 40px 36px;border-radius:28px;
+    background:linear-gradient(180deg, #054a37 0%, #03382a 100%);
+    color:var(--cream);
+    box-shadow:0 40px 100px -30px rgba(3,56,42,.55), 0 0 0 1px rgba(3,56,42,.15);
+    position:relative;
+  }
+  .card h1{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:36px;line-height:1.05;color:var(--cream);margin:0 0 6px;letter-spacing:-.01em;
+  }
+  .card h1 em{font-style:italic;color:var(--lime)}
+  .card .sub{font-size:14.5px;line-height:1.5;color:rgba(255,241,217,.7);margin:0 0 28px}
+  .card label{
+    display:block;font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(255,241,217,.7);margin:18px 0 8px;
+  }
+  .card input{
+    width:100%;padding:14px 16px;border-radius:12px;
+    background:rgba(255,241,217,.08);color:var(--cream);
+    border:1.5px solid rgba(255,241,217,.18);
+    font-family:inherit;font-size:15px;
+    transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .card input::placeholder{color:rgba(255,241,217,.4)}
+  .card input:focus{outline:none;border-color:var(--lime);background:rgba(255,241,217,.12);box-shadow:0 0 0 4px rgba(171,208,50,.18)}
+  .auth-error{
+    margin-top:16px;padding:10px 14px;border-radius:10px;
+    background:rgba(250,85,40,.12);border:1px solid rgba(250,85,40,.4);
+    color:#ffb29c;font-size:13px;
+  }
+  .submit{
+    width:100%;margin-top:26px;padding:15px;border-radius:14px;
+    background:var(--lime);color:var(--green-deep);
+    border:none;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:600;
+    transition:transform .15s ease, box-shadow .25s ease;
+  }
+  .submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 32px -12px rgba(171,208,50,.55)}
+  .submit:disabled{opacity:.55;cursor:not-allowed}
+  .card-footer{
+    margin-top:26px;padding-top:22px;text-align:center;
+    border-top:1px solid rgba(255,241,217,.12);
+    font-size:14px;color:rgba(255,241,217,.55);
+  }
+  .card-footer a{color:var(--cream);font-weight:600;text-decoration:none}
+  .card-footer a:hover{color:var(--lime)}
+  @media (max-width:560px){
+    .card{padding:32px 24px 24px;border-radius:22px}
+    .card h1{font-size:30px}
+  }
+`
