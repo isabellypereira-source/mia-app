@@ -386,21 +386,25 @@ const CSS = `
   .landing-root .carousel .dots span{width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.4);transition:background .3s}
   .landing-root .carousel .dots span.active{background:var(--lime)}
   .landing-root .floating-card{
-    position:absolute;right:-32px;bottom:50px;
-    background:#fff;border-radius:18px;padding:16px 18px;
-    box-shadow:0 24px 50px -16px rgba(5,30,23,.3);
-    border:1px solid rgba(5,74,55,.06);z-index:5;width:240px;
+    position:absolute;
+    right:-60px;bottom:40%;
+    background:#fff;border-radius:22px;padding:26px 28px;
+    box-shadow:0 30px 70px -20px rgba(5,30,23,.45), 0 0 0 1px rgba(5,74,55,.05);
+    z-index:10;width:340px;
     animation:floatCard 6s ease-in-out infinite;
   }
-  @keyframes floatCard{50%{transform:translateY(-6px)}}
-  .landing-root .floating-card .title{font-size:13.5px;font-weight:600;color:var(--green-deep);margin-bottom:2px}
-  .landing-root .floating-card .sub{font-size:11.5px;color:#8a9990;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-  .landing-root .floating-card .sub .live{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px rgba(171,208,50,.25)}
-  .landing-root .floating-card .row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;color:var(--green-mid)}
+  @keyframes floatCard{50%{transform:translateY(-8px)}}
+  .landing-root .floating-card .title{font-size:17px;font-weight:600;color:var(--green-deep);margin-bottom:4px}
+  .landing-root .floating-card .sub{font-size:13px;color:#8a9990;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+  .landing-root .floating-card .sub .live{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px rgba(171,208,50,.25)}
+  .landing-root .floating-card .row{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:8px;color:var(--green-mid)}
   .landing-root .floating-card .row b{color:var(--green-deep);font-weight:600}
-  .landing-root .floating-card .bar{height:5px;border-radius:999px;background:rgba(6,110,81,.1);overflow:hidden;margin-bottom:10px}
+  .landing-root .floating-card .bar{height:6px;border-radius:999px;background:rgba(6,110,81,.1);overflow:hidden;margin-bottom:16px}
   .landing-root .floating-card .bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--lime))}
   .landing-root .floating-card .bar.b3 i{background:linear-gradient(90deg,var(--orange-soft),var(--orange))}
+  @media (max-width:1200px){
+    .landing-root .floating-card{right:-20px;width:300px}
+  }
   .landing-root section.block{padding:110px 64px;max-width:1480px;margin:0 auto}
   .landing-root section.block.resolve{max-width:none;background:var(--green-deep);color:var(--cream);padding:110px 0}
   .landing-root .resolve-inner{max-width:1480px;margin:0 auto;padding:0 64px}
