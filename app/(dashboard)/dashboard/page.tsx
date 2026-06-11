@@ -1,28 +1,14 @@
 'use client'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles,
-  FlaskConical,
-  SlidersHorizontal,
-  TestTube2,
-  MessageSquare,
-  ArrowRight,
-  BookOpen,
-  Library,
-  Lightbulb,
-  Microscope,
-  FileDown,
-  Wifi,
-  WifiOff,
+  Sparkles, FlaskConical, SlidersHorizontal, TestTube2,
+  MessageSquare, ArrowRight, BookOpen, Library,
+  Lightbulb, Microscope, FileDown, Wifi, WifiOff, ChevronRight,
 } from 'lucide-react'
 import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
-interface Formulacao {
-  id: string
-  nome: string
-  created_at: string
-}
+interface Formulacao { id: string; nome: string; created_at: string }
 
 const DICAS_MIA = [
   'Xantana a 0,5% combinada com goma guar a 0,3% cria sinergia estrutural — yield stress até 40% maior que cada uma isolada.',
@@ -34,230 +20,339 @@ const DICAS_MIA = [
   'Para diagnóstico de colapso, verifique primeiro o yield stress: se τ₀ < 50 Pa, a estrutura não sustenta o próprio peso.',
 ]
 
-const ACOES_RAPIDAS = [
-  { href: '/formular',     icon: FlaskConical,      label: 'Nova Formulação',     desc: 'Crie ou gere com a MIA',         iconBg: '#003223', iconFg: 'white' },
-  { href: '/parametros',   icon: SlidersHorizontal, label: 'Calcular Parâmetros', desc: 'G-code e parâmetros otimizados', iconBg: '#516600', iconFg: 'white' },
-  { href: '/experimentos', icon: TestTube2,          label: 'Novo Experimento',    desc: 'Log de impressão + diagnóstico', iconBg: '#c8ee4f', iconFg: '#003223' },
-  { href: '/chat',         icon: MessageSquare,     label: 'Chat com MIA',        desc: 'Consulta direta à IA',           iconBg: '#571000', iconFg: 'white' },
+const ACOES = [
+  { href: '/formular',     icon: FlaskConical,      label: 'Nova Formulação',     desc: 'Gere com IA ou crie manualmente',  color: '#054a37', accent: '#abd032' },
+  { href: '/parametros',   icon: SlidersHorizontal, label: 'Calcular Parâmetros', desc: 'G-code e parâmetros otimizados',   color: '#196454', accent: '#abd032' },
+  { href: '/experimentos', icon: TestTube2,          label: 'Experimentos',        desc: 'Log de impressão + diagnóstico',   color: '#abd032', accent: '#054a37' },
+  { href: '/chat',         icon: MessageSquare,     label: 'Chat com MIA',        desc: 'Consulta direta à IA',            color: '#000000', accent: '#abd032' },
 ]
 
-const WORKFLOW_STEPS = [
-  { label: 'Formular',       href: '/formular',       step: '1', icon: FlaskConical },
-  { label: 'Formulações',    href: '/formulacoes',    step: '2', icon: BookOpen },
-  { label: 'Parâmetros',     href: '/parametros',     step: '3', icon: SlidersHorizontal },
-  { label: 'Experimentos',   href: '/experimentos',   step: '4', icon: TestTube2 },
-  { label: 'Caracterização', href: '/caracterizacao', step: '5', icon: Microscope },
-  { label: 'Protocolos',     href: '/protocolos',     step: '6', icon: FileDown },
+const WORKFLOW = [
+  { label: 'Formular',       href: '/formular',       n: '01', icon: FlaskConical },
+  { label: 'Formulações',    href: '/formulacoes',    n: '02', icon: BookOpen },
+  { label: 'Parâmetros',     href: '/parametros',     n: '03', icon: SlidersHorizontal },
+  { label: 'Experimentos',   href: '/experimentos',   n: '04', icon: TestTube2 },
+  { label: 'Caracterização', href: '/caracterizacao', n: '05', icon: Microscope },
+  { label: 'Protocolos',     href: '/protocolos',     n: '06', icon: FileDown },
 ]
 
 function formatarData(iso: string) {
   const d = new Date(iso)
-  const agora = new Date()
-  const diffDias = Math.floor((agora.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
-  if (diffDias === 0) return 'hoje'
-  if (diffDias === 1) return 'ontem'
-  if (diffDias < 7) return `há ${diffDias} dias`
-  if (diffDias < 30) return `há ${Math.floor(diffDias / 7)} sem.`
+  const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
+  if (diff === 0) return 'hoje'
+  if (diff === 1) return 'ontem'
+  if (diff < 7) return `há ${diff} dias`
   return d.toLocaleDateString('pt-BR')
+}
+
+// Contador animado
+function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
+  const [v, setV] = useState(0)
+  const ran = useRef(false)
+  useEffect(() => {
+    if (ran.current) return
+    ran.current = true
+    const dur = 1400
+    const start = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min((now - start) / dur, 1)
+      const ease = 1 - Math.pow(1 - p, 3)
+      setV(Math.round(ease * to))
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [to])
+  return <>{v}{suffix}</>
+}
+
+// Hook de reveal por IntersectionObserver
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [vis, setVis] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect() } }, { threshold: 0.1 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+  return { ref, vis }
+}
+
+function RevealSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const { ref, vis } = useReveal()
+  return (
+    <div ref={ref} className={className} style={{
+      opacity: vis ? 1 : 0,
+      transform: vis ? 'translateY(0)' : 'translateY(28px)',
+      transition: `opacity 0.6s ease ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+    }}>
+      {children}
+    </div>
+  )
 }
 
 export default function DashboardPage() {
   const { connected: agentConnected, lastSeen: agentLastSeen, loading: agentLoading } = useAgentConnected()
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
-  const [qtdExperimentos, setQtdExperimentos] = useState(0)
   const [carregando, setCarregando] = useState(true)
-
+  const [hoveredAction, setHoveredAction] = useState<string | null>(null)
   const dica = useMemo(() => DICAS_MIA[Math.floor(Math.random() * DICAS_MIA.length)], [])
 
   useEffect(() => {
-    fetch('/api/formulacoes')
-      .then(r => r.json())
-      .then(data => setFormulacoes(data || []))
-      .finally(() => setCarregando(false))
-
-    try {
-      const exp = JSON.parse(localStorage.getItem('mia_experimentos') || '[]')
-      setQtdExperimentos(Array.isArray(exp) ? exp.length : 0)
-    } catch { /* ignore */ }
+    fetch('/api/formulacoes').then(r => r.json()).then(d => setFormulacoes(d || [])).finally(() => setCarregando(false))
   }, [])
 
-  const recentes = formulacoes.slice(0, 4)
-
   return (
-    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
+    <>
+      <style>{`
+        @keyframes shimmer-line {
+          from { transform: translateX(-100%); }
+          to { transform: translateX(200%); }
+        }
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-16px); }
+        }
+        .action-card { transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s ease, background 0.25s ease; }
+        .action-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 48px rgba(5,74,55,0.15); }
+        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(5,74,55,0.1); }
+        .workflow-step { transition: background 0.2s, color 0.2s, transform 0.2s; }
+        .workflow-step:hover { background: #054a37 !important; color: #fff1d9 !important; transform: translateY(-2px); }
+        .workflow-step:hover span { color: #abd032 !important; }
+        .recent-row { transition: background 0.15s, padding-left 0.2s; }
+        .recent-row:hover { background: rgba(5,74,55,0.05) !important; padding-left: 20px !important; }
+      `}</style>
 
-      {/* Banner de boas-vindas */}
-      <div className="relative overflow-hidden" style={{ background: '#fff2da', borderBottom: '1px solid #e5d9c1' }}>
-        <div className="absolute top-[-20%] right-8 w-56 h-56 rounded-full pointer-events-none"
-          style={{ background: 'rgba(200,238,79,0.12)' }} />
-        <div className="relative px-8 py-7 max-w-5xl mx-auto flex items-start justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles size={13} style={{ color: '#516600' }} />
-              <span className="text-xs font-display font-semibold uppercase tracking-widest" style={{ color: '#707974' }}>Morphê Foods</span>
-            </div>
-            <h1 className="font-display font-bold text-2xl mb-1.5" style={{ color: '#003223', letterSpacing: '-0.02em' }}>
-              Olá! A MIA está pronta.
-            </h1>
-            <p className="text-sm font-sans max-w-md leading-relaxed" style={{ color: '#58413c' }}>
-              Sua assistente de impressão 3D de alimentos. Formule, calcule parâmetros, diagnostique e exporte.
-            </p>
-          </div>
-          <div className="flex-shrink-0 flex items-center gap-2 bg-white rounded-xl px-4 py-2.5 shadow-tonal-sm">
-            <span className="status-online" />
-            <span className="text-xs font-display font-semibold" style={{ color: '#516600' }}>MIA Online</span>
-          </div>
-        </div>
-      </div>
+      <div className="h-full overflow-y-auto" style={{ background: '#fff1d9' }}>
 
-      <div className="max-w-5xl mx-auto px-8 py-6 space-y-5">
+        {/* ── HERO ──────────────────────────────────────────────────── */}
+        <div className="relative overflow-hidden" style={{ background: '#054a37' }}>
+          {/* Orbs */}
+          <div className="absolute top-[-30%] right-[-5%] w-96 h-96 rounded-full pointer-events-none"
+            style={{ background: 'rgba(171,208,50,0.12)', filter: 'blur(64px)', animation: 'float-slow 8s ease-in-out infinite' }} />
+          <div className="absolute bottom-[-20%] left-[30%] w-64 h-64 rounded-full pointer-events-none"
+            style={{ background: 'rgba(25,100,84,0.4)', filter: 'blur(48px)', animation: 'float-slow 6s ease-in-out infinite reverse' }} />
 
-        {/* Status do agente Slicer */}
-        {!agentLoading && (
-          agentConnected ? (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
-              style={{ background: 'rgba(0,50,35,0.04)', borderColor: 'rgba(0,50,35,0.15)' }}>
-              <Wifi size={15} style={{ color: '#003223' }} />
-              <span className="text-sm font-sans font-medium" style={{ color: '#003223' }}>Slicer conectado ✓</span>
-              {agentLastSeen && (
-                <span className="text-xs ml-auto" style={{ color: '#707974' }}>
-                  Última atividade: {new Date(agentLastSeen).toLocaleString('pt-BR')}
-                </span>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl border"
-              style={{ background: 'rgba(88,65,60,0.04)', borderColor: 'rgba(88,65,60,0.15)' }}>
-              <WifiOff size={15} style={{ color: '#707974' }} />
-              <span className="text-sm font-sans" style={{ color: '#707974' }}>Aguardando conexão do Slicer</span>
-              <a href="https://mia-app-isabellypereira-6813s-projects.vercel.app" className="text-xs ml-auto underline" style={{ color: '#58413c' }}>
-                Instalar agente
-              </a>
-            </div>
-          )
-        )}
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: 'Formulações',  valor: carregando ? '—' : String(formulacoes.length), icon: FlaskConical, iconBg: '#003223', iconFg: 'white' },
-            { label: 'Experimentos', valor: String(qtdExperimentos),                       icon: TestTube2,    iconBg: '#516600', iconFg: 'white' },
-            { label: 'Biblioteca',   valor: '6 tópicos',                                   icon: Library,      iconBg: '#c8ee4f', iconFg: '#003223' },
-            { label: 'Modelo IA',    valor: 'Gemini 2.0',                                  icon: Sparkles,     iconBg: '#571000', iconFg: 'white' },
-          ].map(({ label, valor, icon: Icon, iconBg, iconFg }) => (
-            <div key={label} className="bg-white p-4 rounded-2xl shadow-tonal">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3"
-                style={{ background: iconBg }}>
-                <Icon size={14} style={{ color: iconFg }} />
+          <div className="relative z-10 max-w-5xl mx-auto px-8 py-10">
+            <div className="flex items-start justify-between gap-6 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#abd032', animation: 'pulse-dot 2s ease-in-out infinite' }} />
+                  <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(171,208,50,0.7)' }}>
+                    Morphê Foods · The Living Lab
+                  </span>
+                </div>
+                <h1 className="font-black mb-3 leading-none" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff1d9', letterSpacing: '-0.03em' }}>
+                  Olá! A <span style={{ color: '#abd032' }}>MIA</span> está pronta.
+                </h1>
+                <p className="text-sm max-w-lg leading-relaxed" style={{ color: 'rgba(255,241,217,0.6)' }}>
+                  Sua assistente de impressão 3D de alimentos — de hidrocolóides a G-code.
+                </p>
               </div>
-              <p className="font-display font-bold text-2xl" style={{ color: '#003223' }}>{valor}</p>
-              <p className="text-xs font-sans mt-0.5" style={{ color: '#707974' }}>{label}</p>
+
+              {/* Status badges */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
+                  style={{ background: 'rgba(171,208,50,0.12)', border: '1px solid rgba(171,208,50,0.2)' }}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#abd032', animation: 'pulse-dot 2s ease-in-out infinite' }} />
+                  <span className="text-xs font-bold" style={{ color: '#abd032' }}>MIA Online</span>
+                </div>
+                {!agentLoading && (
+                  agentConnected ? (
+                    <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
+                      style={{ background: 'rgba(255,241,217,0.08)', border: '1px solid rgba(255,241,217,0.12)' }}>
+                      <Wifi size={12} style={{ color: '#abd032' }} />
+                      <span className="text-xs" style={{ color: 'rgba(255,241,217,0.7)' }}>Slicer conectado</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
+                      style={{ background: 'rgba(255,241,217,0.04)', border: '1px solid rgba(255,241,217,0.08)' }}>
+                      <WifiOff size={12} style={{ color: 'rgba(255,241,217,0.3)' }} />
+                      <span className="text-xs" style={{ color: 'rgba(255,241,217,0.3)' }}>Slicer desconectado</span>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
-          ))}
-        </div>
 
-        {/* Ações rápidas + Formulações recentes */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
-          <div className="bg-white p-5 rounded-2xl shadow-tonal">
-            <h2 className="font-display font-bold text-base mb-4" style={{ color: '#003223' }}>Ações rápidas</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {ACOES_RAPIDAS.map(({ href, icon: Icon, label, desc, iconBg, iconFg }) => (
-                <Link key={href} href={href}
-                  className="flex flex-col gap-2.5 p-4 rounded-xl transition-all duration-200 hover:shadow-tonal hover:scale-[1.02]"
-                  style={{ background: '#fff2da' }}>
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-                    style={{ background: iconBg }}>
-                    <Icon size={15} style={{ color: iconFg }} />
-                  </div>
-                  <div>
-                    <p className="text-xs font-display font-semibold leading-tight" style={{ color: '#003223' }}>{label}</p>
-                    <p className="text-[11px] font-sans mt-0.5 leading-tight" style={{ color: '#707974' }}>{desc}</p>
-                  </div>
-                </Link>
+            {/* Stats inline */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+              {[
+                { n: formulacoes.length, s: '', label: 'Formulações', loading: carregando },
+                { n: 6, s: '', label: 'Protocolos' },
+                { n: 99, s: '%', label: 'Precisão' },
+                { n: 1, s: '', label: agentConnected ? 'Slicer ativo' : 'Modelos IA' },
+              ].map(({ n, s, label, loading }) => (
+                <div key={label} className="stat-card rounded-2xl px-5 py-4 cursor-default"
+                  style={{ background: 'rgba(255,241,217,0.06)', border: '1px solid rgba(255,241,217,0.1)' }}>
+                  <p className="font-black text-2xl mb-0.5" style={{ color: '#abd032' }}>
+                    {loading ? '—' : <Counter to={n} suffix={s} />}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,241,217,0.4)' }}>{label}</p>
+                </div>
               ))}
             </div>
           </div>
+        </div>
 
-          <div className="bg-white p-5 rounded-2xl shadow-tonal">
+        <div className="max-w-5xl mx-auto px-8 py-8 space-y-6">
+
+          {/* ── AÇÕES RÁPIDAS ────────────────────────────────────────── */}
+          <RevealSection>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display font-bold text-base" style={{ color: '#003223' }}>Formulações recentes</h2>
-              <Link href="/formulacoes" className="text-xs font-display font-semibold flex items-center gap-1 transition-opacity hover:opacity-70"
-                style={{ color: '#516600' }}>
-                Ver todas <ArrowRight size={11} />
-              </Link>
+              <h2 className="font-black text-xl" style={{ color: '#054a37', letterSpacing: '-0.02em' }}>Ações rápidas</h2>
             </div>
-
-            {carregando ? (
-              <div className="space-y-2">
-                {[1, 2, 3].map(i => <div key={i} className="skeleton h-10 rounded-xl" />)}
-              </div>
-            ) : recentes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                  style={{ background: '#fff2da' }}>
-                  <BookOpen size={20} style={{ color: '#bfc9c2' }} />
-                </div>
-                <p className="text-sm font-sans mb-1" style={{ color: '#58413c' }}>Nenhuma formulação ainda</p>
-                <p className="text-xs font-sans mb-4" style={{ color: '#707974' }}>Crie sua primeira com a MIA</p>
-                <Link href="/formular" className="btn-primary text-xs px-4 py-2">
-                  Criar formulação
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {recentes.map(f => (
-                  <Link key={f.id} href="/formulacoes"
-                    className="flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-150"
-                    style={{ background: 'transparent' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#fff2da')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#003223' }} />
-                      <span className="text-sm font-sans truncate" style={{ color: '#211b0c' }}>{f.nome}</span>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {ACOES.map(({ href, icon: Icon, label, desc, color, accent }) => {
+                const hovered = hoveredAction === href
+                return (
+                  <Link key={href} href={href}
+                    onMouseEnter={() => setHoveredAction(href)}
+                    onMouseLeave={() => setHoveredAction(null)}
+                    className="action-card flex flex-col justify-between p-5 rounded-2xl min-h-[148px]"
+                    style={{
+                      background: hovered ? color : '#fff',
+                      border: `1.5px solid ${hovered ? color : 'rgba(5,74,55,0.08)'}`,
+                    }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                      style={{ background: hovered ? `${accent}22` : `${color}12` }}>
+                      <Icon size={18} style={{ color: hovered ? accent : color }} />
                     </div>
-                    <span className="text-xs font-sans flex-shrink-0 ml-2" style={{ color: '#707974' }}>{formatarData(f.created_at)}</span>
+                    <div>
+                      <p className="font-bold text-sm mb-1 leading-tight"
+                        style={{ color: hovered ? (color === '#abd032' ? '#054a37' : '#fff1d9') : '#054a37' }}>
+                        {label}
+                      </p>
+                      <p className="text-[11px] leading-snug"
+                        style={{ color: hovered ? (color === '#abd032' ? 'rgba(5,74,55,0.6)' : 'rgba(255,241,217,0.55)') : 'rgba(5,74,55,0.4)' }}>
+                        {desc}
+                      </p>
+                    </div>
                   </Link>
+                )
+              })}
+            </div>
+          </RevealSection>
+
+          {/* ── FORMULAÇÕES + DICA ──────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+
+            {/* Formulações recentes */}
+            <RevealSection className="lg:col-span-3" delay={50}>
+              <div className="rounded-2xl overflow-hidden h-full"
+                style={{ background: '#fff', border: '1.5px solid rgba(5,74,55,0.08)' }}>
+                <div className="flex items-center justify-between px-5 py-4"
+                  style={{ borderBottom: '1px solid rgba(5,74,55,0.06)' }}>
+                  <h2 className="font-black text-base" style={{ color: '#054a37', letterSpacing: '-0.02em' }}>Formulações recentes</h2>
+                  <Link href="/formulacoes" className="flex items-center gap-1 text-xs font-bold transition-opacity hover:opacity-60"
+                    style={{ color: '#abd032' }}>
+                    Ver todas <ChevronRight size={12} />
+                  </Link>
+                </div>
+
+                <div className="p-2">
+                  {carregando ? (
+                    <div className="space-y-1 p-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="h-10 rounded-xl animate-pulse" style={{ background: 'rgba(5,74,55,0.04)' }} />
+                      ))}
+                    </div>
+                  ) : formulacoes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 text-center">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+                        style={{ background: 'rgba(171,208,50,0.1)' }}>
+                        <BookOpen size={20} style={{ color: '#abd032' }} />
+                      </div>
+                      <p className="text-sm font-bold mb-1" style={{ color: '#054a37' }}>Nenhuma formulação ainda</p>
+                      <p className="text-xs mb-5" style={{ color: 'rgba(5,74,55,0.4)' }}>Crie sua primeira com a MIA</p>
+                      <Link href="/formular"
+                        className="text-xs font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90"
+                        style={{ background: '#054a37', color: '#fff1d9' }}>
+                        Criar formulação →
+                      </Link>
+                    </div>
+                  ) : (
+                    formulacoes.slice(0, 6).map(f => (
+                      <Link key={f.id} href="/formulacoes"
+                        className="recent-row flex items-center justify-between px-4 py-3 rounded-xl"
+                        style={{ background: 'transparent', paddingLeft: 16 }}>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: 'rgba(171,208,50,0.12)' }}>
+                            <FlaskConical size={11} style={{ color: '#abd032' }} />
+                          </div>
+                          <span className="text-sm font-medium truncate" style={{ color: '#054a37' }}>{f.nome}</span>
+                        </div>
+                        <span className="text-[11px] flex-shrink-0 ml-3" style={{ color: 'rgba(5,74,55,0.35)' }}>
+                          {formatarData(f.created_at)}
+                        </span>
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
+            </RevealSection>
+
+            {/* Dica da MIA */}
+            <RevealSection className="lg:col-span-2" delay={100}>
+              <div className="rounded-2xl p-6 h-full flex flex-col"
+                style={{ background: '#054a37', minHeight: 220 }}>
+                <div className="flex items-center gap-2 mb-5">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(171,208,50,0.15)' }}>
+                    <Lightbulb size={13} style={{ color: '#abd032' }} />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(171,208,50,0.6)' }}>
+                    Dica da MIA
+                  </span>
+                </div>
+                <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,241,217,0.8)' }}>{dica}</p>
+                <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(171,208,50,0.12)' }}>
+                  <Link href="/chat" className="flex items-center gap-1.5 text-xs font-bold transition-opacity hover:opacity-70"
+                    style={{ color: '#abd032' }}>
+                    <Sparkles size={11} /> Perguntar à MIA
+                  </Link>
+                </div>
+              </div>
+            </RevealSection>
+          </div>
+
+          {/* ── FLUXO DE TRABALHO ────────────────────────────────────── */}
+          <RevealSection delay={150}>
+            <div className="rounded-2xl p-6" style={{ background: '#fff', border: '1.5px solid rgba(5,74,55,0.08)' }}>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="font-black text-base" style={{ color: '#054a37', letterSpacing: '-0.02em' }}>Fluxo de trabalho</h2>
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(5,74,55,0.3)' }}>
+                  6 etapas
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                {WORKFLOW.map(({ label, href, n, icon: Icon }, i, arr) => (
+                  <div key={href} className="flex items-center gap-2">
+                    <Link href={href}
+                      className="workflow-step flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                      style={{ background: 'rgba(5,74,55,0.05)', color: '#054a37' }}>
+                      <span className="text-[10px] font-black" style={{ color: '#abd032' }}>{n}</span>
+                      <Icon size={12} />
+                      <span className="text-xs font-bold">{label}</span>
+                    </Link>
+                    {i < arr.length - 1 && (
+                      <ArrowRight size={10} style={{ color: 'rgba(5,74,55,0.2)' }} className="flex-shrink-0" />
+                    )}
+                  </div>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Dica da MIA */}
-        <div className="p-5 rounded-2xl" style={{ background: '#f9edd4', borderLeft: '3px solid #003223' }}>
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-              style={{ background: '#003223' }}>
-              <Lightbulb size={15} style={{ color: 'white' }} />
             </div>
-            <div>
-              <p className="text-xs font-display font-semibold mb-1.5 uppercase tracking-wider" style={{ color: '#516600' }}>Dica da MIA</p>
-              <p className="text-sm font-sans leading-relaxed" style={{ color: '#58413c' }}>{dica}</p>
-            </div>
-          </div>
-        </div>
+          </RevealSection>
 
-        {/* Fluxo de trabalho */}
-        <div className="bg-white p-5 rounded-2xl shadow-tonal">
-          <h2 className="font-display font-bold text-base mb-4" style={{ color: '#003223' }}>Fluxo de trabalho</h2>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {WORKFLOW_STEPS.map(({ label, href, step, icon: Icon }, i, arr) => (
-              <div key={href} className="flex items-center gap-1.5">
-                <Link href={href}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-display font-medium transition-all duration-150"
-                  style={{ background: '#fff2da', color: '#003223' }}>
-                  <span className="text-[10px] font-bold opacity-50">{step}</span>
-                  <Icon size={11} />
-                  <span>{label}</span>
-                </Link>
-                {i < arr.length - 1 && <ArrowRight size={10} style={{ color: '#bfc9c2' }} className="flex-shrink-0" />}
-              </div>
-            ))}
-          </div>
         </div>
-
       </div>
-    </div>
+    </>
   )
 }
