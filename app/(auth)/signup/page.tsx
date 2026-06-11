@@ -75,7 +75,7 @@ export default function SignupPage() {
           {!success ? (
             <>
               <h1>Crie sua <em>conta grátis.</em></h1>
-              <p className="sub">Leva menos de um minuto pra começar com a MIA.</p>
+              <p className="sub">Comece a imprimir alimentos hoje!</p>
 
               <form onSubmit={handleSignup}>
                 <label htmlFor="nome">Nome</label>
