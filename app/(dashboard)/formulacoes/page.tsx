@@ -79,6 +79,12 @@ function calcularNutri(ingredientes: Ingrediente[]): NutriInfo {
   }
 }
 
+type NutriResp = {
+  total: { kcal: number; proteina_g: number; carboidrato_g: number; gordura_g: number; fibra_g: number; umidade_g: number; sodio_mg: number }
+  matches: { nome: string; percentual: number; matched: { nome: string } | null }[]
+  missing: string[]
+}
+
 function FormulacoesInner() {
   const params = useSearchParams()
   const q = params.get('q')?.toLowerCase().trim() || ''
@@ -87,6 +93,35 @@ function FormulacoesInner() {
   const [selecionada, setSelecionada] = useState<Formulacao | null>(null)
   const [abaDetalhe, setAbaDetalhe] = useState<'nutri' | 'anvisa'>('nutri')
   const [excluindo, setExcluindo] = useState<string | null>(null)
+  const [nutriData, setNutriData] = useState<NutriResp | null>(null)
+  const [nutriLoading, setNutriLoading] = useState(false)
+  const [customOpen, setCustomOpen] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!selecionada || abaDetalhe !== 'nutri') return
+    setNutriLoading(true)
+    setNutriData(null)
+    fetch('/api/foods/nutri', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredientes: selecionada.ingredientes || [], peso_g: 100 }),
+    })
+      .then(r => r.json())
+      .then((d: NutriResp) => setNutriData(d))
+      .finally(() => setNutriLoading(false))
+  }, [selecionada, abaDetalhe])
+
+  const refetchNutri = async () => {
+    if (!selecionada) return
+    setNutriLoading(true)
+    const res = await fetch('/api/foods/nutri', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredientes: selecionada.ingredientes || [], peso_g: 100 }),
+    })
+    setNutriData(await res.json())
+    setNutriLoading(false)
+  }
 
   useEffect(() => {
     fetch('/api/formulacoes')
@@ -249,33 +284,57 @@ function FormulacoesInner() {
               <h3 className="text-xs font-medium text-[#58413c] uppercase tracking-wider mb-3">
                 Tabela Nutricional Estimada (por 100 g)
               </h3>
-              <p className="text-xs text-[#58413c] mb-3 italic">
-                Estimativa baseada na composição declarada e dados da Tabela Brasileira de Composição de Alimentos (TACO). Para valores precisos, realizar análise laboratorial.
-              </p>
-              {(() => {
-                const nutri = calcularNutri(selecionada.ingredientes || [])
-                return (
-                  <table className="w-full text-sm">
-                    <tbody className="divide-y divide-border">
-                      {[
-                        ['Valor energético', nutri.calorias],
-                        ['Carboidratos', nutri.carboidratos],
-                        ['Proteínas', nutri.proteinas],
-                        ['Gorduras totais', nutri.gorduras],
-                        ['Fibra alimentar', nutri.fibras],
-                        ['Umidade estimada', nutri.umidade],
-                      ].map(([label, valor]) => (
-                        <tr key={label}>
-                          <td className="py-2 text-[#58413c]">{label}</td>
-                          <td className="py-2 text-right font-medium">{valor}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )
-              })()}
+              {nutriLoading && (
+                <p className="text-xs text-[#58413c] mb-3">Calculando…</p>
+              )}
+              {nutriData && nutriData.missing && nutriData.missing.length > 0 && (
+                <div style={{ background: 'rgba(250,85,40,.08)', border: '1px solid rgba(250,85,40,.25)', borderRadius: 12, padding: 12, marginBottom: 14 }}>
+                  <p style={{ fontSize: 12.5, color: 'var(--orange,#fa5528)', fontWeight: 600, margin: 0, marginBottom: 6 }}>
+                    {nutriData.missing.length === 1 ? 'Ingrediente não encontrado na base' : 'Ingredientes não encontrados'}
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: 0, marginBottom: 8 }}>
+                    Informe os valores manualmente para que a MIA inclua esses itens no cálculo.
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {nutriData.missing.map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setCustomOpen(n)}
+                        style={{
+                          background: 'var(--accent,#abd032)', color: 'var(--accent-text-on,#054a37)',
+                          border: 'none', borderRadius: 999, padding: '6px 12px',
+                          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        }}
+                      >
+                        + Informar valores de {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {nutriData && (
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-border">
+                    {[
+                      ['Valor energético', `${nutriData.total.kcal} kcal`],
+                      ['Carboidratos', `${nutriData.total.carboidrato_g.toFixed(1)} g`],
+                      ['Proteínas', `${nutriData.total.proteina_g.toFixed(1)} g`],
+                      ['Gorduras totais', `${nutriData.total.gordura_g.toFixed(1)} g`],
+                      ['Fibra alimentar', `${nutriData.total.fibra_g.toFixed(1)} g`],
+                      ['Sódio', `${nutriData.total.sodio_mg} mg`],
+                      ['Umidade estimada', `${nutriData.total.umidade_g.toFixed(1)} g`],
+                    ].map(([label, valor]) => (
+                      <tr key={label}>
+                        <td className="py-2 text-[#58413c]">{label}</td>
+                        <td className="py-2 text-right font-medium">{valor}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               <p className="text-xs text-[#58413c] mt-3">
-                * Sólidos totais estimados: {
+                * Sólidos totais declarados: {
                   Math.min(
                     selecionada.ingredientes?.reduce((s, i) => s + i.percentual, 0) ?? 0,
                     100
@@ -283,6 +342,14 @@ function FormulacoesInner() {
                 }%
               </p>
             </div>
+          )}
+
+          {customOpen && (
+            <CustomFoodModal
+              nome={customOpen}
+              onClose={() => setCustomOpen(null)}
+              onSaved={async () => { setCustomOpen(null); await refetchNutri() }}
+            />
           )}
 
           {/* Aba ANVISA */}
@@ -305,6 +372,132 @@ function FormulacoesInner() {
         </div>
       )}
     </div>
+  )
+}
+
+function CustomFoodModal({
+  nome,
+  onClose,
+  onSaved,
+}: {
+  nome: string
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [kcal, setKcal] = useState('')
+  const [prot, setProt] = useState('')
+  const [carb, setCarb] = useState('')
+  const [gord, setGord] = useState('')
+  const [fib, setFib] = useState('')
+  const [umid, setUmid] = useState('')
+  const [sod, setSod] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    setErr(null)
+    const res = await fetch('/api/foods', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome,
+        kcal: parseFloat(kcal) || 0,
+        proteina_g: parseFloat(prot) || 0,
+        carboidrato_g: parseFloat(carb) || 0,
+        gordura_g: parseFloat(gord) || 0,
+        fibra_g: parseFloat(fib) || 0,
+        umidade_g: parseFloat(umid) || 0,
+        sodio_mg: parseFloat(sod) || 0,
+      }),
+    })
+    setSaving(false)
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      setErr(j.error || 'Falha ao salvar')
+      return
+    }
+    onSaved()
+  }
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(3,56,42,.6)',
+        backdropFilter: 'blur(6px)', display: 'grid', placeItems: 'center', zIndex: 100,
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--cream,#fff1d9)', borderRadius: 20, padding: 28, width: 'min(480px,92vw)',
+          boxShadow: '0 30px 80px -20px rgba(0,0,0,.4)',
+        }}
+      >
+        <h3 style={{ margin: 0, fontFamily: 'var(--font-serif),serif', fontStyle: 'italic', fontSize: 24, color: 'var(--green-deep,#03382a)' }}>
+          Informar valores
+        </h3>
+        <p style={{ margin: '4px 0 18px', fontSize: 13.5, color: 'var(--green-mid,#196454)' }}>
+          Para <b>{nome}</b>. Insira valores por 100 g do ingrediente.
+        </p>
+        <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <Field label="Energia (kcal)" value={kcal} onChange={setKcal} />
+          <Field label="Proteína (g)" value={prot} onChange={setProt} />
+          <Field label="Carboidrato (g)" value={carb} onChange={setCarb} />
+          <Field label="Gordura (g)" value={gord} onChange={setGord} />
+          <Field label="Fibra (g)" value={fib} onChange={setFib} />
+          <Field label="Umidade (g)" value={umid} onChange={setUmid} />
+          <Field label="Sódio (mg)" value={sod} onChange={setSod} />
+          {err && <p style={{ gridColumn: '1 / -1', color: 'var(--orange,#fa5528)', fontSize: 12.5, margin: 0 }}>{err}</p>}
+          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10, marginTop: 6 }}>
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                background: 'var(--green-deep,#03382a)', color: 'var(--cream,#fff1d9)',
+                border: 'none', borderRadius: 10, padding: '11px 22px', fontWeight: 600, cursor: 'pointer',
+                fontFamily: 'inherit', fontSize: 14,
+              }}
+            >
+              {saving ? 'Salvando…' : 'Salvar valores'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: 'transparent', color: 'var(--green-mid,#196454)',
+                border: '1px solid rgba(5,74,55,.15)', borderRadius: 10, padding: '11px 22px',
+                fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', fontSize: 14,
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function Field({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{ fontSize: 11, color: 'var(--green-mid,#196454)', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        {label}
+      </span>
+      <input
+        type="number"
+        step="0.1"
+        min="0"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          background: '#fff', border: '1px solid rgba(5,74,55,.15)', borderRadius: 8,
+          padding: '9px 12px', fontSize: 14, color: 'var(--green-deep,#03382a)', outline: 'none',
+        }}
+      />
+    </label>
   )
 }
 
