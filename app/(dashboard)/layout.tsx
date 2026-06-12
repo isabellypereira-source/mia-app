@@ -479,6 +479,86 @@ const DASH_CSS = `
     color:var(--accent-text-on) !important;
   }
 
+  /* hex-specific overrides for all legacy hardcoded colors */
+  .dash-root .content [style*="#fff8f1"],
+  .dash-root .content [style*="#fff2da"],
+  .dash-root .content [style*="#f9edd4"],
+  .dash-root .content [style*="#f0f9ff"],
+  .dash-root .content [class*="bg-[#fff2da]"],
+  .dash-root .content [class*="bg-[#fff8f1]"],
+  .dash-root .content [class*="bg-[#f9edd4]"]{
+    background:transparent !important;
+  }
+  .dash-root .content [style*="#003223"],
+  .dash-root .content [style*="#054a37"],
+  .dash-root .content [style*="#1a2e1a"],
+  .dash-root .content [class*="bg-[#003223]"],
+  .dash-root .content [class*="bg-[#004d35]"]{
+    background:var(--surface-glass-strong) !important;
+    color:var(--text-main) !important;
+    backdrop-filter:blur(16px);
+    border:1px solid var(--border-glass-strong);
+  }
+  .dash-root .content button[style*="#003223"],
+  .dash-root .content a[style*="#003223"],
+  .dash-root .content button[style*="#054a37"],
+  .dash-root .content a[style*="#054a37"],
+  .dash-root .content [class*="bg-[#003223]"]:is(button,a),
+  .dash-root .content [class*="bg-[#004d35]"]:is(button,a){
+    background:var(--accent) !important;
+    color:var(--accent-text-on) !important;
+    border:none !important;
+  }
+  .dash-root .content [style*="#c8ee4f"],
+  .dash-root .content [style*="#516600"],
+  .dash-root .content [style*="#abd032"]{
+    background:var(--accent) !important;
+    color:var(--accent-text-on) !important;
+  }
+  .dash-root .content [style*="color: #003223"],
+  .dash-root .content [style*="color:#003223"],
+  .dash-root .content [style*="color: '#003223"]{
+    color:var(--text-main) !important;
+  }
+  .dash-root .content [style*="color: #58413c"],
+  .dash-root .content [style*="color:#58413c"],
+  .dash-root .content [style*="color: #707974"]{
+    color:var(--text-muted) !important;
+  }
+  .dash-root .content [class*="border-[#e5d9c1]"],
+  .dash-root .content [class*="border-[#"]{
+    border-color:var(--border-glass) !important;
+  }
+  .dash-root .content .shadow-tonal,
+  .dash-root .content [class*="shadow-"]{
+    box-shadow:0 12px 36px -18px rgba(0,0,0,.3) !important;
+  }
+  .dash-root .content h1,
+  .dash-root .content h2,
+  .dash-root .content h3,
+  .dash-root .content h4{color:var(--text-main)}
+  /* generic paragraphs without explicit color */
+  .dash-root .content p,
+  .dash-root .content span,
+  .dash-root .content li,
+  .dash-root .content td,
+  .dash-root .content label{color:var(--text-main)}
+  .dash-root .content .text-xs,
+  .dash-root .content .text-sm{color:inherit}
+  /* rounded card-ish wrappers */
+  .dash-root .content .rounded-2xl,
+  .dash-root .content .rounded-xl,
+  .dash-root .content .rounded-3xl{
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+  }
+  /* fix any element that has a solid white-ish inline bg */
+  .dash-root .content [style*="background-color: white"],
+  .dash-root .content [style*="background-color:#fff"]{
+    background-color:var(--surface-glass-strong) !important;
+    color:var(--text-main) !important;
+  }
+
   @media (max-width:1180px){
     .dash-root .profile .info{display:none}
     .dash-root .search{width:200px}
