@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
-  ArrowLeft, ArrowRight, Check, Download, Sparkles, SlidersHorizontal, Info, Box, Square,
+  ArrowLeft, ArrowRight, Check, Download, Sparkles, SlidersHorizontal, Info, Square,
 } from 'lucide-react'
 import {
   SYRINGES, MACHINES, calcEPerMm,
@@ -13,6 +13,11 @@ import {
 const ShapePreview = dynamic(
   () => import('@/components/parametros/ShapePreview'),
   { ssr: false, loading: () => <div className="flex items-center justify-center h-[280px] text-xs" style={{ color: 'var(--text-faint)' }}>Carregando...</div> },
+)
+
+const ShapeThumb = dynamic(
+  () => import('@/components/parametros/ShapeThumb'),
+  { ssr: false },
 )
 
 // ---------------------------------------------------------------------------
@@ -342,9 +347,13 @@ export default function ParametrosPage() {
                   className={`shape-card ${formato === f.id ? 'active' : ''}`}>
                   {formato === f.id && <span className="shape-check"><Check size={13} strokeWidth={2.5} /></span>}
                   <div className="shape-box">
-                    <div className="shape-box-inner">
-                      {f.stl ? <Box size={20} /> : <Square size={20} />}
-                    </div>
+                    {f.stl ? (
+                      <ShapeThumb stlPath={f.stl} />
+                    ) : (
+                      <div className="shape-box-inner">
+                        <Square size={22} />
+                      </div>
+                    )}
                   </div>
                   <p className="shape-label">{f.label}</p>
                 </button>
@@ -714,15 +723,15 @@ const PARAM_CSS = `
 
   /* ── Shape grid (formato) — quadrados grandes com quadrado interno ── */
   .shape-grid{
-    display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
-    gap:14px;
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:18px;
   }
   .shape-card{
     position:relative;
-    display:flex;flex-direction:column;align-items:center;gap:10px;
+    display:flex;flex-direction:column;align-items:center;gap:12px;
     background:var(--surface-glass-strong);
     border:1.5px solid var(--border-glass-strong);
-    border-radius:18px;padding:16px 10px;
+    border-radius:20px;padding:18px 14px;
     cursor:pointer;transition:.2s;
     font-family:inherit;color:var(--text-main);
     backdrop-filter:blur(16px);
@@ -730,8 +739,8 @@ const PARAM_CSS = `
   .shape-card:hover{transform:translateY(-3px);border-color:var(--accent-em);box-shadow:0 18px 38px -16px rgba(0,0,0,.28)}
   .shape-card.active{border-color:var(--accent);background:var(--icon-tint)}
   .shape-check{
-    position:absolute;top:10px;right:10px;
-    width:22px;height:22px;border-radius:50%;
+    position:absolute;top:12px;right:12px;z-index:1;
+    width:24px;height:24px;border-radius:50%;
     background:var(--accent);color:var(--accent-text-on);
     display:grid;place-items:center;
   }
@@ -741,6 +750,7 @@ const PARAM_CSS = `
     background:var(--surface-glass);
     border:1.5px solid var(--border-glass);
     display:grid;place-items:center;
+    overflow:hidden;
     transition:.2s;
   }
   .shape-card.active .shape-box{border-color:var(--accent-em);background:var(--icon-tint)}
@@ -754,7 +764,7 @@ const PARAM_CSS = `
     transition:.2s;
   }
   .shape-card.active .shape-box-inner{border-color:var(--accent);color:var(--accent)}
-  .shape-label{margin:0;font-size:13px;font-weight:500;text-align:center;line-height:1.3}
+  .shape-label{margin:0;font-size:14px;font-weight:500;text-align:center;line-height:1.3}
 
   /* ── Tamanho / preview ────────────────────────────── */
   .param-size-layout{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
@@ -884,7 +894,7 @@ const PARAM_CSS = `
     .param-root{padding:18px 16px}
     .param-step-col{min-width:48px}
     .param-step-label{display:none}
-    .shape-grid{grid-template-columns:repeat(3,1fr)}
+    .shape-grid{grid-template-columns:repeat(2,1fr)}
     .param-fill-grid{grid-template-columns:1fr}
     .param-meta-grid{grid-template-columns:1fr 1fr}
   }
