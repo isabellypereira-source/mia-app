@@ -1,11 +1,18 @@
 'use client'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
-  TestTube2, Plus, CheckCircle, XCircle, AlertCircle, Sparkles,
-  ChevronDown, ChevronUp, Calendar, Trash2, Download, Send, Loader2, Wifi,
+  CheckCircle2, AlertCircle, XCircle,
+  Plus, Download, Trash2, ChevronDown, ChevronUp,
+  Sparkles, Calendar, Loader2, Wifi, FlaskConical, SlidersHorizontal, BookOpen,
 } from 'lucide-react'
 
-interface Formulacao { id: string; nome: string }
+interface Ingrediente { nome: string; percentual: number | string; funcao: string }
+interface Formulacao {
+  id: string
+  nome: string
+  parametros?: Record<string, unknown> | null
+  ingredientes?: Ingrediente[]
+}
 interface ChatMsg { role: 'user' | 'assistant'; content: string }
 
 interface Experimento {
@@ -24,273 +31,81 @@ interface Experimento {
 
 type Resultado = 'sucesso' | 'falha' | 'parcial'
 
-const RC: Record<string, { icon: typeof CheckCircle; color: string; bg: string; label: string }> = {
-  sucesso:  { icon: CheckCircle,  color: 'text-green-500', bg: 'bg-green-50 border-green-200',   label: 'Sucesso'  },
-  parcial:  { icon: AlertCircle,  color: 'text-amber-500', bg: 'bg-amber-50 border-amber-200',   label: 'Parcial'  },
-  falha:    { icon: XCircle,      color: 'text-red-500',   bg: 'bg-red-50 border-red-200',       label: 'Falha'    },
-  pendente: { icon: Loader2,      color: 'text-blue-400',  bg: 'bg-blue-50 border-blue-200',     label: 'Pendente' },
-}
-
-const PROBLEMAS = [
-  'Material não extrusou / entupimento',
-  'Colapso estrutural durante a impressão',
-  'Filamento irregular / inconsistente',
-  'Baixa adesão entre camadas',
-  'Deformação pós-impressão',
-  'Bolhas ou vazios no material',
-  'Problema de temperatura',
-  'Outro',
+// Linguagem acessível com termo técnico associado, p/ acadêmicos e leigos
+const PROBLEMAS_FALHA = [
+  { id: 'A massa entupiu no bico',               tech: 'Material não extrusou' },
+  { id: 'A peça desabou enquanto imprimia',      tech: 'Colapso estrutural' },
+  { id: 'O filete saiu irregular ou cortando',   tech: 'Filamento inconsistente' },
+  { id: 'As camadas não grudaram entre si',      tech: 'Baixa adesão entre camadas' },
+  { id: 'A peça deformou depois de pronta',      tech: 'Deformação pós-impressão' },
+  { id: 'Apareceram bolhas ou furos no material', tech: 'Bolhas ou vazios' },
+  { id: 'A temperatura saiu do esperado',         tech: 'Desvio térmico' },
+  { id: 'Outro',                                  tech: 'Descrição livre' },
 ]
 
-// Limpa code blocks JSON e formatação de cards estruturados de respostas antigas
-function limparTextoMia(texto: string): string {
-  return texto
-    .replace(/```json[\s\S]*?```/g, '')           // remove blocos ```json ... ```
-    .replace(/```[\s\S]*?```/g, '')                // remove qualquer code block
-    .replace(/\{"__type"[\s\S]*?\}\s*$/gm, '')     // remove cards inline
-    .replace(/\n{3,}/g, '\n\n')                    // colapsa quebras de linha
-    .trim()
-}
+const PROBLEMAS_PARCIAL = [
+  { id: 'Imprimiu, mas quebrou ao retirar',      tech: 'Fragilidade estrutural' },
+  { id: 'Imprimiu, mas perdeu a forma',          tech: 'Relaxamento pós-deposição' },
+  { id: 'Imprimiu pela metade',                  tech: 'Interrupção de processo' },
+  { id: 'Textura ficou diferente do esperado',   tech: 'Inconsistência sensorial' },
+  { id: 'Outro',                                  tech: 'Descrição livre' },
+]
 
-function DiagnosticoChat({ exp }: { exp: Experimento }) {
-  const [msgs, setMsgs] = useState<ChatMsg[]>(exp.chat ?? [])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [msgs, loading])
-
-  async function enviar(msgOverride?: string) {
-    const texto = (msgOverride ?? input).trim()
-    if (!texto || loading) return
-    setInput('')
-
-    const newMsgs: ChatMsg[] = [...msgs, { role: 'user', content: texto }]
-    setMsgs(newMsgs)
-    setLoading(true)
-
-    const context = [
-      `Experimento de impressão 3D de alimentos na MIA.`,
-      exp.formulacao_nome ? `Formulação: ${exp.formulacao_nome}` : '',
-      `Data: ${exp.data}`,
-      `Resultado: ${RC[exp.resultado]?.label ?? exp.resultado}`,
-      exp.descricao ? `Observações: ${exp.descricao}` : '',
-      exp.gcode_filename ? `Arquivo GCode: ${exp.gcode_filename}` : '',
-      `\nVocê é a MIA. Analise o caso, sugira causas e soluções. Seja técnico e direto.`,
-    ].filter(Boolean).join('\n')
-
-    const apiMsgs = [
-      { role: 'user', content: context + '\n\n---\n\n' + texto },
-      ...newMsgs.slice(1).map(m => ({ role: m.role, content: m.content })),
-    ]
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMsgs, plainText: true }),
-      })
-      const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
-      let texto2 = ''
-      const respMsgs: ChatMsg[] = [...newMsgs, { role: 'assistant', content: '' }]
-      setMsgs(respMsgs)
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          for (const line of decoder.decode(value).split('\n')) {
-            if (line.startsWith('0:')) {
-              try { texto2 += JSON.parse(line.slice(2)) } catch { /* skip */ }
-            }
-          }
-          setMsgs(prev => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: texto2 } : m))
-        }
-      }
-    } catch {
-      setMsgs(prev => [...prev, { role: 'assistant', content: 'Erro ao conectar com a MIA.' }])
-    }
-    setLoading(false)
+function calcularNutri(ingredientes: Ingrediente[] | undefined, pesoG: number) {
+  if (!ingredientes?.length || !pesoG) return null
+  let carb = 0, prot = 0, gord = 0, fibra = 0, umid = 0
+  const total = ingredientes.reduce((s, i) => s + Number(i.percentual || 0), 0) || 100
+  for (const ing of ingredientes) {
+    const frac = Number(ing.percentual || 0) / total
+    const fn = (ing.funcao || '').toLowerCase()
+    if (fn.includes('estruturante') || fn.includes('carboidrato') || fn.includes('amido')) { carb += frac * 70; umid += frac * 20 }
+    else if (fn.includes('proteína')) { prot += frac * 80; umid += frac * 10 }
+    else if (fn.includes('lipídio') || fn.includes('gordura')) { gord += frac * 90 }
+    else if (fn.includes('hidrocolóide') || fn.includes('fibra')) { fibra += frac * 60; umid += frac * 30 }
+    else { carb += frac * 30; umid += frac * 60 }
   }
-
-  return (
-    <div className="flex flex-col" style={{ minHeight: 320 }}>
-      <div className="flex-1 overflow-y-auto space-y-3 p-4 max-h-96">
-        {msgs.length === 0 && (
-          <div className="text-center py-6">
-            <p className="text-xs text-[#58413c] mb-3">Converse com a MIA sobre este experimento.</p>
-            {exp.resultado !== 'sucesso' && exp.resultado !== 'pendente' && (
-              <button onClick={() => enviar('Analise este experimento e me diga as prováveis causas do problema e como corrigir.')}
-                className="text-xs bg-[#003223]/8 border border-[#003223]/15 text-[#003223] px-4 py-2 rounded-full hover:bg-[#003223]/12 transition-colors">
-                <Sparkles size={11} className="inline mr-1" />
-                Analisar problema automaticamente
-              </button>
-            )}
-          </div>
-        )}
-        {msgs.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {m.role === 'assistant' && (
-              <div className="w-6 h-6 rounded-full bg-[#003223] flex items-center justify-center mr-2 flex-shrink-0 mt-0.5">
-                <span className="text-white text-[9px] font-bold">M</span>
-              </div>
-            )}
-            <div className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-wrap ${
-              m.role === 'user' ? 'bg-[#003223] text-white rounded-br-sm' : 'bg-white border border-[#e5d9c1] text-[#211b0c] rounded-bl-sm'
-            }`}>
-              {m.content
-                ? (m.role === 'assistant' ? limparTextoMia(m.content) : m.content)
-                : <span className="opacity-40">...</span>}
-            </div>
-          </div>
-        ))}
-        {loading && msgs[msgs.length - 1]?.role !== 'assistant' && (
-          <div className="flex justify-start">
-            <div className="w-6 h-6 rounded-full bg-[#003223] flex items-center justify-center mr-2 flex-shrink-0">
-              <span className="text-white text-[9px] font-bold">M</span>
-            </div>
-            <div className="bg-white border border-[#e5d9c1] rounded-2xl rounded-bl-sm px-3.5 py-2.5">
-              <Loader2 size={13} className="animate-spin text-[#58413c]" />
-            </div>
-          </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-      <div className="border-t border-[#e5d9c1] p-3 flex gap-2">
-        <textarea value={input} onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() } }}
-          placeholder="Descreva o problema, cole G-code, ou faça uma pergunta..."
-          rows={2}
-          className="flex-1 bg-[#fff8f1] border border-[#e5d9c1] rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-[#003223]/20 resize-none" />
-        <button onClick={() => enviar()} disabled={!input.trim() || loading}
-          className="bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white p-2 rounded-xl transition-colors self-end">
-          <Send size={14} />
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Formulário de resultado para experimentos pendentes (vindos do agent)
-// ---------------------------------------------------------------------------
-
-function RegistrarResultado({ exp, formulacoes, onSalvo }: {
-  exp: Experimento
-  formulacoes: Formulacao[]
-  onSalvo: (updated: Experimento) => void
-}) {
-  const [resultado, setResultado] = useState<Resultado>('sucesso')
-  const [descricao, setDescricao] = useState('')
-  const [problema, setProblema] = useState('')
-  const [peso, setPeso] = useState('')
-  const [formulacaoId, setFormulacaoId] = useState('')
-  const [salvando, setSalvando] = useState(false)
-
-  async function salvar() {
-    setSalvando(true)
-    const form = formulacoes.find(f => f.id === formulacaoId)
-    const res = await fetch('/api/experimentos', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: exp.id,
-        resultado,
-        descricao: problema ? `${problema}${descricao ? ' — ' + descricao : ''}` : descricao,
-        problema,
-        peso_impresso_g: peso ? parseFloat(peso) : undefined,
-        formulacao_id: formulacaoId || undefined,
-        formulacao_nome: form?.nome,
-      }),
-    })
-    const updated = await res.json()
-    setSalvando(false)
-    onSalvo(updated)
+  const kcal = Math.round(carb * 4 + prot * 4 + gord * 9)
+  const ratio = pesoG / 100
+  return {
+    kcal: Math.round(kcal * ratio),
+    carb: (carb * ratio).toFixed(1),
+    prot: (prot * ratio).toFixed(1),
+    gord: (gord * ratio).toFixed(1),
+    fibra: (fibra * ratio).toFixed(1),
+    umid: Math.min(umid * ratio, pesoG * 0.85).toFixed(1),
   }
-
-  return (
-    <div className="p-4 space-y-4">
-      <p className="text-xs text-[#58413c]">
-        GCode recebido: <span className="font-mono text-[#003223]">{exp.gcode_filename}</span>
-      </p>
-
-      <div>
-        <label className="text-xs text-[#58413c] block mb-1.5">Formulação (opcional)</label>
-        <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}
-          className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20">
-          <option value="">Selecione...</option>
-          {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <label className="text-xs text-[#58413c] block mb-2">Como foi a impressão?</label>
-        <div className="flex gap-2">
-          {(['sucesso', 'parcial', 'falha'] as Resultado[]).map(r => {
-            const cfg = RC[r]; const Icon = cfg.icon
-            return (
-              <button key={r} onClick={() => setResultado(r)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors ${resultado === r ? cfg.bg + ' ' + cfg.color + ' font-medium' : 'border-[#e5d9c1] text-[#58413c]'}`}>
-                <Icon size={13} /> {cfg.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {(resultado === 'falha' || resultado === 'parcial') && (
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 gap-1.5">
-            {PROBLEMAS.map(p => (
-              <button key={p} onClick={() => setProblema(p === problema ? '' : p)}
-                className={`text-left text-xs px-3 py-2 rounded-lg border transition-colors ${problema === p ? 'border-[#003223]/30 bg-[rgba(0,50,35,0.06)] text-[#003223]' : 'border-[#e5d9c1] text-[#58413c] hover:border-[#003223]/20'}`}>
-                {p}
-              </button>
-            ))}
-          </div>
-          <textarea value={descricao} onChange={e => setDescricao(e.target.value)}
-            placeholder="Detalhes adicionais..." rows={2}
-            className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20 resize-none" />
-        </div>
-      )}
-
-      <div className="flex items-center gap-2">
-        <input type="number" value={peso} onChange={e => setPeso(e.target.value)}
-          placeholder="Peso (g)" min={0} step={0.1}
-          className="w-28 bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
-        <span className="text-xs text-[#58413c]">g impresso (opcional)</span>
-      </div>
-
-      <button onClick={salvar} disabled={salvando}
-        className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-        <TestTube2 size={14} /> {salvando ? 'Salvando...' : 'Registrar resultado'}
-      </button>
-    </div>
-  )
 }
-
-// ---------------------------------------------------------------------------
-// Página principal
-// ---------------------------------------------------------------------------
 
 export default function ExperimentosPage() {
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [experimentos, setExperimentos] = useState<Experimento[]>([])
   const [novoAberto, setNovoAberto] = useState(false)
   const [expandido, setExpandido] = useState<string | null>(null)
-  const [abaExp, setAbaExp] = useState<Record<string, 'observacao' | 'resultado' | 'diagnostico'>>({})
   const [carregando, setCarregando] = useState(true)
 
-  // Formulário manual
+  // form state
   const [formulacaoId, setFormulacaoId] = useState('')
   const [data, setData] = useState(new Date().toISOString().split('T')[0])
   const [resultado, setResultado] = useState<Resultado>('sucesso')
-  const [descricao, setDescricao] = useState('')
-  const [problemaSelecionado, setProblemaSelecionado] = useState('')
+  const [problemaSel, setProblemaSel] = useState('')
+  const [outroTexto, setOutroTexto] = useState('')
   const [pesoImpresso, setPesoImpresso] = useState('')
+  const [obs, setObs] = useState('')
   const [salvando, setSalvando] = useState(false)
+  const [incluirNutri, setIncluirNutri] = useState(true)
+  const [incluirParametros, setIncluirParametros] = useState(true)
+
+  const formulacaoSelecionada = useMemo(
+    () => formulacoes.find(f => f.id === formulacaoId),
+    [formulacoes, formulacaoId]
+  )
+  const parametrosSugeridos = formulacaoSelecionada?.parametros || null
+  const tabelaNutri = useMemo(
+    () => formulacaoSelecionada && pesoImpresso
+      ? calcularNutri(formulacaoSelecionada.ingredientes, parseFloat(pesoImpresso))
+      : null,
+    [formulacaoSelecionada, pesoImpresso]
+  )
 
   const carregar = useCallback(async () => {
     const [fRes, eRes] = await Promise.all([
@@ -305,35 +120,68 @@ export default function ExperimentosPage() {
 
   useEffect(() => {
     carregar()
-    // Polling leve para capturar novos GCodes do agent
-    const interval = setInterval(() => {
-      fetch('/api/experimentos').then(r => r.json()).then(d => setExperimentos(d || []))
-    }, 15000)
-    return () => clearInterval(interval)
+    const i = setInterval(() => fetch('/api/experimentos').then(r => r.json()).then(d => setExperimentos(d || [])), 15000)
+    return () => clearInterval(i)
   }, [carregar])
 
-  async function registrarManual() {
+  const problemasAtuais = resultado === 'falha' ? PROBLEMAS_FALHA : resultado === 'parcial' ? PROBLEMAS_PARCIAL : []
+
+  function resetForm() {
+    setFormulacaoId('')
+    setData(new Date().toISOString().split('T')[0])
+    setResultado('sucesso')
+    setProblemaSel('')
+    setOutroTexto('')
+    setPesoImpresso('')
+    setObs('')
+    setIncluirNutri(true)
+    setIncluirParametros(true)
+  }
+
+  async function registrar() {
+    if (!formulacaoId) return
     setSalvando(true)
-    const form = formulacoes.find(f => f.id === formulacaoId)
+    const form = formulacaoSelecionada
+
+    // resultado_label: o que será mostrado como "Resultado"
+    let resultadoTexto = ''
+    if (resultado === 'sucesso') {
+      resultadoTexto = 'Impressão bem-sucedida.'
+    } else {
+      const escolhido = problemaSel === 'Outro' ? outroTexto.trim() : problemaSel
+      resultadoTexto = escolhido || 'Sem detalhamento.'
+    }
+
+    // bloco anexo: parametros + nutri (vai no "descricao" como bloco enriquecido)
+    const blocos: string[] = []
+    if (incluirParametros && parametrosSugeridos && Object.keys(parametrosSugeridos).length) {
+      blocos.push('PARÂMETROS DE IMPRESSÃO:\n' + Object.entries(parametrosSugeridos)
+        .map(([k, v]) => `  ${k}: ${v}`).join('\n'))
+    }
+    if (incluirNutri && tabelaNutri && pesoImpresso) {
+      blocos.push(`TABELA NUTRICIONAL (${pesoImpresso} g):\n  Energia: ${tabelaNutri.kcal} kcal\n  Carboidratos: ${tabelaNutri.carb} g\n  Proteínas: ${tabelaNutri.prot} g\n  Gorduras: ${tabelaNutri.gord} g\n  Fibras: ${tabelaNutri.fibra} g\n  Umidade: ${tabelaNutri.umid} g`)
+    }
+    if (obs.trim()) {
+      blocos.push('OBSERVAÇÕES:\n' + obs.trim())
+    }
+
     await fetch('/api/experimentos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        formulacao_id: formulacaoId || undefined,
-        formulacao_nome: form?.nome ?? 'Formulação não informada',
+        formulacao_id: formulacaoId,
+        formulacao_nome: form?.nome ?? 'Formulação',
         data,
         resultado,
-        descricao: problemaSelecionado
-          ? `${problemaSelecionado}${descricao ? ' — ' + descricao : ''}`
-          : descricao,
-        problema: problemaSelecionado || undefined,
+        problema: resultado === 'sucesso' ? undefined : resultadoTexto,
+        descricao: blocos.length ? blocos.join('\n\n') : undefined,
         peso_impresso_g: pesoImpresso ? parseFloat(pesoImpresso) : undefined,
       }),
     })
     await carregar()
-    setFormulacaoId(''); setData(new Date().toISOString().split('T')[0])
-    setResultado('sucesso'); setDescricao(''); setProblemaSelecionado(''); setPesoImpresso('')
-    setNovoAberto(false); setSalvando(false)
+    resetForm()
+    setNovoAberto(false)
+    setSalvando(false)
   }
 
   async function excluir(id: string) {
@@ -348,239 +196,573 @@ export default function ExperimentosPage() {
 
   function baixarHistorico() {
     const linhas = experimentos.map(e =>
-      `[${e.data}] ${e.formulacao_nome ?? e.gcode_filename ?? '—'} — ${RC[e.resultado]?.label}\n` +
-      (e.descricao ? `Observação: ${e.descricao}\n` : '') +
+      `[${e.data}] ${e.formulacao_nome ?? e.gcode_filename ?? 'Sem nome'}\n` +
+      `Resultado: ${e.resultado === 'sucesso' ? 'Sucesso' : e.problema ?? e.resultado}\n` +
+      (e.descricao ? `${e.descricao}\n` : '') +
       (e.peso_impresso_g ? `Peso: ${e.peso_impresso_g}g\n` : '') + '---'
     ).join('\n')
-    const blob = new Blob([`Histórico — MIA BioedTech\n${new Date().toLocaleString('pt-BR')}\n\n${linhas}`], { type: 'text/plain' })
+    const blob = new Blob([`Histórico de experimentos | MIA · Morphê Foods\n${new Date().toLocaleString('pt-BR')}\n\n${linhas}`], { type: 'text/plain' })
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob); a.download = `experimentos_${Date.now()}.txt`; a.click()
+    a.href = URL.createObjectURL(blob)
+    a.download = `experimentos_${Date.now()}.txt`
+    a.click()
   }
-
-  function getAba(id: string) { return abaExp[id] ?? 'observacao' }
-  function setAba(id: string, aba: 'observacao' | 'resultado' | 'diagnostico') {
-    setAbaExp(prev => ({ ...prev, [id]: aba }))
-  }
-
-  const pendentes = experimentos.filter(e => e.resultado === 'pendente')
 
   return (
-    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
-      <div className="section-alt border-b border-[#e5d9c1] px-8 py-6">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Experimentos</h1>
-            <p className="text-sm text-[#58413c] mt-1">
-              Registre impressões e diagnostique com a MIA.
-              {pendentes.length > 0 && (
-                <span className="ml-2 bg-blue-100 text-blue-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {pendentes.length} novo{pendentes.length > 1 ? 's' : ''} do Slicer
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {experimentos.length > 0 && (
-              <button onClick={baixarHistorico} className="btn-ghost flex items-center gap-1.5 text-xs px-3 py-2">
-                <Download size={12} /> Histórico
-              </button>
-            )}
-            <button onClick={() => setNovoAberto(!novoAberto)}
-              className="btn-primary flex items-center gap-1.5 text-sm px-4 py-2">
-              <Plus size={14} /> Novo
-            </button>
-          </div>
+    <>
+      <style>{EXP_CSS}</style>
+
+      {/* Flow steps */}
+      <div className="exp-flow">
+        <div className="step done">
+          <span className="step-ic"><FlaskConical size={16} strokeWidth={1.8} /></span>
+          <span>Formulação</span>
+        </div>
+        <span className="step-arrow" aria-hidden="true">→</span>
+        <div className="step done">
+          <span className="step-ic"><SlidersHorizontal size={16} strokeWidth={1.8} /></span>
+          <span>Parâmetros</span>
+        </div>
+        <span className="step-arrow" aria-hidden="true">→</span>
+        <div className="step active">
+          <span className="step-ic"><BookOpen size={16} strokeWidth={1.8} /></span>
+          <span>Caderno de experimentos</span>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-8 py-6 space-y-4">
+      <div className="exp-head">
+        <div>
+          <h2 className="exp-title">Caderno de experimentos</h2>
+          <p className="exp-sub">Registre suas impressões. A MIA usa esses dados para diagnosticar e sugerir ajustes nas próximas tentativas.</p>
+        </div>
+        <div className="exp-actions">
+          {experimentos.length > 0 && (
+            <button className="btn-ghost" onClick={baixarHistorico}>
+              <Download size={14} strokeWidth={1.8} /> Histórico
+            </button>
+          )}
+          <button className="btn-accent" onClick={() => setNovoAberto(!novoAberto)}>
+            <Plus size={14} strokeWidth={2} /> Registrar experimento
+          </button>
+        </div>
+      </div>
 
-        {/* Formulário manual */}
-        {novoAberto && (
-          <div className="bg-white border border-[#e5d9c1] rounded-2xl p-5">
-            <h2 className="text-sm font-semibold mb-4">Registrar experimento</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-xs text-[#58413c] block mb-1.5">Formulação</label>
-                <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}
-                  className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20">
-                  <option value="">Selecione...</option>
-                  {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-[#58413c] block mb-1.5">Data</label>
-                <div className="relative">
-                  <Calendar size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#58413c]" />
-                  <input type="date" value={data} onChange={e => setData(e.target.value)}
-                    className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
-                </div>
+      {/* Form */}
+      {novoAberto && (
+        <div className="form-card">
+          <h3 className="form-title">Novo experimento</h3>
+
+          <div className="row-2">
+            <div className="field">
+              <label>Qual formulação você imprimiu?</label>
+              <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}>
+                <option value="">Selecione uma formulação…</option>
+                {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>Data da impressão</label>
+              <div className="input-wrap">
+                <Calendar size={14} strokeWidth={1.8} className="input-icon" />
+                <input type="date" value={data} onChange={e => setData(e.target.value)} />
               </div>
             </div>
-            <div className="mb-4">
-              <label className="text-xs text-[#58413c] block mb-2">Resultado</label>
-              <div className="flex gap-2">
-                {(['sucesso', 'parcial', 'falha'] as Resultado[]).map(r => {
-                  const cfg = RC[r]; const Icon = cfg.icon
-                  return (
-                    <button key={r} onClick={() => setResultado(r)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors ${resultado === r ? cfg.bg + ' ' + cfg.color + ' font-medium' : 'border-[#e5d9c1] text-[#58413c]'}`}>
-                      <Icon size={13} /> {cfg.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-            {(resultado === 'falha' || resultado === 'parcial') && (
-              <div className="mb-4 space-y-3">
-                <div className="grid grid-cols-1 gap-1.5">
-                  {PROBLEMAS.map(p => (
-                    <button key={p} onClick={() => setProblemaSelecionado(p === problemaSelecionado ? '' : p)}
-                      className={`text-left text-xs px-3 py-2 rounded-lg border transition-colors ${problemaSelecionado === p ? 'border-[#003223]/30 bg-[rgba(0,50,35,0.06)] text-[#003223]' : 'border-[#e5d9c1] text-[#58413c] hover:border-[#003223]/20'}`}>
-                      {p}
-                    </button>
-                  ))}
-                </div>
-                <textarea value={descricao} onChange={e => setDescricao(e.target.value)}
-                  placeholder="Detalhes adicionais..." rows={3}
-                  className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20 resize-none" />
-              </div>
-            )}
-            {resultado === 'sucesso' && (
-              <div className="mb-4">
-                <textarea value={descricao} onChange={e => setDescricao(e.target.value)}
-                  placeholder="Observações (opcional)" rows={2}
-                  className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20 resize-none" />
-              </div>
-            )}
-            <div className="mb-4 flex items-center gap-2">
-              <input type="number" value={pesoImpresso} onChange={e => setPesoImpresso(e.target.value)}
-                placeholder="Peso (g)" min={0} step={0.1}
-                className="w-28 bg-white border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/20" />
-              <span className="text-xs text-[#58413c]">g — estimativa nutricional</span>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={registrarManual} disabled={salvando}
-                className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-                <TestTube2 size={14} /> {salvando ? 'Salvando...' : 'Registrar'}
+          </div>
+
+          <div className="field">
+            <label>Como foi o resultado da impressão?</label>
+            <div className="result-tabs">
+              <button
+                type="button"
+                onClick={() => { setResultado('sucesso'); setProblemaSel(''); setOutroTexto('') }}
+                className={`result-tab sucesso ${resultado === 'sucesso' ? 'active' : ''}`}
+              >
+                <CheckCircle2 size={16} strokeWidth={1.8} /> Sucesso
               </button>
-              <button onClick={() => setNovoAberto(false)}
-                className="text-sm text-[#58413c] hover:text-[#211b0c] px-4 py-2 border border-[#e5d9c1] rounded-lg transition-colors">
-                Cancelar
+              <button
+                type="button"
+                onClick={() => { setResultado('parcial'); setProblemaSel('') }}
+                className={`result-tab parcial ${resultado === 'parcial' ? 'active' : ''}`}
+              >
+                <AlertCircle size={16} strokeWidth={1.8} /> Parcial
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResultado('falha'); setProblemaSel('') }}
+                className={`result-tab falha ${resultado === 'falha' ? 'active' : ''}`}
+              >
+                <XCircle size={16} strokeWidth={1.8} /> Falha
               </button>
             </div>
           </div>
-        )}
 
-        {/* Lista */}
-        {carregando ? (
-          <div className="flex justify-center py-12">
-            <Loader2 size={20} className="animate-spin text-[#58413c]" />
+          {/* Problem options */}
+          {problemasAtuais.length > 0 && (
+            <div className="field">
+              <label>O que aconteceu? <span className="hint">(Selecione a opção que mais se aproxima)</span></label>
+              <div className="problem-list">
+                {problemasAtuais.map(p => (
+                  <button
+                    type="button"
+                    key={p.id}
+                    onClick={() => setProblemaSel(p.id === problemaSel ? '' : p.id)}
+                    className={`problem-item ${problemaSel === p.id ? 'active' : ''}`}
+                  >
+                    <span className="problem-label">{p.id}</span>
+                    <span className="problem-tech">{p.tech}</span>
+                  </button>
+                ))}
+              </div>
+              {problemaSel === 'Outro' && (
+                <div className="outro-wrap">
+                  <textarea
+                    value={outroTexto}
+                    onChange={e => setOutroTexto(e.target.value)}
+                    rows={3}
+                    placeholder="Descreva o que aconteceu na impressão. A MIA vai analisar essa descrição quando você acessar o diagnóstico."
+                  />
+                  <p className="outro-hint">
+                    <Sparkles size={12} strokeWidth={1.8} /> A MIA vai gerar o diagnóstico a partir dessa descrição na aba de análise.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Parameters used */}
+          {formulacaoSelecionada && (
+            <div className="field">
+              <label className="toggle-label">
+                <input
+                  type="checkbox"
+                  checked={incluirParametros}
+                  onChange={e => setIncluirParametros(e.target.checked)}
+                />
+                <span>Incluir parâmetros de impressão usados</span>
+              </label>
+              {incluirParametros && (
+                parametrosSugeridos && Object.keys(parametrosSugeridos).length > 0 ? (
+                  <div className="block-info">
+                    <div className="block-info-title">Parâmetros sugeridos pela MIA para essa formulação</div>
+                    <div className="block-info-grid">
+                      {Object.entries(parametrosSugeridos).map(([k, v]) => (
+                        <div key={k} className="param-row">
+                          <span className="param-k">{k}</span>
+                          <span className="param-v">{String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="block-empty">Essa formulação ainda não tem parâmetros calculados. Você pode definir em <a href="/parametros">Parâmetros</a> e voltar aqui.</p>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Nutritional table */}
+          <div className="field">
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={incluirNutri}
+                onChange={e => setIncluirNutri(e.target.checked)}
+              />
+              <span>Incluir tabela nutricional</span>
+            </label>
+            {incluirNutri && (
+              <>
+                <div className="input-wrap">
+                  <input
+                    type="number"
+                    value={pesoImpresso}
+                    onChange={e => setPesoImpresso(e.target.value)}
+                    placeholder="Peso impresso em gramas (ex: 120)"
+                    min={0}
+                    step={0.1}
+                  />
+                </div>
+                {tabelaNutri && (
+                  <div className="block-info">
+                    <div className="block-info-title">Calculado para {pesoImpresso} g</div>
+                    <div className="block-info-grid grid-3">
+                      <div className="nutri-cell"><span>Energia</span><b>{tabelaNutri.kcal} kcal</b></div>
+                      <div className="nutri-cell"><span>Carboidratos</span><b>{tabelaNutri.carb} g</b></div>
+                      <div className="nutri-cell"><span>Proteínas</span><b>{tabelaNutri.prot} g</b></div>
+                      <div className="nutri-cell"><span>Gorduras</span><b>{tabelaNutri.gord} g</b></div>
+                      <div className="nutri-cell"><span>Fibras</span><b>{tabelaNutri.fibra} g</b></div>
+                      <div className="nutri-cell"><span>Umidade</span><b>{tabelaNutri.umid} g</b></div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        ) : experimentos.length === 0 ? (
-          <div className="text-center py-16 text-[#58413c]">
-            <TestTube2 size={32} className="mx-auto mb-3 opacity-20" />
-            <p className="text-sm">Nenhum experimento registrado.</p>
-            <button onClick={() => setNovoAberto(true)}
-              className="text-[#003223] text-sm hover:underline mt-2 inline-block">
-              Registrar primeiro experimento
+
+          {/* Observações */}
+          <div className="field">
+            <label>Observações <span className="hint">(opcional)</span></label>
+            <textarea
+              value={obs}
+              onChange={e => setObs(e.target.value)}
+              rows={3}
+              placeholder="Algo a mais que você queira anotar sobre essa impressão."
+            />
+          </div>
+
+          <div className="actions">
+            <button
+              type="button"
+              disabled={salvando || !formulacaoId}
+              onClick={registrar}
+              className="btn-accent"
+            >
+              {salvando ? <><Loader2 size={14} className="spin" /> Salvando…</> : <>Registrar experimento</>}
+            </button>
+            <button type="button" onClick={() => setNovoAberto(false)} className="btn-ghost">
+              Cancelar
             </button>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {experimentos.map(exp => {
-              const cfg = RC[exp.resultado] ?? RC.pendente
-              const Icon = cfg.icon
-              const aberto = expandido === exp.id
-              const aba = getAba(exp.id)
-              const isPendente = exp.resultado === 'pendente'
+        </div>
+      )}
 
-              return (
-                <div key={exp.id} className={`bg-white border rounded-2xl overflow-hidden ${isPendente ? 'border-blue-200 ring-1 ring-blue-100' : 'border-[#e5d9c1]'}`}>
-                  <button onClick={() => {
-                    setExpandido(aberto ? null : exp.id)
-                    if (isPendente) setAba(exp.id, 'resultado')
-                  }} className="w-full flex items-center justify-between px-4 py-3.5 text-left">
-                    <div className="flex items-center gap-3">
-                      {exp.origem === 'agent'
-                        ? <Wifi size={15} className="text-blue-400 flex-shrink-0" />
-                        : <Icon size={16} className={cfg.color} />
-                      }
-                      <div>
-                        <p className="text-sm font-medium">
-                          {exp.formulacao_nome ?? exp.gcode_filename ?? 'Experimento'}
-                        </p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <p className="text-xs text-[#58413c]">{exp.data}</p>
-                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${cfg.bg} ${cfg.color}`}>
-                            {isPendente && exp.origem === 'agent' ? 'Aguardando resultado' : cfg.label}
-                          </span>
-                          {exp.peso_impresso_g && (
-                            <span className="text-[10px] text-[#58413c]">{exp.peso_impresso_g}g</span>
-                          )}
-                        </div>
+      {/* List */}
+      {carregando ? (
+        <div className="exp-empty"><Loader2 size={20} className="spin" /></div>
+      ) : experimentos.length === 0 ? (
+        <div className="exp-empty">
+          <p>Você ainda não registrou nenhum experimento.</p>
+          <button onClick={() => setNovoAberto(true)} className="btn-accent">
+            <Plus size={14} strokeWidth={2} /> Registrar o primeiro
+          </button>
+        </div>
+      ) : (
+        <div className="exp-list">
+          {experimentos.map(exp => {
+            const aberto = expandido === exp.id
+            const isPendente = exp.resultado === 'pendente'
+            return (
+              <div key={exp.id} className={`exp-row r-${exp.resultado}`}>
+                <button
+                  className="exp-row-head"
+                  onClick={() => setExpandido(aberto ? null : exp.id)}
+                >
+                  <div className="exp-row-left">
+                    {exp.origem === 'agent'
+                      ? <span className="r-pill r-agent"><Wifi size={13} /> Do Slicer</span>
+                      : <ResultPill resultado={exp.resultado} />}
+                    <div>
+                      <p className="exp-name">{exp.formulacao_nome ?? exp.gcode_filename ?? 'Experimento'}</p>
+                      <p className="exp-meta">
+                        {exp.data}
+                        {exp.peso_impresso_g ? ` · ${exp.peso_impresso_g}g` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="exp-row-right">
+                    <button
+                      onClick={e => { e.stopPropagation(); excluir(exp.id) }}
+                      className="trash"
+                      aria-label="Excluir"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    {aberto ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </div>
+                </button>
+
+                {aberto && (
+                  <div className="exp-row-body">
+                    <div className="exp-result">
+                      <div className="exp-result-label">Resultado</div>
+                      <div className="exp-result-text">
+                        {isPendente
+                          ? 'Aguardando registro do resultado.'
+                          : exp.resultado === 'sucesso'
+                            ? 'Impressão bem-sucedida.'
+                            : exp.problema || 'Sem detalhamento.'}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button onClick={e => { e.stopPropagation(); excluir(exp.id) }}
-                        className="text-[#bfc9c2] hover:text-red-400 transition-colors p-1">
-                        <Trash2 size={13} />
-                      </button>
-                      {aberto ? <ChevronUp size={15} className="text-[#58413c]" /> : <ChevronDown size={15} className="text-[#58413c]" />}
-                    </div>
-                  </button>
-
-                  {aberto && (
-                    <div className="border-t border-[#e5d9c1]">
-                      <div className="flex border-b border-[#e5d9c1]">
-                        {[
-                          { id: 'observacao' as const, label: 'Observações', hide: isPendente },
-                          { id: 'resultado' as const, label: isPendente ? 'Registrar resultado' : 'Resultado', hide: false },
-                          { id: 'diagnostico' as const, label: 'Diagnóstico MIA', hide: false },
-                        ].filter(a => !a.hide).map(a => (
-                          <button key={a.id} onClick={() => setAba(exp.id, a.id)}
-                            className={`px-4 py-2.5 text-xs font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5 ${aba === a.id ? 'border-[#003223] text-[#003223]' : 'border-transparent text-[#58413c] hover:text-[#211b0c]'}`}>
-                            {a.id === 'diagnostico' && <Sparkles size={10} />}
-                            {a.label}
-                          </button>
-                        ))}
+                    {exp.descricao && (
+                      <div className="exp-detalhes">
+                        <pre>{exp.descricao}</pre>
                       </div>
-
-                      {aba === 'observacao' && (
-                        <div className="p-4 space-y-3">
-                          {exp.descricao
-                            ? <p className="text-sm text-[#58413c] leading-relaxed">{exp.descricao}</p>
-                            : <p className="text-xs text-[#58413c] italic">Nenhuma observação.</p>
-                          }
-                          {exp.gcode_filename && (
-                            <p className="text-xs text-[#58413c]">GCode: <span className="font-mono">{exp.gcode_filename}</span></p>
-                          )}
-                        </div>
-                      )}
-
-                      {aba === 'resultado' && (
-                        isPendente
-                          ? <RegistrarResultado exp={exp} formulacoes={formulacoes}
-                              onSalvo={updated => {
-                                setExperimentos(prev => prev.map(e => e.id === updated.id ? updated : e))
-                                setAba(exp.id, 'observacao')
-                              }} />
-                          : (
-                            <div className="p-4">
-                              <p className="text-sm text-[#58413c]">{exp.descricao || 'Nenhuma observação.'}</p>
-                            </div>
-                          )
-                      )}
-
-                      {aba === 'diagnostico' && <DiagnosticoChat exp={exp} />}
+                    )}
+                    <div className="exp-row-cta">
+                      <a href={`/experimentos/${exp.id}/diagnostico`} className="btn-accent">
+                        <Sparkles size={14} strokeWidth={1.8} /> Diagnóstico com a MIA
+                      </a>
                     </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </>
   )
 }
+
+function ResultPill({ resultado }: { resultado: string }) {
+  if (resultado === 'sucesso') return <span className="r-pill r-sucesso"><CheckCircle2 size={13} /> Sucesso</span>
+  if (resultado === 'parcial') return <span className="r-pill r-parcial"><AlertCircle size={13} /> Parcial</span>
+  if (resultado === 'falha') return <span className="r-pill r-falha"><XCircle size={13} /> Falha</span>
+  return <span className="r-pill r-pendente"><Loader2 size={13} className="spin" /> Pendente</span>
+}
+
+const EXP_CSS = `
+  .spin{animation:expspin 1s linear infinite}
+  @keyframes expspin{to{transform:rotate(360deg)}}
+
+  /* Flow stepper */
+  .exp-flow{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 14px;border-radius:999px;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    backdrop-filter:blur(12px);
+    width:fit-content;margin-bottom:24px;
+  }
+  .exp-flow .step{
+    display:flex;align-items:center;gap:8px;
+    font-size:13px;color:var(--text-muted) !important;
+    padding:6px 10px;border-radius:999px;
+  }
+  .exp-flow .step.done{color:var(--text-main) !important}
+  .exp-flow .step.active{
+    background:var(--accent) !important;color:var(--accent-text-on) !important;font-weight:600;
+  }
+  .exp-flow .step-ic{display:grid;place-items:center;width:18px;height:18px}
+  .exp-flow .step-arrow{color:var(--text-faint);font-size:13px}
+
+  .exp-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:24px;margin-bottom:24px;flex-wrap:wrap;
+  }
+  .exp-title{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:36px;margin:0 0 4px;color:var(--text-main) !important;letter-spacing:-.01em;
+  }
+  .exp-sub{font-size:14px;color:var(--text-muted) !important;margin:0;max-width:580px;line-height:1.5}
+  .exp-actions{display:flex;gap:10px;flex-shrink:0}
+
+  .btn-accent{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 18px;border-radius:999px;
+    background:var(--accent) !important;color:var(--accent-text-on) !important;
+    font-family:inherit;font-size:13.5px;font-weight:600;
+    border:none;cursor:pointer;text-decoration:none;
+    transition:transform .15s, box-shadow .25s;
+  }
+  .btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 28px -10px var(--accent)}
+  .btn-accent:disabled{opacity:.5;cursor:not-allowed}
+  .btn-ghost{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 18px;border-radius:999px;
+    background:var(--surface-glass) !important;color:var(--text-main) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    font-family:inherit;font-size:13.5px;font-weight:500;
+    cursor:pointer;backdrop-filter:blur(12px);
+    transition:.15s;
+  }
+  .btn-ghost:hover{background:var(--hover-tint) !important}
+
+  /* Form card */
+  .form-card{
+    background:var(--surface-glass-strong) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    backdrop-filter:blur(20px);
+    border-radius:22px;padding:30px;margin-bottom:24px;
+  }
+  .form-title{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:24px;margin:0 0 22px;color:var(--text-main) !important;
+  }
+  .field{margin-bottom:22px}
+  .field label{
+    display:block;font-size:13px;font-weight:600;
+    color:var(--text-main) !important;margin-bottom:10px;letter-spacing:.01em;
+  }
+  .field label .hint{font-weight:400;color:var(--text-faint) !important;font-size:12px;margin-left:6px}
+  .row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+
+  .form-card select,
+  .form-card input[type="date"],
+  .form-card input[type="number"],
+  .form-card textarea{
+    width:100%;padding:12px 14px;border-radius:12px;
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    color:var(--text-main) !important;
+    font-family:inherit;font-size:14px;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .form-card textarea{resize:vertical;line-height:1.5}
+  .form-card select:focus,
+  .form-card input:focus,
+  .form-card textarea:focus{
+    outline:none;border-color:var(--accent) !important;
+    box-shadow:0 0 0 4px var(--icon-tint);
+  }
+  .form-card select option{color:var(--green-deep);background:var(--cream)}
+  .form-card textarea::placeholder,
+  .form-card input::placeholder{color:var(--text-faint) !important}
+
+  .input-wrap{position:relative}
+  .input-wrap .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-faint)}
+  .input-wrap input[type="date"]{padding-left:38px}
+
+  /* Result tabs */
+  .result-tabs{display:flex;gap:10px;flex-wrap:wrap}
+  .result-tab{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:10px 18px;border-radius:14px;
+    background:var(--surface-glass) !important;
+    border:1.5px solid var(--border-glass-strong) !important;
+    color:var(--text-main) !important;
+    font-family:inherit;font-size:14px;font-weight:500;
+    cursor:pointer;transition:.15s;
+  }
+  .result-tab:hover{background:var(--hover-tint) !important}
+  .result-tab.sucesso.active{
+    background:var(--lime) !important;border-color:var(--lime) !important;color:var(--green-deep) !important;font-weight:600;
+  }
+  .result-tab.parcial.active{
+    background:#f4c560 !important;border-color:#f4c560 !important;color:var(--green-deep) !important;font-weight:600;
+  }
+  .result-tab.falha.active{
+    background:var(--orange) !important;border-color:var(--orange) !important;color:#fff !important;font-weight:600;
+  }
+
+  /* Problem list */
+  .problem-list{display:flex;flex-direction:column;gap:8px}
+  .problem-item{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-radius:12px;
+    background:var(--surface-glass) !important;
+    border:1.5px solid var(--border-glass) !important;
+    color:var(--text-main) !important;
+    font-family:inherit;font-size:14px;cursor:pointer;text-align:left;
+    transition:.15s;
+  }
+  .problem-item:hover{background:var(--hover-tint) !important;border-color:var(--border-glass-strong) !important}
+  .problem-item.active{
+    background:var(--accent) !important;border-color:var(--accent) !important;color:var(--accent-text-on) !important;font-weight:600;
+  }
+  .problem-label{flex:1}
+  .problem-tech{
+    font-size:11.5px;color:var(--text-faint) !important;
+    font-style:italic;letter-spacing:.02em;margin-left:14px;
+  }
+  .problem-item.active .problem-tech{color:rgba(3,56,42,.65) !important}
+  .dash-root.theme-light .problem-item.active .problem-tech{color:rgba(255,255,255,.85) !important}
+
+  .outro-wrap{margin-top:12px}
+  .outro-hint{
+    display:flex;align-items:center;gap:6px;
+    font-size:12px;color:var(--accent-em) !important;margin:8px 0 0;
+  }
+
+  /* Toggle */
+  .toggle-label{
+    display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px;
+  }
+  .toggle-label input[type="checkbox"]{
+    width:18px;height:18px;accent-color:var(--accent);cursor:pointer;
+  }
+  .toggle-label span{font-weight:500;color:var(--text-main) !important;font-size:14px}
+
+  /* Info blocks */
+  .block-info{
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass) !important;
+    border-radius:12px;padding:14px 16px;margin-top:10px;
+  }
+  .block-info-title{
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--text-faint) !important;margin-bottom:10px;
+  }
+  .block-info-grid{display:flex;flex-direction:column;gap:6px}
+  .block-info-grid.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .param-row{display:flex;justify-content:space-between;font-size:13.5px}
+  .param-k{color:var(--text-muted) !important;text-transform:capitalize}
+  .param-v{color:var(--text-main) !important;font-weight:600}
+  .nutri-cell{
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass) !important;
+    border-radius:10px;padding:10px 12px;
+  }
+  .nutri-cell span{display:block;font-size:11px;color:var(--text-faint) !important;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+  .nutri-cell b{font-family:var(--font-serif),serif;font-style:italic;font-size:17px;color:var(--accent-em) !important;font-weight:400}
+  .block-empty{
+    font-size:13px;color:var(--text-muted) !important;
+    background:var(--surface-glass) !important;
+    border:1px dashed var(--border-glass-strong) !important;
+    border-radius:12px;padding:14px 16px;margin:0;
+  }
+  .block-empty a{color:var(--accent-em) !important;font-weight:600;text-decoration:none}
+
+  .actions{display:flex;gap:10px;margin-top:8px}
+
+  /* List */
+  .exp-list{display:flex;flex-direction:column;gap:10px}
+  .exp-row{
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass) !important;
+    backdrop-filter:blur(16px);
+    border-radius:16px;overflow:hidden;
+  }
+  .exp-row-head{
+    width:100%;display:flex;justify-content:space-between;align-items:center;
+    padding:16px 20px;background:transparent !important;border:none;cursor:pointer;text-align:left;
+  }
+  .exp-row-left{display:flex;align-items:center;gap:14px;flex:1;min-width:0}
+  .exp-name{font-size:14.5px;font-weight:600;color:var(--text-main) !important;margin:0}
+  .exp-meta{font-size:12px;color:var(--text-faint) !important;margin:3px 0 0}
+  .exp-row-right{display:flex;align-items:center;gap:8px;color:var(--text-muted)}
+  .trash{background:transparent;border:none;color:var(--text-faint) !important;cursor:pointer;padding:6px;display:grid;place-items:center;border-radius:8px}
+  .trash:hover{background:var(--hover-tint) !important;color:var(--orange) !important}
+
+  .r-pill{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:5px 10px;border-radius:999px;font-size:11.5px;font-weight:600;
+    letter-spacing:.02em;
+  }
+  .r-pill.r-sucesso{background:var(--lime) !important;color:var(--green-deep) !important}
+  .r-pill.r-parcial{background:#f4c560 !important;color:var(--green-deep) !important}
+  .r-pill.r-falha{background:var(--orange) !important;color:#fff !important}
+  .r-pill.r-pendente{background:var(--surface-glass-strong) !important;color:var(--text-main) !important;border:1px solid var(--border-glass-strong)}
+  .r-pill.r-agent{background:var(--surface-glass-strong) !important;color:var(--text-main) !important;border:1px solid var(--border-glass-strong)}
+
+  .exp-row-body{
+    padding:18px 20px;
+    border-top:1px solid var(--border-glass);
+  }
+  .exp-result{margin-bottom:14px}
+  .exp-result-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint) !important;margin-bottom:6px}
+  .exp-result-text{font-size:14.5px;color:var(--text-main) !important;line-height:1.5}
+  .exp-detalhes{
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass) !important;
+    border-radius:12px;padding:14px;margin-bottom:14px;
+  }
+  .exp-detalhes pre{
+    margin:0;font-family:inherit;font-size:13px;
+    color:var(--text-muted) !important;white-space:pre-wrap;line-height:1.55;
+  }
+  .exp-row-cta{display:flex;gap:10px}
+
+  .exp-empty{
+    text-align:center;padding:60px 24px;color:var(--text-muted) !important;
+    display:flex;flex-direction:column;align-items:center;gap:18px;
+  }
+  .exp-empty p{margin:0;font-size:14.5px}
+
+  @media (max-width:900px){
+    .row-2{grid-template-columns:1fr}
+    .block-info-grid.grid-3{grid-template-columns:1fr 1fr}
+    .problem-item{flex-direction:column;align-items:flex-start;gap:4px}
+    .problem-tech{margin-left:0}
+  }
+`
