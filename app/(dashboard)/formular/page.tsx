@@ -223,42 +223,34 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 
   // ─── TELA INICIAL ─────────────────────────────────────────────
   if (modo === 'escolha') return (
-    <div className="h-full overflow-y-auto flex items-center justify-center px-6 py-12" style={{ background: '#fff8f1' }}>
-      <div className="w-full max-w-lg">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-5" style={{ background: '#003223' }}>
-            <FlaskConical size={26} style={{ color: '#c8ee4f' }} />
-          </div>
-          <h1 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Como quer formular?</h1>
-          <p className="text-sm font-sans" style={{ color: '#58413c' }}>Escolha o ponto de partida do seu fluxo de criação.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button onClick={() => setModo('input')}
-            className="bg-white p-6 rounded-2xl shadow-tonal text-left group transition-all duration-200 hover:shadow-tonal-lg hover:scale-[1.02]">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: '#fff2da' }}>
-              <FlaskConical size={20} style={{ color: '#003223' }} />
+    <>
+      <style>{ESCOLHA_CSS}</style>
+      <div className="escolha-wrap">
+        <span className="escolha-eyebrow"><span className="dot" /> Decisão inicial</span>
+        <h1 className="escolha-title">Como você quer <em>formular</em> hoje?</h1>
+        <p className="escolha-sub">Você pode partir de uma formulação que já tem em mente, ou começar uma conversa guiada com a MIA para construir do zero.</p>
+
+        <div className="escolha-grid">
+          <button type="button" onClick={() => setModo('input')} className="choice soft">
+            <div>
+              <div className="iconbox"><FlaskConical size={26} strokeWidth={1.8} /></div>
+              <h2>Já tenho a formulação</h2>
+              <p>Insira ingredientes, percentuais e funções para validar, salvar e caracterizar.</p>
             </div>
-            <h2 className="font-display font-semibold text-sm mb-1" style={{ color: '#003223' }}>Tenho uma formulação</h2>
-            <p className="text-xs font-sans leading-relaxed" style={{ color: '#58413c' }}>Insira ingredientes e percentuais para validar e salvar.</p>
-            <div className="flex items-center gap-1 mt-4 text-xs font-display font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#516600' }}>
-              Inserir <ArrowRight size={11} />
-            </div>
+            <span className="cta">Inserir manualmente <ArrowRight size={16} strokeWidth={2} /></span>
           </button>
-          <button onClick={() => setModo('wizard_app')}
-            className="p-6 rounded-2xl text-left group transition-all duration-200 hover:scale-[1.02]"
-            style={{ background: '#003223' }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: 'rgba(200,238,79,0.2)' }}>
-              <Sparkles size={20} style={{ color: '#c8ee4f' }} />
+          <button type="button" onClick={() => setModo('wizard_app')} className="choice accent">
+            <span className="ribbon">Recomendado</span>
+            <div>
+              <div className="iconbox"><Sparkles size={26} strokeWidth={1.8} /></div>
+              <h2>Criar com a MIA</h2>
+              <p>Conte sua aplicação e restrições. A MIA propõe uma formulação otimizada com base científica.</p>
             </div>
-            <h2 className="font-display font-semibold text-sm mb-1 text-white">Criar com a MIA</h2>
-            <p className="text-xs font-sans leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>Deixe a MIA sugerir uma formulação otimizada para sua aplicação.</p>
-            <div className="flex items-center gap-1 mt-4 text-xs font-display font-semibold" style={{ color: '#c8ee4f' }}>
-              Iniciar guia <ArrowRight size={11} />
-            </div>
+            <span className="cta">Iniciar guia <ArrowRight size={16} strokeWidth={2} /></span>
           </button>
         </div>
       </div>
-    </div>
+    </>
   )
 
   // ─── WIZARD: APLICAÇÃO ────────────────────────────────────────
@@ -748,3 +740,109 @@ function WizardShell({
     </div>
   )
 }
+
+const ESCOLHA_CSS = `
+  .escolha-wrap{
+    width:100%;max-width:1080px;margin:0 auto;
+    padding:48px 48px 64px;text-align:center;
+    position:relative;
+    min-height:calc(100vh - 200px);
+    display:flex;flex-direction:column;justify-content:center;
+  }
+  .escolha-wrap::before{
+    content:"";position:absolute;inset:-100px 0 0;pointer-events:none;
+    background:radial-gradient(60% 50% at 50% 0%, var(--icon-tint), transparent 65%);
+    z-index:-1;
+  }
+  .escolha-eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:7px 16px;border-radius:999px;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    color:var(--text-muted) !important;
+    font-size:12.5px;font-weight:500;letter-spacing:.06em;
+    margin:0 auto 24px;
+    backdrop-filter:blur(12px);width:fit-content;
+  }
+  .escolha-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent-em);box-shadow:0 0 0 4px var(--icon-tint)}
+  .escolha-title{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:clamp(40px,5.5vw,68px);line-height:1.02;letter-spacing:-.02em;
+    color:var(--text-main) !important;margin:0 0 16px;
+  }
+  .escolha-title em{font-style:italic;color:var(--accent-em) !important;font-family:inherit}
+  .escolha-sub{font-size:16px;line-height:1.55;color:var(--text-muted) !important;max-width:520px;margin:0 auto 56px}
+
+  .escolha-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:880px;margin:0 auto;width:100%}
+
+  .escolha-wrap .choice{
+    text-align:left;
+    padding:36px;border-radius:28px;
+    cursor:pointer;text-decoration:none;
+    transition:transform .25s ease, box-shadow .3s ease, border-color .25s ease;
+    position:relative;overflow:hidden;
+    min-height:300px;display:flex;flex-direction:column;justify-content:space-between;
+    font-family:inherit;
+  }
+
+  .escolha-wrap .choice.soft{
+    background:var(--surface-glass-strong) !important;
+    border:1px solid var(--border-glass-strong);
+    color:var(--text-main) !important;
+    backdrop-filter:blur(20px);
+  }
+  .escolha-wrap .choice.soft:hover{transform:translateY(-4px);border-color:var(--accent-em);box-shadow:0 30px 60px -20px rgba(0,0,0,.2)}
+  .escolha-wrap .choice.soft .iconbox{
+    width:54px;height:54px;border-radius:16px;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    color:var(--text-main) !important;
+    display:grid;place-items:center;
+  }
+  .escolha-wrap .choice.soft h2{color:var(--text-main) !important}
+  .escolha-wrap .choice.soft p{color:var(--text-muted) !important}
+  .dash-root .escolha-wrap .choice.soft .cta{color:var(--accent-em) !important}
+  .dash-root.theme-light .escolha-wrap .choice.soft .cta{color:#79a51e !important}
+
+  .escolha-wrap .choice.accent{
+    background:linear-gradient(135deg, var(--accent) 0%, var(--accent-em) 100%) !important;
+    color:var(--accent-text-on) !important;
+    border:1px solid transparent;
+    box-shadow:0 20px 50px -16px var(--accent);
+  }
+  .escolha-wrap .choice.accent:hover{transform:translateY(-4px);box-shadow:0 30px 70px -16px var(--accent)}
+  .escolha-wrap .choice.accent .iconbox{
+    width:54px;height:54px;border-radius:16px;
+    background:rgba(3,56,42,.22);
+    display:grid;place-items:center;color:var(--accent-text-on) !important;
+    border:none;
+  }
+  .dash-root.theme-light .escolha-wrap .choice.accent .iconbox{background:rgba(255,255,255,.22)}
+  .escolha-wrap .choice.accent h2{color:var(--accent-text-on) !important}
+  .escolha-wrap .choice.accent p{color:rgba(3,56,42,.78) !important}
+  .dash-root.theme-light .escolha-wrap .choice.accent p{color:rgba(255,255,255,.85) !important}
+  .escolha-wrap .choice.accent .cta{color:var(--accent-text-on) !important}
+
+  .escolha-wrap .choice .iconbox svg{width:26px;height:26px}
+  .escolha-wrap .choice h2{margin:24px 0 8px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .escolha-wrap .choice p{margin:0;font-size:14.5px;line-height:1.5;max-width:280px}
+  .escolha-wrap .choice .cta{
+    margin-top:24px;display:inline-flex;align-items:center;gap:8px;
+    font-size:14px;font-weight:600;
+  }
+
+  .escolha-wrap .choice .ribbon{
+    position:absolute;top:20px;right:20px;
+    background:rgba(3,56,42,.18);
+    color:var(--accent-text-on) !important;
+    font-size:10.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+    padding:6px 12px;border-radius:999px;
+  }
+  .dash-root.theme-light .escolha-wrap .choice .ribbon{background:rgba(255,255,255,.22)}
+
+  @media (max-width:900px){
+    .escolha-grid{grid-template-columns:1fr}
+    .escolha-wrap{padding:24px}
+  }
+`
+

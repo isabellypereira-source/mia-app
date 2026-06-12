@@ -287,13 +287,17 @@ const DASH_CSS = `
   .dash-root main.stage{display:flex;flex-direction:column;overflow:hidden;position:relative;min-width:0}
   .dash-root header.top{
     display:flex;align-items:center;justify-content:space-between;
-    padding:22px 36px;
-    background:var(--header-bg);
-    backdrop-filter:blur(20px);
-    -webkit-backdrop-filter:blur(20px);
-    border-bottom:1px solid var(--header-border);
-    transition:background .4s ease, border-color .4s ease;
+    padding:18px 36px;
+    background:transparent;
+    border-bottom:1px solid var(--border-glass);
+    transition:border-color .4s ease;
     gap:24px;
+  }
+  .dash-root header.top .search,
+  .dash-root header.top .icon-btn,
+  .dash-root header.top .profile{
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
   }
   .dash-root .greeting h1{
     font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
