@@ -519,95 +519,233 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
   if (modo === 'wizard_resultado' || modo === 'input' || modo === 'validar') {
     const isWizard = modo === 'wizard_resultado'
     return (
-      <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
-        {/* Header */}
-        <div className="px-8 py-5 border-b" style={{ background: '#fff2da', borderColor: '#e5d9c1' }}>
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
-            <button onClick={() => setModo(isWizard ? 'wizard_ingredientes' : 'escolha')}
-              className="text-xs font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>← Voltar</button>
-            <h1 className="font-display font-bold text-lg" style={{ color: '#003223' }}>
-              {isWizard ? 'Formulação sugerida pela MIA' : 'Inserir formulação'}
-            </h1>
-            {isWizard && (
-              <a href="/chat" target="_blank" rel="noopener noreferrer"
-                className="ml-auto flex items-center gap-1.5 text-xs font-sans border rounded-lg px-3 py-1.5 transition-colors hover:border-[#003223] hover:text-[#003223]"
-                style={{ borderColor: '#e5d9c1', color: '#58413c' }}>
-                <ExternalLink size={11} /> Chat com MIA
-              </a>
-            )}
-          </div>
+      <>
+        <style>{`
+          .formular-header{
+            display:flex;align-items:center;gap:14px;margin-bottom:22px;
+          }
+          .formular-back{
+            display:inline-flex;align-items:center;gap:6px;
+            background:transparent;border:none;cursor:pointer;
+            color:var(--text-muted);font-family:inherit;font-size:13px;
+            padding:6px 10px;border-radius:8px;transition:.15s;
+          }
+          .formular-back:hover{background:var(--hover-tint);color:var(--text-main)}
+          .formular-h1{
+            font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+            font-size:28px;color:var(--text-main);margin:0;letter-spacing:-.01em;
+          }
+          .formular-chat{
+            margin-left:auto;display:inline-flex;align-items:center;gap:6px;
+            background:var(--surface-glass);
+            border:1px solid var(--border-glass-strong);
+            color:var(--text-main);
+            padding:8px 14px;border-radius:999px;
+            font-size:13px;font-weight:500;text-decoration:none;
+            backdrop-filter:blur(12px);transition:.15s;
+          }
+          .formular-chat:hover{background:var(--hover-tint)}
+
+          /* glass card e inputs do formulário */
+          .formular-card{
+            background:var(--surface-glass) !important;
+            border:1px solid var(--border-glass) !important;
+            backdrop-filter:blur(16px);
+            border-radius:18px;padding:22px;margin-bottom:16px;
+          }
+          .formular-card-title{
+            display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:14px;
+          }
+          .formular-card-title h2{
+            font-size:14px;font-weight:600;color:var(--text-main);margin:0;
+          }
+          .formular-total{
+            font-size:12px;padding:5px 12px;border-radius:999px;
+            background:var(--icon-tint) !important;
+            color:var(--accent-em) !important;
+            border:1px solid var(--border-glass-strong) !important;
+            font-weight:600;
+          }
+          .formular-row{
+            display:grid;grid-template-columns:1fr 90px 150px 32px;
+            gap:8px;align-items:center;margin-bottom:8px;
+          }
+          .formular-input,
+          .formular-select{
+            background:var(--surface-glass-strong) !important;
+            border:1px solid var(--border-glass-strong) !important;
+            color:var(--text-main) !important;
+            border-radius:10px;padding:10px 12px;
+            font-family:inherit;font-size:14px;width:100%;
+            transition:border-color .15s, box-shadow .15s;
+          }
+          .formular-input:focus,
+          .formular-select:focus{
+            outline:none;border-color:var(--accent) !important;
+            box-shadow:0 0 0 4px var(--icon-tint);
+          }
+          .formular-input::placeholder{color:var(--text-faint) !important}
+          .formular-pct-wrap{position:relative}
+          .formular-pct-wrap span{
+            position:absolute;right:10px;top:50%;transform:translateY(-50%);
+            color:var(--text-faint);font-size:12px;
+          }
+          .formular-pct-wrap .formular-input{padding-right:24px}
+          .formular-trash{
+            display:grid;place-items:center;
+            background:transparent;border:none;cursor:pointer;
+            color:var(--text-faint);padding:6px;border-radius:6px;
+            transition:.15s;
+          }
+          .formular-trash:hover{color:var(--orange);background:var(--hover-tint)}
+          .formular-trash:disabled{opacity:.25;cursor:not-allowed}
+          .formular-add{
+            margin-top:8px;display:inline-flex;align-items:center;gap:6px;
+            background:transparent;border:none;cursor:pointer;
+            color:var(--accent-em) !important;
+            font-family:inherit;font-size:13px;font-weight:500;padding:4px 0;
+          }
+          .formular-add:hover{opacity:.75}
+
+          .formular-save-row{display:flex;gap:10px}
+          .formular-save-row .formular-input{flex:1}
+          .formular-save{
+            display:inline-flex;align-items:center;gap:8px;
+            padding:10px 22px;border-radius:12px;
+            background:var(--accent) !important;
+            color:var(--accent-text-on) !important;
+            border:none;cursor:pointer;font-family:inherit;
+            font-size:14px;font-weight:600;
+            transition:transform .15s, box-shadow .25s;
+          }
+          .formular-save:hover:not(:disabled){
+            transform:translateY(-1px);
+            box-shadow:0 12px 28px -10px var(--accent);
+          }
+          .formular-save:disabled{opacity:.5;cursor:not-allowed}
+
+          .formular-validation{
+            background:var(--surface-glass) !important;
+            border:1px solid var(--border-glass) !important;
+            border-left:3px solid var(--accent-em) !important;
+            border-radius:14px;padding:16px;margin-bottom:16px;
+          }
+          .formular-validation-header{
+            display:flex;align-items:center;gap:8px;margin-bottom:8px;
+            font-size:12px;font-weight:600;
+            color:var(--accent-em);letter-spacing:.06em;text-transform:uppercase;
+          }
+          .formular-validation p{
+            color:var(--text-muted);font-size:14px;line-height:1.55;margin:0;
+            white-space:pre-wrap;
+          }
+
+          .formular-body{
+            max-width:760px;margin:0 auto;
+          }
+        `}</style>
+        <div className="formular-header">
+          <button onClick={() => setModo(isWizard ? 'wizard_ingredientes' : 'escolha')} className="formular-back">
+            ← Voltar
+          </button>
+          <h1 className="formular-h1">
+            {isWizard ? 'Formulação sugerida pela MIA' : 'Inserir formulação'}
+          </h1>
+          {isWizard && (
+            <a href="/chat" target="_blank" rel="noopener noreferrer" className="formular-chat">
+              <ExternalLink size={12} /> Chat com MIA
+            </a>
+          )}
         </div>
 
-        <div className="max-w-2xl mx-auto px-8 py-6 space-y-4">
+        <div className="formular-body">
           {isWizard && validacao && (
-            <div className="p-4 rounded-2xl" style={{ background: '#f9edd4', borderLeft: '3px solid #003223' }}>
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles size={13} style={{ color: '#003223' }} />
-                <span className="text-xs font-display font-semibold" style={{ color: '#003223' }}>Análise MIA</span>
+            <div className="formular-validation">
+              <div className="formular-validation-header">
+                <Sparkles size={13} /> Análise da MIA
               </div>
-              <p className="text-sm font-sans leading-relaxed" style={{ color: '#58413c' }}>{validacao}</p>
+              <p>{validacao}</p>
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-tonal p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-display font-semibold" style={{ color: '#003223' }}>
-                Ingredientes {isWizard && <span className="text-xs font-normal ml-1" style={{ color: '#707974' }}>(você pode editar)</span>}
-              </h2>
-              <span className="text-xs font-sans px-2 py-0.5 rounded-full" style={{ background: '#fff2da', color: '#516600' }}>
+          <div className="formular-card">
+            <div className="formular-card-title">
+              <h2>Ingredientes {isWizard && <span style={{ fontWeight: 400, opacity: 0.6, fontSize: 12 }}>(você pode editar)</span>}</h2>
+              <span className="formular-total">
                 Total: {ingredientes.reduce((acc, i) => acc + (parseFloat(i.percentual) || 0), 0).toFixed(1)}%
               </span>
             </div>
-            <div className="space-y-2">
+            <div>
               {ingredientes.map((ing, i) => (
-                <div key={i} className="grid grid-cols-[1fr_80px_140px_32px] gap-2 items-center">
-                  <input value={ing.nome} onChange={e => updateIngrediente(i, 'nome', e.target.value)} placeholder="Ingrediente"
-                    className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#003223] transition-colors"
-                    style={{ color: '#211b0c' }} />
-                  <div className="relative">
-                    <input value={ing.percentual} onChange={e => updateIngrediente(i, 'percentual', e.target.value)} placeholder="0" type="number" min="0" max="100"
-                      className="w-full bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm font-sans focus:outline-none focus:border-[#003223] transition-colors"
-                      style={{ color: '#211b0c' }} />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs" style={{ color: '#707974' }}>%</span>
+                <div key={i} className="formular-row">
+                  <input
+                    value={ing.nome}
+                    onChange={e => updateIngrediente(i, 'nome', e.target.value)}
+                    placeholder="Ingrediente"
+                    className="formular-input"
+                  />
+                  <div className="formular-pct-wrap">
+                    <input
+                      value={ing.percentual}
+                      onChange={e => updateIngrediente(i, 'percentual', e.target.value)}
+                      placeholder="0"
+                      type="number"
+                      min="0"
+                      max="100"
+                      className="formular-input"
+                    />
+                    <span>%</span>
                   </div>
-                  <select value={ing.funcao} onChange={e => updateIngrediente(i, 'funcao', e.target.value)}
-                    className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-2 py-2 text-sm font-sans focus:outline-none focus:border-[#003223] transition-colors"
-                    style={{ color: '#211b0c' }}>
+                  <select
+                    value={ing.funcao}
+                    onChange={e => updateIngrediente(i, 'funcao', e.target.value)}
+                    className="formular-select"
+                  >
                     {FUNCOES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
-                  <button onClick={() => removeIngrediente(i)} disabled={ingredientes.length === 1}
-                    className="flex items-center justify-center text-[#58413c] hover:text-red-400 disabled:opacity-20 transition-colors">
+                  <button
+                    onClick={() => removeIngrediente(i)}
+                    disabled={ingredientes.length === 1}
+                    className="formular-trash"
+                    aria-label="Remover"
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>
               ))}
             </div>
-            <button onClick={addIngrediente} className="mt-3 flex items-center gap-1.5 text-xs font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>
+            <button onClick={addIngrediente} className="formular-add">
               <Plus size={13} /> Adicionar ingrediente
             </button>
           </div>
 
           {!isWizard && validacao && (
-            <div className="bg-white rounded-2xl shadow-tonal p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <CheckCircle size={15} style={{ color: '#003223' }} />
-                <span className="text-sm font-display font-semibold" style={{ color: '#003223' }}>Análise da MIA</span>
+            <div className="formular-validation">
+              <div className="formular-validation-header">
+                <CheckCircle size={13} /> Análise da MIA
               </div>
-              <p className="text-sm font-sans leading-relaxed whitespace-pre-wrap" style={{ color: '#58413c' }}>{validacao}</p>
+              <p>{validacao}</p>
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-tonal p-5">
-            <h2 className="text-sm font-display font-semibold mb-3" style={{ color: '#003223' }}>Salvar formulação</h2>
-            <div className="flex gap-3">
-              <input value={nomeFormulacao} onChange={e => setNomeFormulacao(e.target.value)}
+          <div className="formular-card">
+            <div className="formular-card-title">
+              <h2>Salvar formulação</h2>
+            </div>
+            <div className="formular-save-row">
+              <input
+                value={nomeFormulacao}
+                onChange={e => setNomeFormulacao(e.target.value)}
                 placeholder="Nome da formulação (ex: Pasta de batata-doce v1)"
-                className="flex-1 bg-[#fff8f1] border border-[#e5d9c1] rounded-lg px-3 py-2.5 text-sm font-sans focus:outline-none focus:border-[#003223] transition-colors"
-                style={{ color: '#211b0c' }} />
-              <button onClick={salvarFormulacao} disabled={!nomeFormulacao.trim() || salvando}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                style={{ background: '#003223', color: 'white' }}>
-                <Save size={14} /> {salvando ? 'Salvando...' : 'Salvar'}
+                className="formular-input"
+              />
+              <button
+                onClick={salvarFormulacao}
+                disabled={!nomeFormulacao.trim() || salvando}
+                className="formular-save"
+              >
+                <Save size={14} /> {salvando ? 'Salvando…' : 'Salvar'}
               </button>
             </div>
           </div>
@@ -615,7 +753,7 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
           {/* "Validar com MIA" e "Gerar STL 3D" temporariamente removidos.
               Voltaremos a esses fluxos quando estiverem prontos. */}
         </div>
-      </div>
+      </>
     )
   }
 
