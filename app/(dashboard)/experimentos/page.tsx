@@ -3,8 +3,9 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import {
   CheckCircle2, AlertCircle, XCircle,
   Plus, Download, Trash2, ChevronDown, ChevronUp,
-  Sparkles, Calendar, Loader2, Wifi, FlaskConical, SlidersHorizontal, BookOpen,
+  Sparkles, Calendar, Loader2, Wifi, Pencil,
 } from 'lucide-react'
+import Link from 'next/link'
 
 interface Ingrediente { nome: string; percentual: number | string; funcao: string }
 interface Formulacao {
@@ -80,8 +81,10 @@ export default function ExperimentosPage() {
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [experimentos, setExperimentos] = useState<Experimento[]>([])
   const [novoAberto, setNovoAberto] = useState(false)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
   const [expandido, setExpandido] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
+  const [formAberto, setFormAberto] = useState(false)
 
   // form state
   const [formulacaoId, setFormulacaoId] = useState('')
@@ -138,12 +141,27 @@ export default function ExperimentosPage() {
     setIncluirParametros(true)
   }
 
+  function abrirEdicao(exp: Experimento) {
+    setEditandoId(exp.id)
+    setFormulacaoId(exp.formulacao_id || '')
+    setData(exp.data || new Date().toISOString().split('T')[0])
+    setResultado((exp.resultado === 'pendente' ? 'sucesso' : exp.resultado) as Resultado)
+    setProblemaSel(exp.problema && (PROBLEMAS_FALHA.some(p => p.id === exp.problema) || PROBLEMAS_PARCIAL.some(p => p.id === exp.problema)) ? exp.problema : exp.problema ? 'Outro' : '')
+    setOutroTexto(exp.problema && !PROBLEMAS_FALHA.some(p => p.id === exp.problema) && !PROBLEMAS_PARCIAL.some(p => p.id === exp.problema) ? exp.problema : '')
+    setPesoImpresso(exp.peso_impresso_g ? String(exp.peso_impresso_g) : '')
+    const obsMatch = exp.descricao?.match(/OBSERVAÇÕES:\n([\s\S]*?)(?:\n\n|$)/)
+    setObs(obsMatch ? obsMatch[1].trim() : '')
+    setIncluirParametros(!!exp.descricao?.includes('PARÂMETROS DE IMPRESSÃO'))
+    setIncluirNutri(!!exp.descricao?.includes('TABELA NUTRICIONAL'))
+    setNovoAberto(true)
+    setExpandido(null)
+  }
+
   async function registrar() {
     if (!formulacaoId) return
     setSalvando(true)
     const form = formulacaoSelecionada
 
-    // resultado_label: o que será mostrado como "Resultado"
     let resultadoTexto = ''
     if (resultado === 'sucesso') {
       resultadoTexto = 'Impressão bem-sucedida.'
@@ -152,7 +170,6 @@ export default function ExperimentosPage() {
       resultadoTexto = escolhido || 'Sem detalhamento.'
     }
 
-    // bloco anexo: parametros + nutri (vai no "descricao" como bloco enriquecido)
     const blocos: string[] = []
     if (incluirParametros && parametrosSugeridos && Object.keys(parametrosSugeridos).length) {
       blocos.push('PARÂMETROS DE IMPRESSÃO:\n' + Object.entries(parametrosSugeridos)
@@ -165,21 +182,32 @@ export default function ExperimentosPage() {
       blocos.push('OBSERVAÇÕES:\n' + obs.trim())
     }
 
-    await fetch('/api/experimentos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        formulacao_id: formulacaoId,
-        formulacao_nome: form?.nome ?? 'Formulação',
-        data,
-        resultado,
-        problema: resultado === 'sucesso' ? undefined : resultadoTexto,
-        descricao: blocos.length ? blocos.join('\n\n') : undefined,
-        peso_impresso_g: pesoImpresso ? parseFloat(pesoImpresso) : undefined,
-      }),
-    })
+    const payload = {
+      formulacao_id: formulacaoId,
+      formulacao_nome: form?.nome ?? 'Formulação',
+      data,
+      resultado,
+      problema: resultado === 'sucesso' ? undefined : resultadoTexto,
+      descricao: blocos.length ? blocos.join('\n\n') : undefined,
+      peso_impresso_g: pesoImpresso ? parseFloat(pesoImpresso) : undefined,
+    }
+
+    if (editandoId) {
+      await fetch('/api/experimentos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editandoId, ...payload }),
+      })
+    } else {
+      await fetch('/api/experimentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+    }
     await carregar()
     resetForm()
+    setEditandoId(null)
     setNovoAberto(false)
     setSalvando(false)
   }
@@ -212,27 +240,8 @@ export default function ExperimentosPage() {
     <>
       <style>{EXP_CSS}</style>
 
-      {/* Flow steps */}
-      <div className="exp-flow">
-        <div className="step done">
-          <span className="step-ic"><FlaskConical size={16} strokeWidth={1.8} /></span>
-          <span>Formulação</span>
-        </div>
-        <span className="step-arrow" aria-hidden="true">→</span>
-        <div className="step done">
-          <span className="step-ic"><SlidersHorizontal size={16} strokeWidth={1.8} /></span>
-          <span>Parâmetros</span>
-        </div>
-        <span className="step-arrow" aria-hidden="true">→</span>
-        <div className="step active">
-          <span className="step-ic"><BookOpen size={16} strokeWidth={1.8} /></span>
-          <span>Caderno de experimentos</span>
-        </div>
-      </div>
-
       <div className="exp-head">
         <div>
-          <h2 className="exp-title">Caderno de experimentos</h2>
           <p className="exp-sub">Registre suas impressões. A MIA usa esses dados para diagnosticar e sugerir ajustes nas próximas tentativas.</p>
         </div>
         <div className="exp-actions">
@@ -250,15 +259,17 @@ export default function ExperimentosPage() {
       {/* Form */}
       {novoAberto && (
         <div className="form-card">
-          <h3 className="form-title">Novo experimento</h3>
+          <h3 className="form-title">{editandoId ? 'Editar experimento' : 'Novo experimento'}</h3>
 
           <div className="row-2">
             <div className="field">
               <label>Qual formulação você imprimiu?</label>
-              <select value={formulacaoId} onChange={e => setFormulacaoId(e.target.value)}>
-                <option value="">Selecione uma formulação…</option>
-                {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
-              </select>
+              <CustomSelect
+                value={formulacaoId}
+                options={formulacoes.map(f => ({ value: f.id, label: f.nome }))}
+                placeholder="Selecione uma formulação…"
+                onChange={setFormulacaoId}
+              />
             </div>
             <div className="field">
               <label>Data da impressão</label>
@@ -377,7 +388,7 @@ export default function ExperimentosPage() {
                     type="number"
                     value={pesoImpresso}
                     onChange={e => setPesoImpresso(e.target.value)}
-                    placeholder="Peso impresso em gramas (ex: 120)"
+                    placeholder="Digite aqui o peso do produto impresso (em gramas)"
                     min={0}
                     step={0.1}
                   />
@@ -417,9 +428,9 @@ export default function ExperimentosPage() {
               onClick={registrar}
               className="btn-accent"
             >
-              {salvando ? <><Loader2 size={14} className="spin" /> Salvando…</> : <>Registrar experimento</>}
+              {salvando ? <><Loader2 size={14} className="spin" /> Salvando…</> : (editandoId ? <>Salvar alterações</> : <>Registrar experimento</>)}
             </button>
-            <button type="button" onClick={() => setNovoAberto(false)} className="btn-ghost">
+            <button type="button" onClick={() => { setNovoAberto(false); setEditandoId(null); resetForm() }} className="btn-ghost">
               Cancelar
             </button>
           </div>
@@ -461,9 +472,18 @@ export default function ExperimentosPage() {
                   </div>
                   <div className="exp-row-right">
                     <button
+                      onClick={e => { e.stopPropagation(); abrirEdicao(exp) }}
+                      className="trash"
+                      aria-label="Editar"
+                      title="Editar"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
                       onClick={e => { e.stopPropagation(); excluir(exp.id) }}
                       className="trash"
                       aria-label="Excluir"
+                      title="Excluir"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -504,6 +524,62 @@ export default function ExperimentosPage() {
   )
 }
 
+function CustomSelect({
+  value,
+  options,
+  placeholder,
+  onChange,
+}: {
+  value: string
+  options: { value: string; label: string }[]
+  placeholder: string
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const selected = options.find(o => o.value === value)
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      const t = e.target as HTMLElement
+      if (!t.closest('.cs-wrap')) setOpen(false)
+    }
+    document.addEventListener('click', onDoc)
+    return () => document.removeEventListener('click', onDoc)
+  }, [open])
+  return (
+    <div className="cs-wrap">
+      <button
+        type="button"
+        className={`cs-trigger ${open ? 'open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span className={selected ? '' : 'cs-placeholder'}>
+          {selected?.label || placeholder}
+        </span>
+        <ChevronDown size={16} strokeWidth={2} className={`cs-chev ${open ? 'rotated' : ''}`} />
+      </button>
+      {open && (
+        <div className="cs-menu">
+          {options.length === 0 ? (
+            <div className="cs-empty">Nenhuma opção disponível.</div>
+          ) : (
+            options.map(o => (
+              <button
+                key={o.value}
+                type="button"
+                className={`cs-item ${o.value === value ? 'active' : ''}`}
+                onClick={() => { onChange(o.value); setOpen(false) }}
+              >
+                {o.label}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ResultPill({ resultado }: { resultado: string }) {
   if (resultado === 'sucesso') return <span className="r-pill r-sucesso"><CheckCircle2 size={13} /> Sucesso</span>
   if (resultado === 'parcial') return <span className="r-pill r-parcial"><AlertCircle size={13} /> Parcial</span>
@@ -515,37 +591,48 @@ const EXP_CSS = `
   .spin{animation:expspin 1s linear infinite}
   @keyframes expspin{to{transform:rotate(360deg)}}
 
-  /* Flow stepper */
-  .exp-flow{
-    display:flex;align-items:center;gap:10px;
-    padding:8px 14px;border-radius:999px;
-    background:var(--surface-glass);
-    border:1px solid var(--border-glass);
-    backdrop-filter:blur(12px);
-    width:fit-content;margin-bottom:24px;
-  }
-  .exp-flow .step{
-    display:flex;align-items:center;gap:8px;
-    font-size:13px;color:var(--text-muted) !important;
-    padding:6px 10px;border-radius:999px;
-  }
-  .exp-flow .step.done{color:var(--text-main) !important}
-  .exp-flow .step.active{
-    background:var(--accent) !important;color:var(--accent-text-on) !important;font-weight:600;
-  }
-  .exp-flow .step-ic{display:grid;place-items:center;width:18px;height:18px}
-  .exp-flow .step-arrow{color:var(--text-faint);font-size:13px}
-
   .exp-head{
     display:flex;justify-content:space-between;align-items:flex-start;
     gap:24px;margin-bottom:24px;flex-wrap:wrap;
   }
-  .exp-title{
-    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
-    font-size:36px;margin:0 0 4px;color:var(--text-main) !important;letter-spacing:-.01em;
-  }
   .exp-sub{font-size:14px;color:var(--text-muted) !important;margin:0;max-width:580px;line-height:1.5}
-  .exp-actions{display:flex;gap:10px;flex-shrink:0}
+  .exp-actions{display:flex;gap:10px;flex-shrink:0;margin-left:auto}
+
+  /* Custom select */
+  .cs-wrap{position:relative;width:100%}
+  .cs-trigger{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px;border-radius:12px;
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    color:var(--text-main) !important;
+    font-family:inherit;font-size:14px;text-align:left;cursor:pointer;
+    transition:.15s;
+  }
+  .cs-trigger:hover{background:var(--hover-tint) !important}
+  .cs-trigger.open{border-color:var(--accent) !important;box-shadow:0 0 0 4px var(--icon-tint)}
+  .cs-placeholder{color:var(--text-faint) !important}
+  .cs-chev{transition:transform .2s;color:var(--text-muted)}
+  .cs-chev.rotated{transform:rotate(180deg)}
+  .cs-menu{
+    position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;
+    background:rgba(3,56,42,.96) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    backdrop-filter:blur(20px);
+    border-radius:12px;padding:6px;max-height:280px;overflow-y:auto;
+    box-shadow:0 20px 40px -16px rgba(0,0,0,.5);
+  }
+  .dash-root.theme-light .cs-menu{background:rgba(255,246,227,.98) !important}
+  .cs-item{
+    width:100%;display:block;text-align:left;
+    padding:9px 12px;border-radius:8px;
+    background:transparent !important;border:none;color:var(--text-main) !important;
+    font-family:inherit;font-size:13.5px;cursor:pointer;
+    transition:.12s;
+  }
+  .cs-item:hover{background:var(--hover-tint) !important}
+  .cs-item.active{background:var(--accent) !important;color:var(--accent-text-on) !important;font-weight:600}
+  .cs-empty{padding:18px;text-align:center;color:var(--text-faint);font-size:13px}
 
   .btn-accent{
     display:inline-flex;align-items:center;gap:8px;

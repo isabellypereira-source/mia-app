@@ -21,16 +21,16 @@ import {
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/dashboard',      Icon: Home,             label: 'Início' },
-  { href: '/formular',       Icon: FlaskConical,     label: 'Formular' },
-  { href: '/formulacoes',    Icon: BookOpen,         label: 'Formulações' },
-  { href: '/experimentos',   Icon: TestTube2,        label: 'Experimentos' },
-  { href: '/parametros',     Icon: SlidersHorizontal,label: 'Parâmetros' },
-  { href: '/caracterizacao', Icon: Microscope,       label: 'Caracterização' },
-  { href: '/protocolos',     Icon: FileText,         label: 'Protocolos' },
-  { href: '/biblioteca',     Icon: Library,          label: 'Biblioteca' },
-  { href: '/exportar',       Icon: Download,         label: 'Exportar' },
-  { href: '/chat',           Icon: MessageSquare,    label: 'Chat MIA' },
+  { href: '/dashboard',      Icon: Home,             label: 'Início',         tagline: 'Pronta para a próxima formulação?' },
+  { href: '/formular',       Icon: FlaskConical,     label: 'Formular',       tagline: 'Comece sua próxima formulação' },
+  { href: '/formulacoes',    Icon: BookOpen,         label: 'Formulações',    tagline: 'Suas criações, versões e histórico' },
+  { href: '/parametros',     Icon: SlidersHorizontal,label: 'Parâmetros',     tagline: 'Calibre o processo para a sua formulação' },
+  { href: '/experimentos',   Icon: TestTube2,        label: 'Experimentos',   tagline: 'Onde a teoria encontra a impressora' },
+  { href: '/caracterizacao', Icon: Microscope,       label: 'Caracterização', tagline: 'Meça, analise e documente' },
+  { href: '/protocolos',     Icon: FileText,         label: 'Protocolos',     tagline: 'Métodos validados, prontos para usar' },
+  { href: '/biblioteca',     Icon: Library,          label: 'Biblioteca',     tagline: 'Conhecimento curado sobre impressão 3D de alimentos' },
+  { href: '/exportar',       Icon: Download,         label: 'Exportar',       tagline: 'Documente e compartilhe seus resultados' },
+  { href: '/chat',           Icon: MessageSquare,    label: 'Chat MIA',       tagline: 'Conversa direta com a inteligência da MIA' },
 ]
 
 const ALGAE = [
@@ -130,10 +130,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <p>{phrase}</p>
                 </>
               ) : (
-                <>
-                  <h1>{NAV.find(n => pathname === n.href || pathname.startsWith(n.href + '/'))?.label || 'MIA'}</h1>
-                  <p>Plataforma Morphê Intelligence Assistant</p>
-                </>
+                (() => {
+                  const cur = NAV.find(n => pathname === n.href || pathname.startsWith(n.href + '/'))
+                  return (
+                    <>
+                      <h1>{cur?.label || 'MIA'}</h1>
+                      <p>{cur?.tagline || 'Morphê Intelligence Assistant'}</p>
+                    </>
+                  )
+                })()
               )}
             </div>
             <div className="head-right">
