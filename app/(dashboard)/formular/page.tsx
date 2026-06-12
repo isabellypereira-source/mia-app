@@ -78,20 +78,35 @@ export default function FormularPage() {
   async function gerarComMIA() {
     setModo('wizard_processando')
     const appLabel = APLICACOES.find(a => a.id === aplicacao)?.nome ?? aplicacao
-    const prompt = `Crie uma formulação para impressão 3D de alimentos com as seguintes especificações:
-- Aplicação: ${appLabel}
-- Tendências nutricionais: ${tendencias.length > 0 ? tendencias.join(', ') : 'nenhuma especificada'}
-- Ingredientes base desejados: ${ingredientesWizard.length > 0 ? ingredientesWizard.join(', ') : 'a sua escolha'}
+    const tendLabel = tendencias.length > 0 ? tendencias.join(', ') : 'nenhuma especificada'
+    const ingLabel = ingredientesWizard.length > 0 ? ingredientesWizard.join(', ') : 'a sua escolha'
 
-Retorne APENAS um JSON no formato exato (sem texto adicional):
-{"nome_sugerido":"nome da formulação","ingredientes":[{"nome":"ingrediente","percentual":0,"funcao":"Estruturante"}],"observacoes":"análise técnica curta"}`
+    const prompt = `Crie uma formulação completa para impressão 3D de alimentos.
+
+Especificações:
+- Aplicação: ${appLabel}
+- Tendências nutricionais: ${tendLabel}
+- Ingredientes base desejados: ${ingLabel}
+
+IMPORTANTE: A formulação deve ter entre 5 e 10 ingredientes com percentuais que somem 100%.
+Use funções válidas: Estruturante, Hidrocolóide, Plastificante, Emulsificante, Aromatizante, Corante, Conservante, Proteína, Lipídio, Carboidrato, Líquidos, Outro.
+
+Responda SOMENTE com JSON puro (sem markdown, sem backticks, sem texto antes ou depois):
+{"nome_sugerido":"nome descritivo","ingredientes":[{"nome":"ingrediente","percentual":25,"funcao":"Estruturante"}],"observacoes":"análise técnica breve"}`
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], noTools: true }),
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], noTools: true, skipRag: true }),
       })
+
+      if (!res.ok) {
+        console.error('[MIA] API error:', res.status, res.statusText)
+        setModo('wizard_resultado')
+        return
+      }
+
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
       let texto = ''
@@ -99,25 +114,43 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-          const chunk = decoder.decode(value)
+          const chunk = decoder.decode(value, { stream: true })
           for (const line of chunk.split('\n')) {
-            if (line.startsWith('0:')) { try { texto += JSON.parse(line.slice(2)) } catch { /* skip */ } }
+            if (!line.startsWith('0:')) continue
+            try {
+              const parsed = JSON.parse(line.slice(2))
+              if (typeof parsed === 'string') texto += parsed
+            } catch { /* chunk boundary, skip */ }
           }
         }
       }
-      const jsonMatch = texto.match(/\{[\s\S]*\}/)
+
+      console.log('[MIA] Raw response text:', texto.slice(0, 500))
+
+      const cleaned = texto.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+      const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+
       if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0])
-        setNomeFormulacao(parsed.nome_sugerido ?? '')
-        setIngredientes((parsed.ingredientes ?? []).map((i: { nome: string; percentual: number; funcao: string }) => ({
-          nome: i.nome,
-          percentual: String(i.percentual),
-          funcao: i.funcao,
-        })))
-        setValidacao(parsed.observacoes ?? null)
+        try {
+          const data = JSON.parse(jsonMatch[0])
+          console.log('[MIA] Parsed formulation:', data)
+          setNomeFormulacao(data.nome_sugerido ?? '')
+          if (Array.isArray(data.ingredientes) && data.ingredientes.length > 0) {
+            setIngredientes(data.ingredientes.map((i: { nome: string; percentual: number; funcao: string }) => ({
+              nome: i.nome ?? '',
+              percentual: String(i.percentual ?? 0),
+              funcao: FUNCOES.includes(i.funcao) ? i.funcao : 'Outro',
+            })))
+          }
+          setValidacao(data.observacoes ?? null)
+        } catch (parseErr) {
+          console.error('[MIA] JSON parse error:', parseErr, 'raw:', jsonMatch[0].slice(0, 300))
+        }
+      } else {
+        console.error('[MIA] No JSON found in response. Full text:', cleaned.slice(0, 500))
       }
     } catch (err) {
-      console.error('[MIA] Erro ao gerar formulação:', err)
+      console.error('[MIA] Fetch error:', err)
     }
     setModo('wizard_resultado')
   }
