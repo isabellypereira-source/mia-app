@@ -15,6 +15,7 @@ export type FoodRow = {
   umidade_g: number
   sodio_mg: number | null
   source: string
+  funcao_sugerida?: string | null
 }
 
 export function normalizeName(input: string): string {

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap, Cookie, Soup, Drumstick, IceCream2, Pill, Scissors, Check, ArrowLeft } from 'lucide-react'
 import { gerarSTL, baixarSTL } from '@/lib/prusa-integration'
@@ -67,6 +67,8 @@ export default function FormularPage() {
   const [stlLoading, setStlLoading] = useState(false)
   const [stlResult, setStlResult] = useState<{ url: string; filename: string; metadata?: { volume_mm3: number; peso_estimado_g: number; tempo_impressao_estimado_min: number; forma: string } } | null>(null)
   const [stlError, setStlError] = useState<string | null>(null)
+  const autoSuggestRef = useRef<Record<number, AbortController | undefined>>({})
+  const autoSuggestTimers = useRef<Record<number, ReturnType<typeof setTimeout>>>({})
 
   function toggleTendencia(t: string) {
     setTendencias(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
@@ -137,6 +139,28 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 
   function updateIngrediente(i: number, field: keyof Ingrediente, value: string) {
     setIngredientes(prev => prev.map((ing, idx) => idx === i ? { ...ing, [field]: value } : ing))
+    if (field === 'nome' && value.trim().length >= 3) {
+      const ingTouchedFuncao = ingredientes[i]?.funcao && ingredientes[i].funcao !== 'Estruturante' && ingredientes[i].funcao !== 'Outro'
+      if (ingTouchedFuncao) return
+      const controller = new AbortController()
+      autoSuggestRef.current[i]?.abort()
+      autoSuggestRef.current[i] = controller
+      clearTimeout(autoSuggestTimers.current[i])
+      autoSuggestTimers.current[i] = setTimeout(async () => {
+        try {
+          const res = await fetch(`/api/foods/search?q=${encodeURIComponent(value.trim())}`, { signal: controller.signal })
+          const json = await res.json()
+          const top = json.results?.[0]
+          if (top && top.similarity >= 0.4 && top.funcao_sugerida && FUNCOES.includes(top.funcao_sugerida)) {
+            setIngredientes(prev => prev.map((ing, idx) => {
+              if (idx !== i) return ing
+              const tocado = ing.funcao && ing.funcao !== 'Estruturante' && ing.funcao !== 'Outro'
+              return tocado ? ing : { ...ing, funcao: top.funcao_sugerida }
+            }))
+          }
+        } catch { /* ignore */ }
+      }, 350)
+    }
   }
 
   async function validarFormulacao() {
