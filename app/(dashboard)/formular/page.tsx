@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap } from 'lucide-react'
+import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap, Cookie, Soup, Drumstick, IceCream2, Pill, Scissors, Check, ArrowLeft } from 'lucide-react'
 import { gerarSTL, baixarSTL } from '@/lib/prusa-integration'
 import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
@@ -16,12 +16,12 @@ interface Ingrediente {
 const FUNCOES = ['Estruturante', 'Hidrocolóide', 'Plastificante', 'Emulsificante', 'Aromatizante', 'Corante', 'Conservante', 'Proteína', 'Lipídio', 'Carboidrato', 'Líquidos', 'Outro']
 
 const APLICACOES = [
-  { id: 'snacks',        nome: 'Snacks e Conveniência',   desc: 'Snacks crocantes, biscoitos recheados e barras de cereais funcionais.',               icon: 'cookie' },
-  { id: 'massas',        nome: 'Massas e Grãos',          desc: 'Massas frescas ou secas com perfis nutricionais otimizados e texturas de extrusão.',  icon: 'ramen_dining' },
-  { id: 'proteinas',     nome: 'Proteínas e Análogos',    desc: 'Soluções plant-based e híbridas com foco em suculência e estrutura fibrosa avançada.', icon: 'kebab_dining' },
-  { id: 'laticinios',    nome: 'Laticínios e Sobremesas', desc: 'Iogurtes, queijos vegetais e sobremesas lácteas com estabilidade térmica superior.',   icon: 'icecream' },
-  { id: 'nutraceuticos', nome: 'Nutracêuticos',           desc: 'Suplementos bioativos em formatos inovadores de entrega de nutrientes.',               icon: 'medication' },
-  { id: 'outros',        nome: 'Outras Aplicações',       desc: 'Projetos customizados para demandas específicas de ingredientes e processos.',          icon: 'content_cut' },
+  { id: 'snacks',        nome: 'Snacks e Conveniência',   desc: 'Snacks crocantes, biscoitos recheados e barras de cereais funcionais.',               Icon: Cookie },
+  { id: 'massas',        nome: 'Massas e Grãos',          desc: 'Massas frescas ou secas com perfis nutricionais otimizados e texturas de extrusão.',  Icon: Soup },
+  { id: 'proteinas',     nome: 'Proteínas e Análogos',    desc: 'Soluções plant-based e híbridas com foco em suculência e estrutura fibrosa avançada.', Icon: Drumstick },
+  { id: 'laticinios',    nome: 'Laticínios e Sobremesas', desc: 'Iogurtes, queijos vegetais e sobremesas lácteas com estabilidade térmica superior.',   Icon: IceCream2 },
+  { id: 'nutraceuticos', nome: 'Nutracêuticos',           desc: 'Suplementos bioativos em formatos inovadores de entrega de nutrientes.',               Icon: Pill },
+  { id: 'outros',        nome: 'Outras Aplicações',       desc: 'Projetos customizados para demandas específicas de ingredientes e processos.',          Icon: Scissors },
 ]
 
 const TENDENCIAS = ['Alto em Proteína', 'Sem Glúten', 'Funcional / Bioativo', 'Vegano', 'Sem Lactose', 'Alto em Fibra', 'Low Carb']
@@ -268,29 +268,21 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
       <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
         Selecione o segmento industrial para o qual deseja desenvolver<br />sua nova formulação biônica.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {APLICACOES.map(a => (
-          <button key={a.id} onClick={() => setAplicacao(a.id)}
-            className="relative text-left p-5 rounded-2xl border-2 transition-all duration-200 hover:shadow-tonal"
-            style={{
-              borderColor: aplicacao === a.id ? '#516600' : '#e5d9c1',
-              background: aplicacao === a.id ? 'rgba(81,102,0,0.04)' : 'white',
-            }}>
-            {aplicacao === a.id && (
-              <span className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center" style={{ background: '#516600' }}>
-                <span className="material-symbols-outlined text-white" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>check</span>
-              </span>
-            )}
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-              style={{ background: aplicacao === a.id ? 'rgba(81,102,0,0.12)' : '#fff2da' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '20px', color: aplicacao === a.id ? '#516600' : '#003223', fontVariationSettings: "'wght' 300, 'FILL' 0" }}>
-                {a.icon}
-              </span>
-            </div>
-            <p className="font-display font-semibold text-sm mb-1.5" style={{ color: '#003223' }}>{a.nome}</p>
-            <p className="text-xs font-sans leading-relaxed" style={{ color: '#58413c' }}>{a.desc}</p>
-          </button>
-        ))}
+      <div className="aplicacoes-grid">
+        {APLICACOES.map(a => {
+          const ativo = aplicacao === a.id
+          const Icon = a.Icon
+          return (
+            <button key={a.id} onClick={() => setAplicacao(a.id)} className={`aplic-card ${ativo ? 'active' : ''}`}>
+              {ativo && (
+                <span className="aplic-check"><Check size={13} strokeWidth={2.5} /></span>
+              )}
+              <span className="aplic-icon"><Icon size={22} strokeWidth={1.6} /></span>
+              <p className="aplic-nome">{a.nome}</p>
+              <p className="aplic-desc">{a.desc}</p>
+            </button>
+          )
+        })}
       </div>
     </WizardShell>
   )
@@ -782,87 +774,58 @@ function WizardShell({
   avancarIcon?: React.ReactNode
 }) {
   return (
-    <div className="h-full flex flex-col" style={{ background: '#fff8f1' }}>
-      {/* Step bar */}
-      <div className="px-8 py-4 border-b" style={{ background: '#fff8f1', borderColor: '#e5d9c1' }}>
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center">
-            {WIZARD_STEPS.map((step, i) => {
-              const num = i + 1
-              const isActive = num === passo
-              const isDone = num < passo
-              return (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-display font-bold transition-all"
-                      style={{
-                        background: isActive ? '#003223' : isDone ? '#516600' : 'transparent',
-                        border: isActive || isDone ? 'none' : '1.5px solid #d4ccc0',
-                        color: isActive || isDone ? 'white' : '#bfc9c2',
-                        minWidth: '28px',
-                      }}>
-                      {isDone
-                        ? <span className="material-symbols-outlined" style={{ fontSize: '13px', fontVariationSettings: "'FILL' 1" }}>check</span>
-                        : num}
-                    </div>
-                    <span className="text-[10px] font-sans whitespace-nowrap"
-                      style={{ color: isActive ? '#003223' : isDone ? '#516600' : '#bfc9c2', fontWeight: isActive ? 600 : 400 }}>
-                      {step.label}
-                    </span>
+    <>
+      <style>{WIZARD_CSS}</style>
+      <div className="wiz-root">
+        {/* Step bar */}
+        <div className="wiz-steps">
+          {WIZARD_STEPS.map((step, i) => {
+            const num = i + 1
+            const isActive = num === passo
+            const isDone = num < passo
+            return (
+              <div key={step.id} className="wiz-step-wrap">
+                <div className="wiz-step-col">
+                  <div className={`wiz-step-dot ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}>
+                    {isDone ? <Check size={13} strokeWidth={2.5} /> : num}
                   </div>
-                  {i < WIZARD_STEPS.length - 1 && (
-                    <div className="flex-1 h-px mx-2 mb-4"
-                      style={{ background: isDone ? '#516600' : '#e5d9c1' }} />
-                  )}
+                  <span className={`wiz-step-label ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}>
+                    {step.label}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
+                {i < WIZARD_STEPS.length - 1 && (
+                  <div className={`wiz-step-line ${isDone ? 'done' : ''}`} />
+                )}
+              </div>
+            )
+          })}
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        <div className="max-w-2xl mx-auto pb-28">
-          {children}
-        </div>
-      </div>
-
-      {/* Footer: actions */}
-      <div className="px-8 py-4 border-t flex items-center justify-between"
-        style={{ background: '#fff8f1', borderColor: '#e5d9c1' }}>
-        <button onClick={onCancelar}
-          className="flex items-center gap-1.5 text-sm font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>
-          <ArrowRight size={13} style={{ transform: 'rotate(180deg)' }} /> Cancelar
-        </button>
-        <button onClick={onAvancar} disabled={avancarDisabled}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 hover:opacity-90"
-          style={{ background: '#003223', color: 'white' }}>
-          {avancarIcon} {avancarLabel} <ArrowRight size={14} />
-        </button>
-      </div>
-
-      {/* MIA Intelligence floating card */}
-      {miaIntelDica && (
-        <div className="fixed bottom-6 right-6 max-w-[260px] rounded-2xl p-4 shadow-tonal-lg z-10 animate-slide-up"
-          style={{ background: '#1a2e1a', border: '1px solid rgba(200,238,79,0.2)' }}>
-          <div className="flex items-start gap-2.5">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-              style={{ background: '#c8ee4f' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '13px', color: '#003223', fontVariationSettings: "'FILL' 1" }}>auto_awesome</span>
-            </div>
-            <div>
-              <p className="text-[10px] font-display font-bold uppercase tracking-widest mb-1.5" style={{ color: '#c8ee4f' }}>
-                MIA Intelligence
-              </p>
-              <p className="text-[11px] font-sans leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                {miaIntelDica}
-              </p>
+        {/* MIA Dica como banner inline (não bloqueia mais o botão) */}
+        {miaIntelDica && (
+          <div className="wiz-mia-banner">
+            <div className="wiz-mia-ic"><Sparkles size={14} strokeWidth={1.8} /></div>
+            <div className="wiz-mia-text">
+              <span className="wiz-mia-label">MIA Intelligence</span>
+              <p>{miaIntelDica}</p>
             </div>
           </div>
+        )}
+
+        {/* Content */}
+        <div className="wiz-content">{children}</div>
+
+        {/* Footer */}
+        <div className="wiz-footer">
+          <button onClick={onCancelar} className="wiz-back">
+            <ArrowLeft size={14} strokeWidth={1.8} /> Cancelar
+          </button>
+          <button onClick={onAvancar} disabled={avancarDisabled} className="wiz-next">
+            {avancarIcon} {avancarLabel} <ArrowRight size={14} strokeWidth={2} />
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   )
 }
 
@@ -968,6 +931,137 @@ const ESCOLHA_CSS = `
   @media (max-width:900px){
     .escolha-grid{grid-template-columns:1fr}
     .escolha-wrap{padding:24px}
+  }
+`
+
+const WIZARD_CSS = `
+  .wiz-root{
+    display:flex;flex-direction:column;height:100%;
+    max-width:1100px;margin:0 auto;padding:0 24px 24px;
+    color:var(--text-main);
+  }
+  .wiz-steps{
+    display:flex;align-items:flex-start;
+    padding:18px 8px 26px;
+    border-bottom:1px solid var(--border-glass);
+    margin-bottom:24px;
+  }
+  .wiz-step-wrap{display:flex;align-items:flex-start;flex:1;gap:8px}
+  .wiz-step-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:80px}
+  .wiz-step-dot{
+    width:32px;height:32px;border-radius:50%;
+    display:grid;place-items:center;
+    background:transparent;
+    border:1.5px solid var(--border-glass-strong);
+    color:var(--text-faint);
+    font-weight:600;font-size:13px;
+    transition:.2s;
+  }
+  .wiz-step-dot.done{background:var(--accent-em);color:var(--accent-text-on);border-color:transparent}
+  .wiz-step-dot.active{background:var(--accent);color:var(--accent-text-on);border-color:transparent;box-shadow:0 0 0 4px var(--icon-tint)}
+  .wiz-step-label{font-size:11.5px;color:var(--text-faint);font-weight:500}
+  .wiz-step-label.active{color:var(--text-main);font-weight:600}
+  .wiz-step-label.done{color:var(--text-muted)}
+  .wiz-step-line{
+    flex:1;height:1px;margin-top:16px;
+    background:repeating-linear-gradient(90deg, var(--border-glass) 0 6px, transparent 6px 12px);
+  }
+  .wiz-step-line.done{background:var(--accent-em)}
+
+  .wiz-mia-banner{
+    display:flex;align-items:center;gap:14px;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass-strong);
+    border-left:3px solid var(--accent-em);
+    border-radius:14px;padding:14px 18px;margin-bottom:24px;
+    backdrop-filter:blur(12px);
+  }
+  .wiz-mia-ic{
+    width:36px;height:36px;border-radius:12px;
+    background:var(--icon-tint);color:var(--accent-em);
+    display:grid;place-items:center;flex-shrink:0;
+  }
+  .wiz-mia-text{flex:1;min-width:0}
+  .wiz-mia-label{
+    display:block;font-size:10.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--accent-em);font-weight:700;margin-bottom:2px;
+  }
+  .wiz-mia-text p{margin:0;font-size:13px;color:var(--text-muted);line-height:1.5}
+
+  .wiz-content{flex:1;overflow-y:auto;padding-bottom:24px}
+
+  .wiz-footer{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:18px;border-top:1px solid var(--border-glass);
+    margin-top:auto;
+  }
+  .wiz-back{
+    display:inline-flex;align-items:center;gap:6px;
+    background:transparent;border:none;cursor:pointer;
+    color:var(--text-muted);font-family:inherit;font-size:13.5px;
+    padding:8px 12px;border-radius:10px;transition:.15s;
+  }
+  .wiz-back:hover{background:var(--hover-tint);color:var(--text-main)}
+  .wiz-next{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:var(--accent-text-on);
+    border:none;cursor:pointer;
+    padding:11px 22px;border-radius:999px;
+    font-family:inherit;font-size:14px;font-weight:600;
+    transition:transform .15s, box-shadow .25s;
+  }
+  .wiz-next:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 28px -10px var(--accent)}
+  .wiz-next:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Step title + descrição usados dentro dos passos */
+  .wiz-content h2{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:32px;color:var(--text-main) !important;margin:0 0 8px;letter-spacing:-.01em;
+  }
+  .wiz-content p{color:var(--text-muted);font-size:14.5px;line-height:1.55}
+
+  /* Aplicação cards */
+  .aplicacoes-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:16px;margin-top:16px;
+  }
+  .aplic-card{
+    position:relative;text-align:left;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:18px;padding:22px;
+    cursor:pointer;transition:.2s;
+    backdrop-filter:blur(16px);
+    font-family:inherit;color:var(--text-main);
+  }
+  .aplic-card:hover{transform:translateY(-3px);border-color:var(--accent-em);box-shadow:0 20px 40px -16px rgba(0,0,0,.2)}
+  .aplic-card.active{border-color:var(--accent);background:var(--icon-tint)}
+  .aplic-check{
+    position:absolute;top:14px;right:14px;
+    width:24px;height:24px;border-radius:50%;
+    background:var(--accent);color:var(--accent-text-on);
+    display:grid;place-items:center;
+  }
+  .aplic-icon{
+    display:inline-grid;place-items:center;
+    width:44px;height:44px;border-radius:14px;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    color:var(--accent-em);
+    margin-bottom:14px;
+  }
+  .aplic-card.active .aplic-icon{background:var(--accent);color:var(--accent-text-on);border-color:transparent}
+  .aplic-nome{
+    margin:0 0 6px;font-size:15px;font-weight:600;color:var(--text-main) !important;letter-spacing:-.01em;
+  }
+  .aplic-desc{
+    margin:0;font-size:12.5px;line-height:1.5;color:var(--text-muted) !important;
+  }
+
+  @media (max-width:900px){
+    .aplicacoes-grid{grid-template-columns:1fr 1fr}
+    .wiz-step-col{min-width:48px}
+    .wiz-step-label{display:none}
   }
 `
 
