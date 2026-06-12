@@ -608,6 +608,105 @@ const DASH_CSS = `
     color:var(--text-main) !important;
   }
 
+  /* ============================================================
+     EXTRA AGGRESSIVE OVERRIDES — catch every remaining hex pattern
+     used by the legacy pages so they all blend into the theme.
+     ============================================================ */
+  /* every cream-ish surface => transparent so the algae bg shows */
+  .dash-root .content [style*="#fff2da"],
+  .dash-root .content [style*="#f9edd4"],
+  .dash-root .content [style*="#fff6e3"],
+  .dash-root .content [style*="#fdf"],
+  .dash-root .content [style*="#fef"],
+  .dash-root .content [style*="#f5ecd6"],
+  .dash-root .content [style*="#fbf6e7"],
+  .dash-root .content [style*="#e5d9c1"]{
+    background:transparent !important;
+    background-color:transparent !important;
+  }
+  /* every deep-green surface used as solid background => glass card */
+  .dash-root .content [style*="background: #003223"],
+  .dash-root .content [style*="background:#003223"],
+  .dash-root .content [style*="background: #054a37"],
+  .dash-root .content [style*="background:#054a37"],
+  .dash-root .content [style*="background: #00503a"],
+  .dash-root .content [style*="background: #1a2e1a"],
+  .dash-root .content [style*="background-color: #003223"]{
+    background:var(--surface-glass-strong) !important;
+    background-color:var(--surface-glass-strong) !important;
+    color:var(--text-main) !important;
+    border:1px solid var(--border-glass-strong);
+    backdrop-filter:blur(16px);
+  }
+  /* same hex but on buttons => accent CTA */
+  .dash-root .content button[style*="#003223"],
+  .dash-root .content button[style*="#054a37"],
+  .dash-root .content button[style*="#00503a"],
+  .dash-root .content a[style*="#003223"]{
+    background:var(--accent) !important;
+    background-color:var(--accent) !important;
+    color:var(--accent-text-on) !important;
+    border-color:transparent !important;
+  }
+  /* legacy text colors -> themed text */
+  .dash-root .content [style*="color: #211b0c"],
+  .dash-root .content [style*="color:#211b0c"],
+  .dash-root .content [style*="color: white"]{
+    color:var(--text-main) !important;
+  }
+  .dash-root .content [style*="color: #003223"],
+  .dash-root .content [style*="color:#003223"]{
+    color:var(--text-main) !important;
+  }
+  /* legacy borders */
+  .dash-root .content [style*="borderColor: '#e5d9c1'"],
+  .dash-root .content [style*="border-color: #e5d9c1"],
+  .dash-root .content [style*="border: 1px solid #e5d9c1"]{
+    border-color:var(--border-glass) !important;
+  }
+  /* legacy left-accent borders (e.g. validation cards) */
+  .dash-root .content [style*="borderLeft: '3px solid"]{
+    border-left:3px solid var(--accent) !important;
+  }
+  /* native select arrow in dark theme — give it a subtle hue */
+  .dash-root .content select{
+    background-image:linear-gradient(45deg,transparent 50%, var(--text-muted) 50%),linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position:calc(100% - 16px) center, calc(100% - 11px) center;
+    background-size:5px 5px;background-repeat:no-repeat;
+    -webkit-appearance:none;appearance:none;padding-right:34px !important;
+  }
+  .dash-root .content select option{
+    background:#03382a !important;color:#fff1d9 !important;
+  }
+  .dash-root.theme-light .content select option{
+    background:#fff6e3 !important;color:#03382a !important;
+  }
+  /* tabs with hardcoded green borders */
+  .dash-root .content [class*="border-b-2"][class*="border-[#003223]"]{
+    border-bottom-color:var(--accent-em) !important;
+  }
+  /* ring focus colors */
+  .dash-root .content [class*="focus:ring-[#003223]"]:focus,
+  .dash-root .content [class*="focus:border-[#003223]"]:focus{
+    border-color:var(--accent) !important;
+    box-shadow:0 0 0 4px var(--icon-tint) !important;
+  }
+  /* lime/cookbook-style chip backgrounds */
+  .dash-root .content [style*="rgba(200,238,79"],
+  .dash-root .content [style*="rgba(171,208,50"]{
+    background:var(--icon-tint) !important;color:var(--accent-em) !important;
+  }
+  /* labels and helper text — strip dark green so they read on glass */
+  .dash-root .content label,
+  .dash-root .content .label{color:var(--text-main) !important}
+  .dash-root .content small,
+  .dash-root .content .hint{color:var(--text-faint) !important}
+  /* trash/icon hover red staying readable */
+  .dash-root .content .hover\\:text-red-400:hover{color:var(--orange) !important}
+  /* fix input/textarea text inside the content wrapper if Tailwind tries to override */
+  .dash-root .content input,
+  .dash-root .content textarea{color:var(--text-main) !important}
+
   @media (max-width:1180px){
     .dash-root .profile .info{display:none}
     .dash-root .search{width:200px}
