@@ -675,17 +675,30 @@ const DASH_CSS = `
     background-size:5px 5px;background-repeat:no-repeat;
     -webkit-appearance:none;appearance:none;padding-right:34px !important;
   }
-  /* native option popup is rendered by the OS — set readable dark text
-     on the white default background so it works in both themes */
+  /* native option popup — theme-aware:
+     dark mode: dark green bg + cream text
+     light mode: cream bg + green text
+     selected: accent bg in both */
   .dash-root .content select option{
-    background:#ffffff !important;
+    background:#03382a !important;
+    color:#fff1d9 !important;
+    padding:10px 12px;
+    font-family:inherit;
+  }
+  .dash-root.theme-light .content select option{
+    background:#fff6e3 !important;
     color:#03382a !important;
-    padding:8px;
   }
   .dash-root .content select option:checked,
   .dash-root .content select option:hover{
     background:#abd032 !important;
     color:#03382a !important;
+    font-weight:600;
+  }
+  .dash-root.theme-light .content select option:checked,
+  .dash-root.theme-light .content select option:hover{
+    background:#fa5528 !important;
+    color:#ffffff !important;
   }
   /* tabs with hardcoded green borders */
   .dash-root .content [class*="border-b-2"][class*="border-[#003223]"]{
