@@ -471,6 +471,14 @@ export default function ExperimentosPage() {
                     </div>
                   </div>
                   <div className="exp-row-right">
+                    <Link
+                      href={`/experimentos/${exp.id}/diagnostico`}
+                      onClick={e => e.stopPropagation()}
+                      className="diag-quick"
+                      title="Diagnóstico da MIA"
+                    >
+                      <Sparkles size={13} strokeWidth={1.8} /> Diagnóstico
+                    </Link>
                     <button
                       onClick={e => { e.stopPropagation(); abrirEdicao(exp) }}
                       className="trash"
@@ -509,9 +517,9 @@ export default function ExperimentosPage() {
                       </div>
                     )}
                     <div className="exp-row-cta">
-                      <a href={`/experimentos/${exp.id}/diagnostico`} className="btn-accent">
-                        <Sparkles size={14} strokeWidth={1.8} /> Diagnóstico com a MIA
-                      </a>
+                      <Link href={`/experimentos/${exp.id}/diagnostico`} className="btn-accent">
+                        <Sparkles size={14} strokeWidth={1.8} /> Abrir análise completa
+                      </Link>
                     </div>
                   </div>
                 )}
@@ -810,6 +818,16 @@ const EXP_CSS = `
   .exp-row-right{display:flex;align-items:center;gap:8px;color:var(--text-muted)}
   .trash{background:transparent;border:none;color:var(--text-faint) !important;cursor:pointer;padding:6px;display:grid;place-items:center;border-radius:8px}
   .trash:hover{background:var(--hover-tint) !important;color:var(--orange) !important}
+  .diag-quick{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--icon-tint) !important;
+    color:var(--accent-em) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    padding:7px 12px;border-radius:999px;
+    font-size:12px;font-weight:600;text-decoration:none;
+    transition:.15s;
+  }
+  .diag-quick:hover{background:var(--accent) !important;color:var(--accent-text-on) !important;border-color:transparent;transform:translateY(-1px)}
 
   .r-pill{
     display:inline-flex;align-items:center;gap:5px;

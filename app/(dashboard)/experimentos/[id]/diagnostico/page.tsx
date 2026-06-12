@@ -1,7 +1,7 @@
 'use client'
 import { use, useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Sparkles, Send, Loader2, CheckCircle2, AlertCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, Sparkles, Send, Loader2, CheckCircle2, AlertCircle, XCircle, Download } from 'lucide-react'
 
 interface Ingrediente { nome: string; percentual: number | string; funcao: string }
 interface Formulacao {
@@ -218,6 +218,61 @@ export default function DiagnosticoPage({ params }: { params: Promise<{ id: stri
     streamChunked(q, msgs, false, false)
   }
 
+  function baixarDiagnostico() {
+    if (!exp) return
+    const linhas: string[] = []
+    linhas.push('DIAGNÓSTICO MIA · MORPHÊ FOODS')
+    linhas.push('='.repeat(50))
+    linhas.push('')
+    linhas.push(`Experimento: ${exp.formulacao_nome || 'sem identificação'}`)
+    linhas.push(`Data: ${exp.data}`)
+    linhas.push(`Resultado: ${exp.resultado}`)
+    if (exp.problema) linhas.push(`O que aconteceu: ${exp.problema}`)
+    if (exp.peso_impresso_g) linhas.push(`Peso impresso: ${exp.peso_impresso_g} g`)
+    if (exp.descricao) {
+      linhas.push('')
+      linhas.push('Detalhes adicionais:')
+      linhas.push(exp.descricao)
+    }
+    if (form?.ingredientes?.length) {
+      linhas.push('')
+      linhas.push('COMPOSIÇÃO')
+      linhas.push('-'.repeat(50))
+      for (const i of form.ingredientes) {
+        linhas.push(`  ${i.nome} | ${i.percentual}% | ${i.funcao}`)
+      }
+    }
+    if (form?.parametros && Object.keys(form.parametros).length) {
+      linhas.push('')
+      linhas.push('PARÂMETROS USADOS')
+      linhas.push('-'.repeat(50))
+      for (const [k, v] of Object.entries(form.parametros)) {
+        linhas.push(`  ${k}: ${v}`)
+      }
+    }
+    linhas.push('')
+    linhas.push('ANÁLISE E CONVERSA COM A MIA')
+    linhas.push('='.repeat(50))
+    for (const m of msgs) {
+      if (!m.content?.trim()) continue
+      linhas.push('')
+      linhas.push(m.role === 'user' ? `── Você ──` : `── MIA ──`)
+      linhas.push(m.content.replace(/\*\*/g, ''))
+    }
+    linhas.push('')
+    linhas.push('-'.repeat(50))
+    linhas.push(`Documento gerado em ${new Date().toLocaleString('pt-BR')}`)
+    linhas.push('MIA · Morphê Intelligence Assistant')
+
+    const blob = new Blob([linhas.join('\n')], { type: 'text/plain;charset=utf-8' })
+    const a = document.createElement('a')
+    const safeName = (exp.formulacao_nome || 'experimento').replace(/[^a-z0-9-_]+/gi, '_')
+    a.href = URL.createObjectURL(blob)
+    a.download = `diagnostico_${safeName}_${exp.data}.txt`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
   const suggestions = suggestionsFor(exp?.problema)
 
   if (loading) {
@@ -241,9 +296,16 @@ export default function DiagnosticoPage({ params }: { params: Promise<{ id: stri
     <>
       <style>{DIAG_CSS}</style>
 
-      <Link href="/experimentos" className="diag-back">
-        <ArrowLeft size={14} strokeWidth={1.8} /> Voltar aos experimentos
-      </Link>
+      <div className="diag-topbar">
+        <Link href="/experimentos" className="diag-back">
+          <ArrowLeft size={14} strokeWidth={1.8} /> Voltar aos experimentos
+        </Link>
+        {msgs.length > 0 && !streaming && (
+          <button onClick={baixarDiagnostico} className="diag-download">
+            <Download size={14} strokeWidth={1.8} /> Baixar diagnóstico
+          </button>
+        )}
+      </div>
 
       <div className="diag-grid">
         <aside className="diag-context">
@@ -374,13 +436,27 @@ const DIAG_CSS = `
   .spin{animation:diagspin 1s linear infinite}
   @keyframes diagspin{to{transform:rotate(360deg)}}
 
+  .diag-topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:18px;margin-bottom:18px;
+  }
   .diag-back{
     display:inline-flex;align-items:center;gap:8px;
     color:var(--text-muted) !important;text-decoration:none;
-    font-size:13px;margin-bottom:18px;transition:color .15s;
+    font-size:13px;transition:color .15s;
   }
   .diag-back:hover{color:var(--text-main) !important}
   .diag-back-link{color:var(--accent-em) !important;font-weight:600;text-decoration:none}
+  .diag-download{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    color:var(--text-main) !important;
+    padding:9px 16px;border-radius:999px;
+    font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;
+    transition:.15s;backdrop-filter:blur(12px);
+  }
+  .diag-download:hover{background:var(--accent) !important;color:var(--accent-text-on) !important;border-color:transparent}
 
   .diag-loading{
     display:flex;flex-direction:column;align-items:center;justify-content:center;

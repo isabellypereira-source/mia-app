@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import {
   Home,
   FlaskConical,
@@ -48,12 +49,51 @@ const WELCOME_PHRASES = [
   'Sua próxima formulação te espera.',
 ]
 
+function detectGender(nome: string | null | undefined, stored?: string | null): 'f' | 'm' | 'x' {
+  if (stored === 'f' || stored === 'm' || stored === 'x') return stored
+  if (!nome) return 'x'
+  const first = nome.trim().split(/\s+/)[0].toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  if (!first) return 'x'
+  const last = first.slice(-1)
+  // exceções comuns masculinas terminadas em 'a'
+  const excMasc = ['joshua', 'luca', 'noa', 'aba', 'akira']
+  if (excMasc.includes(first)) return 'm'
+  if (last === 'a' || last === 'y' || last === 'e') return 'f'
+  if (last === 'o' || last === 'r') return 'm'
+  return 'x'
+}
+
+function greetingFor(g: 'f' | 'm' | 'x') {
+  if (g === 'f') return 'Bem-vinda'
+  if (g === 'm') return 'Bem-vindo'
+  return 'Bem-vindo(a)'
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [phrase, setPhrase] = useState(WELCOME_PHRASES[0])
   const [searchTerm, setSearchTerm] = useState('')
+  const [user, setUser] = useState<{ nome: string; greet: string; iniciais: string; cargo: string } | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      const meta = (data.user?.user_metadata || {}) as { nome?: string; gender?: string; cargo?: string }
+      const email = data.user?.email || ''
+      const nomeRaw = meta.nome?.trim() || email.split('@')[0] || 'Pesquisador(a)'
+      const primeiroNome = nomeRaw.split(/\s+/)[0]
+      const g = detectGender(nomeRaw, meta.gender)
+      const iniciais = nomeRaw.split(/\s+/).slice(0, 2).map(s => s[0]?.toUpperCase() || '').join('') || 'U'
+      setUser({
+        nome: primeiroNome,
+        greet: greetingFor(g),
+        iniciais,
+        cargo: meta.cargo || 'Pesquisador(a) · Morphê',
+      })
+    })
+  }, [])
 
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="greeting">
               {isHome ? (
                 <>
-                  <h1>Bem-vinda, <em>Isabelly.</em></h1>
+                  <h1>{user?.greet || 'Bem-vindo(a)'}, <em>{user?.nome || 'colega'}.</em></h1>
                   <p>{phrase}</p>
                 </>
               ) : (
@@ -162,10 +202,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span className="ic"><Bell size={18} strokeWidth={1.8} /></span>
               </button>
               <div className="profile">
-                <div className="avatar">IP</div>
+                <div className="avatar">{user?.iniciais || 'U'}</div>
                 <div className="info">
-                  <div className="nm">Isabelly</div>
-                  <div className="rl">Pesquisadora · Morphê</div>
+                  <div className="nm">{user?.nome || 'Você'}</div>
+                  <div className="rl">{user?.cargo || 'Pesquisador(a) · Morphê'}</div>
                 </div>
               </div>
             </div>
