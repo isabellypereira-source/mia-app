@@ -1,7 +1,7 @@
 'use client'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap, Cookie, Soup, Drumstick, IceCream2, Pill, Scissors, Check, ArrowLeft } from 'lucide-react'
+import { FlaskConical, Sparkles, Plus, Trash2, CheckCircle, Save, ArrowRight, X, ExternalLink, Download, Zap, Cookie, Soup, Drumstick, IceCream2, Pill, Layers, Check, ArrowLeft } from 'lucide-react'
 import { gerarSTL, baixarSTL } from '@/lib/prusa-integration'
 import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
@@ -21,27 +21,18 @@ const APLICACOES = [
   { id: 'proteinas',     nome: 'Proteínas e Análogos',    desc: 'Soluções plant-based e híbridas com foco em suculência e estrutura fibrosa avançada.', Icon: Drumstick },
   { id: 'laticinios',    nome: 'Laticínios e Sobremesas', desc: 'Iogurtes, queijos vegetais e sobremesas lácteas com estabilidade térmica superior.',   Icon: IceCream2 },
   { id: 'nutraceuticos', nome: 'Nutracêuticos',           desc: 'Suplementos bioativos em formatos inovadores de entrega de nutrientes.',               Icon: Pill },
-  { id: 'outros',        nome: 'Outras Aplicações',       desc: 'Projetos customizados para demandas específicas de ingredientes e processos.',          Icon: Scissors },
+  { id: 'outros',        nome: 'Outras Aplicações',       desc: 'Projetos customizados para demandas específicas de ingredientes e processos.',          Icon: Layers },
 ]
 
 const TENDENCIAS = ['Alto em Proteína', 'Sem Glúten', 'Funcional / Bioativo', 'Vegano', 'Sem Lactose', 'Alto em Fibra', 'Low Carb']
 
 const INGREDIENTES_SUGERIDOS: Record<string, string[]> = {
-  snacks:        ['Farinha de arroz', 'Proteína de ervilha', 'Xantana', 'Lecitina de girassol'],
-  massas:        ['Farinha de trigo', 'Glúten vital', 'Goma guar', 'Azeite de oliva'],
-  proteinas:     ['Proteína de soja', 'Metilcelulose', 'Beterraba em pó', 'Óleo de coco'],
-  laticinios:    ['Proteína do leite', 'Carragena', 'Goma de alfarroba', 'Amido modificado'],
-  nutraceuticos: ['Spirulina', 'Cúrcuma', 'Quinoa Real', 'Maca Peruana'],
-  outros:        [],
-}
-
-const DICAS_MIA: Record<string, string> = {
-  snacks:        'Com base nas tendências atuais, a categoria de Snacks & Conveniência está crescendo 12% em pedidos plant-based este mês.',
-  massas:        'Massas com proteína vegetal têm 3x mais engajamento em 2024.',
-  proteinas:     'Proteínas análogas lideram pesquisas de impressão 3D alimentar.',
-  laticinios:    'Sobremesas personalizadas têm alto valor percebido pelo consumidor.',
-  nutraceuticos: 'Nutracêuticos em formas impressas aumentam a biodisponibilidade.',
-  outros:        'Projetos customizados permitem diferenciação máxima no mercado.',
+  snacks:        ['Farinha de arroz', 'Proteína de ervilha', 'Xantana', 'Lecitina de girassol', 'Amido de milho', 'Inulina', 'Cacau em pó', 'Fibra de aveia'],
+  massas:        ['Farinha de trigo', 'Glúten vital', 'Goma guar', 'Azeite de oliva', 'Farinha de grão-de-bico', 'Ovo em pó', 'Semolina', 'Cúrcuma'],
+  proteinas:     ['Proteína de soja', 'Metilcelulose', 'Beterraba em pó', 'Óleo de coco', 'Proteína de ervilha', 'Amido modificado', 'Fibra de bambu', 'Lecitina de soja'],
+  laticinios:    ['Proteína do leite', 'Carragena', 'Goma de alfarroba', 'Amido modificado', 'Agar-agar', 'Pectina', 'Gordura de coco', 'Inulina'],
+  nutraceuticos: ['Spirulina', 'Cúrcuma', 'Quinoa Real', 'Maca Peruana', 'Chia', 'Colágeno hidrolisado', 'Psyllium', 'Proteína de arroz'],
+  outros:        ['Farinha de arroz', 'Xantana', 'Proteína de ervilha', 'Amido modificado', 'Goma guar', 'Agar-agar'],
 }
 
 const WIZARD_STEPS = [
@@ -125,7 +116,9 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
         })))
         setValidacao(parsed.observacoes ?? null)
       }
-    } catch { /* usa defaults */ }
+    } catch (err) {
+      console.error('[MIA] Erro ao gerar formulação:', err)
+    }
     setModo('wizard_resultado')
   }
 
@@ -281,17 +274,15 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
   if (modo === 'wizard_app') return (
     <WizardShell
       passo={1}
-      miaIntelDica={aplicacao ? DICAS_MIA[aplicacao] : undefined}
       onCancelar={() => setModo('escolha')}
       onAvancar={() => setModo('wizard_tendencias')}
       avancarDisabled={!aplicacao}
       avancarLabel="Próximo Passo"
-
     >
-      <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Escolha a sua aplicação</h2>
-      <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
-        Selecione o segmento industrial para o qual deseja desenvolver<br />sua nova formulação biônica.
-      </p>
+      <div className="wiz-head">
+        <h2>Escolha a sua <em>aplicação</em></h2>
+        <p>Selecione o segmento industrial para o qual deseja desenvolver sua nova formulação biônica.</p>
+      </div>
       <div className="aplicacoes-grid">
         {APLICACOES.map(a => {
           const ativo = aplicacao === a.id
@@ -315,220 +306,153 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
   if (modo === 'wizard_tendencias') return (
     <WizardShell
       passo={2}
-      miaIntelDica={tendencias.includes('Alto em Proteína') && tendencias.includes('Vegano')
-        ? 'Combinar "Alto em Proteína" e "Vegano" priorizará micro-proteínas de ervilha e sementes de girassol.'
-        : 'Selecione tendências para que a MIA adapte a formulação ao mercado atual.'}
       onCancelar={() => setModo('wizard_app')}
       onAvancar={() => setModo('wizard_ingredientes')}
-      avancarLabel="Próximo"
-
+      avancarLabel="Próximo Passo"
     >
-      <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Tendências nutricionais</h2>
-      <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
-        Selecione as tendências desejadas <span className="opacity-60">(opcional)</span>
-      </p>
-      <div className="flex flex-wrap gap-2.5">
-        {TENDENCIAS.map(t => (
-          <button key={t} onClick={() => toggleTendencia(t)}
-            className="px-4 py-2.5 rounded-xl border-2 text-sm font-sans transition-all duration-150"
-            style={{
-              borderColor: tendencias.includes(t) ? '#003223' : '#e5d9c1',
-              background: tendencias.includes(t) ? 'rgba(0,50,35,0.06)' : 'white',
-              color: tendencias.includes(t) ? '#003223' : '#58413c',
-              fontWeight: tendencias.includes(t) ? 600 : 400,
-            }}>
-            {tendencias.includes(t) && '✓ '}{t}
-          </button>
-        ))}
+      <div className="wiz-head">
+        <h2><em>Tendências</em> nutricionais</h2>
+        <p>Selecione tendências para que a MIA adapte a formulação ao mercado atual. <span className="wiz-opt">(opcional)</span></p>
+      </div>
+      <div className="trend-grid">
+        {TENDENCIAS.map(t => {
+          const on = tendencias.includes(t)
+          return (
+            <button key={t} onClick={() => toggleTendencia(t)} className={`trend-chip ${on ? 'on' : ''}`}>
+              {on && <Check size={13} strokeWidth={2.5} />} {t}
+            </button>
+          )
+        })}
       </div>
     </WizardShell>
   )
 
   // ─── WIZARD: INGREDIENTES ─────────────────────────────────────
-  if (modo === 'wizard_ingredientes') return (
-    <WizardShell
-      passo={3}
-      miaIntelDica="Adicione os ingredientes principais. A MIA calculará proporções, sinergia e parâmetros de extrusão automaticamente."
-      onCancelar={() => setModo('wizard_tendencias')}
-      onAvancar={gerarComMIA}
-      avancarLabel="Gerar com MIA"
-      avancarIcon={<Sparkles size={14} />}
+  if (modo === 'wizard_ingredientes') {
+    const sugestoes = (INGREDIENTES_SUGERIDOS[aplicacao] ?? []).filter(s => !ingredientesWizard.includes(s))
+    return (
+      <WizardShell
+        passo={3}
+        onCancelar={() => setModo('wizard_tendencias')}
+        onAvancar={gerarComMIA}
+        avancarLabel="Gerar com MIA"
+        avancarIcon={<Sparkles size={14} />}
+      >
+        <div className="wiz-head">
+          <h2><em>Ingredientes</em> base</h2>
+          <p>Adicione os ingredientes principais. A MIA calculará proporções, sinergia e parâmetros de extrusão automaticamente.</p>
+        </div>
 
-    >
-      <h2 className="font-display font-bold text-2xl mb-2" style={{ color: '#003223', letterSpacing: '-0.02em' }}>Ingrediente(s) base</h2>
-      <p className="text-sm font-sans mb-8" style={{ color: '#58413c' }}>
-        Selecione os elementos fundamentais. A MIA irá otimizar a formulação completa.
-      </p>
-      <div className="flex gap-2 mb-4">
-        <input value={buscaIngrediente} onChange={e => setBuscaIngrediente(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && addIngredienteWizard(buscaIngrediente)}
-          placeholder="Ex: cenoura, batata-doce, proteína de ervilha..."
-          className="flex-1 bg-white rounded-xl border border-[#e5d9c1] px-4 py-2.5 text-sm font-sans focus:outline-none focus:border-[#003223] transition-colors"
-          style={{ color: '#211b0c' }} />
-        <button onClick={() => addIngredienteWizard(buscaIngrediente)} disabled={!buscaIngrediente.trim()}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 transition-colors"
-          style={{ background: '#003223', color: 'white' }}>
-          <Plus size={14} /> Adicionar
-        </button>
-      </div>
-      {(INGREDIENTES_SUGERIDOS[aplicacao] ?? []).length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-5">
-          {(INGREDIENTES_SUGERIDOS[aplicacao] ?? []).filter(s => !ingredientesWizard.includes(s)).map(s => (
-            <button key={s} onClick={() => addIngredienteWizard(s)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[#e5d9c1] text-xs font-sans transition-colors hover:border-[#003223] hover:text-[#003223]"
-              style={{ color: '#58413c', background: '#fff2da' }}>
-              <Plus size={10} /> {s}
-            </button>
-          ))}
+        <div className="ing-layout">
+          {/* Left: input + suggestions */}
+          <div className="ing-left">
+            <div className="ing-form">
+              <input value={buscaIngrediente} onChange={e => setBuscaIngrediente(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addIngredienteWizard(buscaIngrediente)}
+                placeholder="Ex: cenoura, batata-doce, proteína de ervilha..."
+                className="ing-input" />
+              <button onClick={() => addIngredienteWizard(buscaIngrediente)} disabled={!buscaIngrediente.trim()}
+                className="ing-add">
+                <Plus size={14} /> Adicionar
+              </button>
+            </div>
+            {sugestoes.length > 0 && (
+              <>
+                <p className="ing-section-label">Sugestões para {APLICACOES.find(a => a.id === aplicacao)?.nome ?? 'sua aplicação'}</p>
+                <div className="ing-suggest">
+                  {sugestoes.map(s => (
+                    <button key={s} onClick={() => addIngredienteWizard(s)} className="ing-sug-chip">
+                      <Plus size={11} /> {s}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Right: selected (always visible) */}
+          <div className={`ing-right ${ingredientesWizard.length > 0 ? 'has-items' : ''}`}>
+            <div className="ing-right-header">
+              <Sparkles size={14} />
+              <span>Ingredientes selecionados</span>
+              {ingredientesWizard.length > 0 && <span className="ing-count">{ingredientesWizard.length}</span>}
+            </div>
+            {ingredientesWizard.length === 0 ? (
+              <p className="ing-empty">Clique nas sugestões ou adicione pelo campo ao lado para montar sua base.</p>
+            ) : (
+              <div className="ing-selected">
+                {ingredientesWizard.map((item, idx) => (
+                  <span key={item} className="ing-sel-chip" style={{ animationDelay: `${idx * 60}ms` }}>
+                    <span className="ing-sel-num">{idx + 1}</span>
+                    {item}
+                    <button onClick={() => removeIngredienteWizard(item)} aria-label="Remover"><X size={12} /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      )}
-      {ingredientesWizard.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {ingredientesWizard.map(i => (
-            <span key={i} className="flex items-center gap-1.5 text-xs font-sans px-3 py-1.5 rounded-full"
-              style={{ background: 'rgba(0,50,35,0.08)', color: '#003223', border: '1px solid rgba(0,50,35,0.15)' }}>
-              {i}
-              <button onClick={() => removeIngredienteWizard(i)} className="opacity-60 hover:opacity-100"><X size={10} /></button>
-            </span>
-          ))}
-        </div>
-      )}
-    </WizardShell>
-  )
+      </WizardShell>
+    )
+  }
 
   // ─── WIZARD: PROCESSANDO ──────────────────────────────────────
-  if (modo === 'wizard_processando') return (
-    <div className="h-full flex items-center justify-center p-6" style={{ background: '#fff8f1' }}>
-      <div className="text-center max-w-sm animate-slide-up">
-        <div className="relative mx-auto w-20 h-20 mb-6">
-          <div className="w-20 h-20 rounded-full border-2 border-[#e5d9c1] bg-white flex items-center justify-center shadow-tonal">
-            <FlaskConical size={32} style={{ color: '#003223' }} className="animate-pulse" />
-          </div>
-          <div className="absolute top-0 right-0 w-4 h-4 rounded-full animate-bounce" style={{ background: '#c8ee4f' }} />
-          <div className="absolute bottom-0 left-0 w-3 h-3 rounded-full animate-bounce" style={{ background: 'rgba(0,50,35,0.2)', animationDelay: '150ms' }} />
-        </div>
-        <h2 className="font-display font-bold text-xl mb-2" style={{ color: '#003223' }}>MIA está formulando...</h2>
-        <p className="text-sm font-sans mb-6" style={{ color: '#58413c' }}>Buscando referências e calculando parâmetros</p>
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          {['Ajustando viscosidade', 'Sinergia de bioativos', 'Teste de estabilidade'].map((s, i) => (
-            <span key={s} className="px-3 py-1 rounded-full text-xs font-sans border"
-              style={{ borderColor: i === 0 ? '#003223' : '#e5d9c1', color: i === 0 ? '#003223' : '#707974', background: 'white' }}>{s}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+  if (modo === 'wizard_processando') return (<LoadingScreen title="MIA está formulando..." subtitle="Buscando referências e calculando parâmetros" />)
 
   // ─── STL: GERANDO ─────────────────────────────────────────────
-  if (modo === 'stl_gerando') return (
-    <div className="h-full flex items-center justify-center p-6" style={{ background: '#fff8f1' }}>
-      <div className="text-center max-w-sm animate-slide-up">
-        <div className="relative mx-auto w-20 h-20 mb-6">
-          <div className="w-20 h-20 rounded-full border-2 border-[#e5d9c1] bg-white flex items-center justify-center shadow-tonal">
-            <Zap size={32} style={{ color: '#003223' }} className="animate-pulse" />
-          </div>
-          <div className="absolute top-0 right-0 w-4 h-4 rounded-full animate-bounce" style={{ background: '#c8ee4f' }} />
-        </div>
-        <h2 className="font-display font-bold text-xl mb-2" style={{ color: '#003223' }}>Gerando STL 3D...</h2>
-        <p className="text-sm font-sans mb-6" style={{ color: '#58413c' }}>Calculando geometria e volume</p>
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          {['Forma do objeto', 'Densidade material', 'Dimensões'].map((s, i) => (
-            <span key={s} className="px-3 py-1 rounded-full text-xs font-sans border"
-              style={{ borderColor: i === 0 ? '#003223' : '#e5d9c1', color: i === 0 ? '#003223' : '#707974', background: 'white' }}>{s}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+  if (modo === 'stl_gerando') return (<LoadingScreen title="Gerando STL 3D..." subtitle="Calculando geometria e volume" />)
 
   // ─── STL: PRONTO ──────────────────────────────────────────────
   if (modo === 'stl_pronto') return (
-    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
-      <div className="px-8 py-5 border-b" style={{ background: '#fff2da', borderColor: '#e5d9c1' }}>
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <button onClick={() => setModo('validar')}
-            className="text-xs font-sans transition-colors hover:text-[#003223]" style={{ color: '#58413c' }}>← Voltar</button>
-          <h1 className="font-display font-bold text-lg" style={{ color: '#003223' }}>STL Gerado com Sucesso</h1>
+    <>
+      <style>{STL_CSS}</style>
+      <div className="stl-root">
+        <div className="stl-header">
+          <button onClick={() => setModo('validar')} className="stl-back">← Voltar</button>
+          <h1 className="stl-title">STL Gerado com Sucesso</h1>
         </div>
-      </div>
 
-      <div className="max-w-2xl mx-auto px-8 py-6 space-y-4">
-        {stlError && (
-          <div className="p-4 rounded-2xl bg-red-50 border-l-4 border-red-500">
-            <p className="text-sm font-sans" style={{ color: '#7f1d1d' }}>{stlError}</p>
-          </div>
-        )}
-
-        <div className="bg-white rounded-2xl shadow-tonal p-6 text-center">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#f0f9ff' }}>
-            <Download size={28} style={{ color: '#003223' }} />
-          </div>
-          <h2 className="font-display font-bold text-lg mb-2" style={{ color: '#003223' }}>
-            {stlResult?.filename}
-          </h2>
-          <p className="text-sm font-sans mb-6" style={{ color: '#58413c' }}>Seu arquivo STL está pronto para download</p>
-
-          {stlResult?.metadata && (
-            <div className="grid grid-cols-2 gap-3 mb-6 p-4 rounded-xl" style={{ background: '#f9edd4' }}>
-              <div>
-                <p className="text-xs font-sans" style={{ color: '#707974' }}>Volume</p>
-                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
-                  {(stlResult.metadata.volume_mm3 / 1000).toFixed(1)} cm³
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-sans" style={{ color: '#707974' }}>Peso Estimado</p>
-                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
-                  {stlResult.metadata.peso_estimado_g.toFixed(1)}g
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-sans" style={{ color: '#707974' }}>Tempo de Impressão</p>
-                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
-                  ~{stlResult.metadata.tempo_impressao_estimado_min}min
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-sans" style={{ color: '#707974' }}>Forma</p>
-                <p className="text-sm font-display font-bold" style={{ color: '#003223' }}>
-                  {stlResult.metadata.forma}
-                </p>
-              </div>
-            </div>
+        <div className="stl-body">
+          {stlError && (
+            <div className="stl-error"><p>{stlError}</p></div>
           )}
 
-          <button onClick={baixarSTLHandler}
-            className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl text-sm font-display font-semibold transition-colors hover:opacity-90"
-            style={{ background: '#003223', color: 'white' }}>
-            <Download size={16} /> Baixar STL
+          <div className="stl-card">
+            <div className="stl-icon-wrap"><Download size={28} /></div>
+            <h2>{stlResult?.filename}</h2>
+            <p className="stl-desc">Seu arquivo STL está pronto para download</p>
+
+            {stlResult?.metadata && (
+              <div className="stl-meta-grid">
+                <div><span>Volume</span><strong>{(stlResult.metadata.volume_mm3 / 1000).toFixed(1)} cm³</strong></div>
+                <div><span>Peso Estimado</span><strong>{stlResult.metadata.peso_estimado_g.toFixed(1)}g</strong></div>
+                <div><span>Tempo de Impressão</span><strong>~{stlResult.metadata.tempo_impressao_estimado_min}min</strong></div>
+                <div><span>Forma</span><strong>{stlResult.metadata.forma}</strong></div>
+              </div>
+            )}
+
+            <button onClick={baixarSTLHandler} className="stl-download">
+              <Download size={16} /> Baixar STL
+            </button>
+          </div>
+
+          <div className="stl-info">
+            <h3>Próximos passos</h3>
+            <p>
+              1. Abra o PrusaSlicer em seu computador<br />
+              2. Importe este arquivo STL (File → Open)<br />
+              3. Configure os parâmetros de impressão<br />
+              4. Exporte o G-code<br />
+              5. Faça upload do G-code aqui para registrar o experimento
+            </p>
+          </div>
+
+          <button onClick={() => setModo('validar')} className="stl-back-btn">
+            <ArrowRight size={16} /> Voltar à Formulação
           </button>
         </div>
-
-        <div className="bg-[#f9edd4] rounded-2xl p-6 border-l-4" style={{ borderColor: '#003223' }}>
-          <div className="flex items-start gap-3">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#003223' }}>
-              <span className="material-symbols-outlined text-white" style={{ fontSize: '14px', fontVariationSettings: "'FILL' 1" }}>info</span>
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-display font-bold text-sm" style={{ color: '#003223' }}>Próximos passos</h3>
-              <p className="text-sm font-sans leading-relaxed" style={{ color: '#58413c' }}>
-                1. Abra o PrusaSlicer em seu computador<br />
-                2. Importe este arquivo STL (File → Open)<br />
-                3. Configure os parâmetros de impressão<br />
-                4. Exporte o G-code<br />
-                5. Faça upload do G-code aqui para registrar o experimento
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <button onClick={() => setModo('validar')}
-          className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-display font-semibold transition-colors"
-          style={{ background: '#003223', color: 'white' }}>
-          <ArrowRight size={16} /> Voltar à Formulação
-        </button>
       </div>
-    </div>
+    </>
   )
 
   // ─── WIZARD: RESULTADO / INPUT MANUAL ────────────────────────
@@ -781,7 +705,6 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
 function WizardShell({
   passo,
   children,
-  miaIntelDica,
   onCancelar,
   onAvancar,
   avancarDisabled,
@@ -790,7 +713,6 @@ function WizardShell({
 }: {
   passo: number
   children: React.ReactNode
-  miaIntelDica?: string
   onCancelar: () => void
   onAvancar: () => void
   avancarDisabled?: boolean
@@ -811,7 +733,7 @@ function WizardShell({
               <div key={step.id} className="wiz-step-wrap">
                 <div className="wiz-step-col">
                   <div className={`wiz-step-dot ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}>
-                    {isDone ? <Check size={13} strokeWidth={2.5} /> : num}
+                    {isDone ? <Check size={14} strokeWidth={2.5} /> : num}
                   </div>
                   <span className={`wiz-step-label ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}>
                     {step.label}
@@ -824,17 +746,6 @@ function WizardShell({
             )
           })}
         </div>
-
-        {/* MIA Dica como banner inline (não bloqueia mais o botão) */}
-        {miaIntelDica && (
-          <div className="wiz-mia-banner">
-            <div className="wiz-mia-ic"><Sparkles size={14} strokeWidth={1.8} /></div>
-            <div className="wiz-mia-text">
-              <span className="wiz-mia-label">MIA Intelligence</span>
-              <p>{miaIntelDica}</p>
-            </div>
-          </div>
-        )}
 
         {/* Content */}
         <div className="wiz-content">{children}</div>
@@ -852,6 +763,187 @@ function WizardShell({
     </>
   )
 }
+
+const LOADING_STEPS = [
+  'Analisando ingredientes',
+  'Calculando sinergia',
+  'Otimizando proporções',
+  'Ajustando viscosidade',
+  'Validando extrusão',
+  'Refinando formulação',
+]
+
+function LoadingScreen({ title, subtitle }: { title: string; subtitle: string }) {
+  const [activeStep, setActiveStep] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveStep(prev => (prev + 1) % LOADING_STEPS.length)
+    }, 1800)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <>
+      <style>{LOADING_CSS}</style>
+      <div className="load-root">
+        <div className="load-center">
+          <div className="load-logo-wrap">
+            <div className="load-ring" />
+            <img src="/mia-logo.png" alt="MIA" className="load-logo" />
+          </div>
+          <h2 className="load-title">{title}</h2>
+          <p className="load-sub">{subtitle}</p>
+          <div className="load-chips">
+            {LOADING_STEPS.map((s, i) => (
+              <span key={s} className={`load-chip ${i === activeStep ? 'active' : ''}`}>
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+const LOADING_CSS = `
+  .load-root{
+    display:flex;align-items:center;justify-content:center;
+    min-height:calc(100vh - 120px);
+    padding:40px;
+  }
+  .load-center{
+    text-align:center;max-width:560px;
+    animation:loadFadeIn .5s ease-out;
+  }
+  @keyframes loadFadeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+  .load-logo-wrap{
+    position:relative;
+    width:110px;height:110px;
+    margin:0 auto 32px;
+  }
+  .load-ring{
+    position:absolute;inset:-6px;
+    border-radius:50%;
+    border:2.5px solid var(--border-glass-strong);
+    border-top-color:var(--accent);
+    animation:loadSpin 1.2s linear infinite;
+  }
+  @keyframes loadSpin{to{transform:rotate(360deg)}}
+  .load-logo{
+    width:100%;height:100%;
+    border-radius:50%;
+    object-fit:contain;
+    background:var(--surface-glass-strong);
+    border:1px solid var(--border-glass);
+    padding:18px;
+    backdrop-filter:blur(12px);
+  }
+
+  .load-title{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:clamp(28px,3.2vw,38px);letter-spacing:-.015em;
+    color:var(--text-main);margin:0 0 10px;
+  }
+  .load-sub{
+    font-size:15px;color:var(--text-muted);margin:0 0 32px;line-height:1.5;
+  }
+
+  .load-chips{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+  }
+  .load-chip{
+    padding:8px 18px;border-radius:999px;
+    font-size:13px;font-weight:500;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass-strong);
+    color:var(--text-faint);
+    transition:all .4s ease;
+    backdrop-filter:blur(10px);
+  }
+  .load-chip.active{
+    background:var(--accent);
+    color:var(--accent-text-on);
+    border-color:var(--accent);
+    box-shadow:0 8px 22px -8px var(--accent);
+    transform:scale(1.06);
+    font-weight:600;
+  }
+`
+
+const STL_CSS = `
+  .stl-root{max-width:760px;margin:0 auto;padding:0 24px}
+  .stl-header{
+    display:flex;align-items:center;gap:14px;
+    padding:16px 0;border-bottom:1px solid var(--border-glass);margin-bottom:24px;
+  }
+  .stl-back{
+    background:transparent;border:none;cursor:pointer;
+    color:var(--text-muted);font-family:inherit;font-size:13px;
+    padding:6px 10px;border-radius:8px;transition:.15s;
+  }
+  .stl-back:hover{background:var(--hover-tint);color:var(--text-main)}
+  .stl-title{font-size:18px;font-weight:600;color:var(--text-main);margin:0}
+
+  .stl-body{display:flex;flex-direction:column;gap:18px;padding-bottom:40px}
+  .stl-error{
+    padding:14px 18px;border-radius:14px;
+    background:rgba(220,38,38,.1);border-left:3px solid rgba(220,38,38,.6);
+  }
+  .stl-error p{margin:0;font-size:14px;color:var(--text-main)}
+
+  .stl-card{
+    background:var(--surface-glass-strong);
+    border:1px solid var(--border-glass-strong);
+    border-radius:20px;padding:28px;text-align:center;
+    backdrop-filter:blur(16px);
+  }
+  .stl-icon-wrap{
+    width:60px;height:60px;border-radius:50%;
+    display:grid;place-items:center;
+    background:var(--icon-tint);color:var(--accent-em);
+    margin:0 auto 16px;
+  }
+  .stl-card h2{font-size:18px;font-weight:600;color:var(--text-main);margin:0 0 6px}
+  .stl-desc{font-size:14px;color:var(--text-muted);margin:0 0 20px}
+
+  .stl-meta-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;
+    padding:16px;border-radius:14px;
+    background:var(--surface-glass);margin-bottom:20px;text-align:left;
+  }
+  .stl-meta-grid span{font-size:12px;color:var(--text-faint);display:block;margin-bottom:4px}
+  .stl-meta-grid strong{font-size:14px;color:var(--text-main);font-weight:600}
+
+  .stl-download{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:12px;border-radius:14px;
+    background:var(--accent);color:var(--accent-text-on);
+    border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;
+    transition:.15s;
+  }
+  .stl-download:hover{transform:translateY(-1px);box-shadow:0 12px 26px -10px var(--accent)}
+
+  .stl-info{
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass-strong);
+    border-left:3px solid var(--accent-em);
+    border-radius:16px;padding:18px 22px;
+  }
+  .stl-info h3{font-size:14px;font-weight:600;color:var(--text-main);margin:0 0 8px}
+  .stl-info p{font-size:14px;color:var(--text-muted);line-height:1.65;margin:0}
+
+  .stl-back-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;padding:12px;border-radius:14px;
+    background:var(--accent);color:var(--accent-text-on);
+    border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;
+    transition:.15s;
+  }
+  .stl-back-btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px -10px var(--accent)}
+`
 
 const ESCOLHA_CSS = `
   .escolha-wrap{
@@ -960,63 +1052,63 @@ const ESCOLHA_CSS = `
 
 const WIZARD_CSS = `
   .wiz-root{
-    display:flex;flex-direction:column;height:100%;
-    max-width:1100px;margin:0 auto;padding:0 24px 24px;
+    display:flex;flex-direction:column;
+    width:100%;max-width:1180px;margin:0 auto;
+    padding:18px 32px 24px;
     color:var(--text-main);
+    min-height:calc(100vh - 120px);
   }
+
+  /* ── Step bar ───────────────────────────────────────── */
   .wiz-steps{
     display:flex;align-items:flex-start;
-    padding:18px 8px 26px;
+    padding:4px 8px 22px;
     border-bottom:1px solid var(--border-glass);
-    margin-bottom:24px;
+    margin-bottom:28px;
   }
-  .wiz-step-wrap{display:flex;align-items:flex-start;flex:1;gap:8px}
-  .wiz-step-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:80px}
+  .wiz-step-wrap{display:flex;align-items:flex-start;flex:1;gap:10px}
+  .wiz-step-col{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:90px}
   .wiz-step-dot{
-    width:32px;height:32px;border-radius:50%;
+    width:34px;height:34px;border-radius:50%;
     display:grid;place-items:center;
-    background:transparent;
+    background:var(--surface-glass-strong);
     border:1.5px solid var(--border-glass-strong);
-    color:var(--text-faint);
+    color:var(--text-muted);
     font-weight:600;font-size:13px;
-    transition:.2s;
+    transition:.25s;
+    backdrop-filter:blur(10px);
   }
   .wiz-step-dot.done{background:var(--accent-em);color:var(--accent-text-on);border-color:transparent}
-  .wiz-step-dot.active{background:var(--accent);color:var(--accent-text-on);border-color:transparent;box-shadow:0 0 0 4px var(--icon-tint)}
-  .wiz-step-label{font-size:11.5px;color:var(--text-faint);font-weight:500}
+  .wiz-step-dot.active{background:var(--accent);color:var(--accent-text-on);border-color:transparent;box-shadow:0 0 0 5px var(--icon-tint)}
+  .wiz-step-label{font-size:12px;color:var(--text-faint);font-weight:500;letter-spacing:.01em}
   .wiz-step-label.active{color:var(--text-main);font-weight:600}
   .wiz-step-label.done{color:var(--text-muted)}
   .wiz-step-line{
-    flex:1;height:1px;margin-top:16px;
-    background:repeating-linear-gradient(90deg, var(--border-glass) 0 6px, transparent 6px 12px);
+    flex:1;height:1.5px;margin-top:17px;border-radius:2px;
+    background:repeating-linear-gradient(90deg, var(--border-glass-strong) 0 6px, transparent 6px 12px);
   }
   .wiz-step-line.done{background:var(--accent-em)}
 
-  .wiz-mia-banner{
-    display:flex;align-items:center;gap:14px;
-    background:var(--surface-glass);
-    border:1px solid var(--border-glass-strong);
-    border-left:3px solid var(--accent-em);
-    border-radius:14px;padding:14px 18px;margin-bottom:24px;
-    backdrop-filter:blur(12px);
-  }
-  .wiz-mia-ic{
-    width:36px;height:36px;border-radius:12px;
-    background:var(--icon-tint);color:var(--accent-em);
-    display:grid;place-items:center;flex-shrink:0;
-  }
-  .wiz-mia-text{flex:1;min-width:0}
-  .wiz-mia-label{
-    display:block;font-size:10.5px;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--accent-em);font-weight:700;margin-bottom:2px;
-  }
-  .wiz-mia-text p{margin:0;font-size:13px;color:var(--text-muted);line-height:1.5}
+  /* ── Content area ──────────────────────────────────── */
+  .wiz-content{flex:1;padding:8px 0 28px}
 
-  .wiz-content{flex:1;overflow-y:auto;padding-bottom:24px}
+  .wiz-head{margin-bottom:30px;max-width:720px}
+  .wiz-head h2{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:clamp(30px,3.4vw,42px);line-height:1.08;letter-spacing:-.015em;
+    color:var(--text-main) !important;margin:0 0 10px;
+  }
+  .wiz-head h2 em{font-style:italic;color:var(--accent-em) !important;font-family:inherit}
+  .wiz-head p{
+    color:var(--text-muted) !important;
+    font-size:15px;line-height:1.55;margin:0;
+  }
+  .wiz-head .wiz-opt{color:var(--text-faint);font-size:13.5px;margin-left:4px}
 
+  /* ── Footer ────────────────────────────────────────── */
   .wiz-footer{
     display:flex;align-items:center;justify-content:space-between;
-    padding-top:18px;border-top:1px solid var(--border-glass);
+    padding-top:20px;border-top:1px solid var(--border-glass);
     margin-top:auto;
   }
   .wiz-back{
@@ -1030,62 +1122,187 @@ const WIZARD_CSS = `
     display:inline-flex;align-items:center;gap:8px;
     background:var(--accent);color:var(--accent-text-on);
     border:none;cursor:pointer;
-    padding:11px 22px;border-radius:999px;
+    padding:12px 26px;border-radius:999px;
     font-family:inherit;font-size:14px;font-weight:600;
     transition:transform .15s, box-shadow .25s;
   }
-  .wiz-next:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 28px -10px var(--accent)}
-  .wiz-next:disabled{opacity:.5;cursor:not-allowed}
+  .wiz-next:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 30px -10px var(--accent)}
+  .wiz-next:disabled{opacity:.45;cursor:not-allowed}
 
-  /* Step title + descrição usados dentro dos passos */
-  .wiz-content h2{
-    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
-    font-size:32px;color:var(--text-main) !important;margin:0 0 8px;letter-spacing:-.01em;
-  }
-  .wiz-content p{color:var(--text-muted);font-size:14.5px;line-height:1.55}
-
-  /* Aplicação cards */
+  /* ── Aplicação grid ────────────────────────────────── */
   .aplicacoes-grid{
     display:grid;grid-template-columns:repeat(3,1fr);
-    gap:16px;margin-top:16px;
+    gap:18px;
   }
   .aplic-card{
     position:relative;text-align:left;
     background:var(--surface-glass-strong);
     border:1.5px solid var(--border-glass-strong);
-    border-radius:18px;padding:22px;
+    border-radius:20px;padding:22px 22px 24px;
     cursor:pointer;transition:.2s;
     backdrop-filter:blur(16px);
     font-family:inherit;color:var(--text-main);
+    min-height:158px;
   }
-  .aplic-card:hover{transform:translateY(-3px);border-color:var(--accent-em);box-shadow:0 20px 40px -16px rgba(0,0,0,.2)}
+  .aplic-card:hover{transform:translateY(-3px);border-color:var(--accent-em);box-shadow:0 22px 44px -18px rgba(0,0,0,.28)}
   .aplic-card.active{border-color:var(--accent);background:var(--icon-tint)}
   .aplic-check{
     position:absolute;top:14px;right:14px;
-    width:24px;height:24px;border-radius:50%;
+    width:26px;height:26px;border-radius:50%;
     background:var(--accent);color:var(--accent-text-on);
     display:grid;place-items:center;
   }
   .aplic-icon{
     display:inline-grid;place-items:center;
-    width:44px;height:44px;border-radius:14px;
-    background:var(--surface-glass);
+    width:46px;height:46px;border-radius:14px;
+    background:var(--icon-tint);
     border:1px solid var(--border-glass);
     color:var(--accent-em);
     margin-bottom:14px;
   }
   .aplic-card.active .aplic-icon{background:var(--accent);color:var(--accent-text-on);border-color:transparent}
   .aplic-nome{
-    margin:0 0 6px;font-size:15px;font-weight:600;color:var(--text-main) !important;letter-spacing:-.01em;
+    margin:0 0 6px;font-size:16px;font-weight:600;
+    color:var(--text-main) !important;letter-spacing:-.01em;
   }
   .aplic-desc{
-    margin:0;font-size:12.5px;line-height:1.5;color:var(--text-muted) !important;
+    margin:0;font-size:13px;line-height:1.5;
+    color:var(--text-muted) !important;
   }
 
-  @media (max-width:900px){
+  /* ── Tendências ────────────────────────────────────── */
+  .trend-grid{
+    display:flex;flex-wrap:wrap;gap:12px;
+    max-width:880px;
+  }
+  .trend-chip{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 22px;border-radius:999px;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    color:var(--text-main);
+    font-family:inherit;font-size:14px;font-weight:500;
+    cursor:pointer;transition:.18s;
+    backdrop-filter:blur(12px);
+  }
+  .trend-chip:hover{border-color:var(--accent-em);transform:translateY(-1px)}
+  .trend-chip.on{
+    background:var(--accent);color:var(--accent-text-on);
+    border-color:var(--accent);font-weight:600;
+    box-shadow:0 10px 24px -10px var(--accent);
+  }
+
+  /* ── Ingredientes (two-column layout) ────────────── */
+  .ing-layout{
+    display:grid;grid-template-columns:1fr 340px;gap:28px;
+    align-items:start;
+  }
+  .ing-left{}
+  .ing-form{
+    display:flex;gap:10px;margin-bottom:20px;
+  }
+  .ing-input{
+    flex:1;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    color:var(--text-main);
+    border-radius:14px;padding:13px 18px;
+    font-family:inherit;font-size:14.5px;
+    transition:.15s;backdrop-filter:blur(12px);
+  }
+  .ing-input::placeholder{color:var(--text-faint)}
+  .ing-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--icon-tint)}
+  .ing-add{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:13px 22px;border-radius:14px;
+    background:var(--accent);color:var(--accent-text-on);
+    border:none;cursor:pointer;
+    font-family:inherit;font-size:14px;font-weight:600;
+    transition:transform .15s, box-shadow .25s, opacity .15s;
+    white-space:nowrap;
+  }
+  .ing-add:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 12px 26px -10px var(--accent)}
+  .ing-add:disabled{opacity:.4;cursor:not-allowed}
+
+  .ing-section-label{
+    font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--text-faint);font-weight:600;
+    margin:4px 0 12px;
+  }
+  .ing-suggest{display:flex;flex-wrap:wrap;gap:8px}
+  .ing-sug-chip{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:9px 16px;border-radius:999px;
+    background:var(--surface-glass);
+    border:1.5px dashed var(--border-glass-strong);
+    color:var(--text-muted);
+    font-family:inherit;font-size:13px;
+    cursor:pointer;transition:.2s;
+  }
+  .ing-sug-chip:hover{border-style:solid;border-color:var(--accent-em);color:var(--text-main);background:var(--icon-tint);transform:translateY(-2px)}
+
+  /* Right panel: selected items */
+  .ing-right{
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:20px;
+    padding:20px;
+    backdrop-filter:blur(16px);
+    min-height:200px;
+    transition:.3s;
+  }
+  .ing-right.has-items{border-color:var(--accent-em)}
+  .ing-right-header{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:600;color:var(--accent-em);
+    margin-bottom:16px;letter-spacing:.02em;
+  }
+  .ing-count{
+    margin-left:auto;
+    width:24px;height:24px;border-radius:50%;
+    background:var(--accent);color:var(--accent-text-on);
+    display:grid;place-items:center;
+    font-size:12px;font-weight:700;
+  }
+  .ing-empty{
+    color:var(--text-faint) !important;font-size:13.5px;line-height:1.55;
+    text-align:center;padding:20px 8px;margin:0;
+  }
+  .ing-selected{display:flex;flex-direction:column;gap:8px}
+  .ing-sel-chip{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 14px;border-radius:14px;
+    background:var(--icon-tint);
+    border:1px solid var(--accent-em);
+    color:var(--text-main);
+    font-family:inherit;font-size:14px;font-weight:500;
+    animation:ingSlideIn .25s ease-out both;
+  }
+  @keyframes ingSlideIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+  .ing-sel-num{
+    width:22px;height:22px;border-radius:50%;
+    background:var(--accent);color:var(--accent-text-on);
+    display:grid;place-items:center;
+    font-size:11px;font-weight:700;flex-shrink:0;
+  }
+  .ing-sel-chip button{
+    display:grid;place-items:center;
+    background:transparent;border:none;cursor:pointer;
+    color:var(--text-faint);padding:0;margin-left:auto;
+    opacity:.7;transition:.15s;
+  }
+  .ing-sel-chip button:hover{opacity:1;color:var(--accent-em);transform:scale(1.15)}
+
+  @media (max-width:980px){
     .aplicacoes-grid{grid-template-columns:1fr 1fr}
+    .ing-layout{grid-template-columns:1fr;gap:20px}
+    .ing-right{min-height:auto}
+  }
+  @media (max-width:700px){
+    .aplicacoes-grid{grid-template-columns:1fr}
     .wiz-step-col{min-width:48px}
     .wiz-step-label{display:none}
+    .wiz-root{padding:16px 18px}
   }
 `
 
