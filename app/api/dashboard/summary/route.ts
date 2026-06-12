@@ -95,6 +95,12 @@ export async function GET() {
   const totalForms = formsAll.data?.length || 0
   const pendingExperiment = Math.max(totalForms - formsWithExperiment.size, 0)
 
+  const { count: troubledCount } = await supabase
+    .from('experimentos')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .in('resultado', ['falha', 'parcial'])
+
   return NextResponse.json({
     continueFormulation: lastForm.data,
     weekStats: {
@@ -105,5 +111,6 @@ export async function GET() {
     activity: activity.slice(0, 6),
     totalForms,
     pendingExperiment,
+    troubledExperiments: troubledCount ?? 0,
   })
 }

@@ -29,6 +29,7 @@ type Summary = {
   activity: ActivityItem[]
   totalForms: number
   pendingExperiment: number
+  troubledExperiments: number
 }
 
 function formatRel(iso: string): string {
@@ -72,6 +73,7 @@ export default function DashboardPage() {
   const acts = data?.activity || []
   const pending = data?.pendingExperiment || 0
   const totalForms = data?.totalForms || 0
+  const troubled = data?.troubledExperiments || 0
 
   return (
     <>
@@ -183,6 +185,11 @@ export default function DashboardPage() {
             <>
               <p className="sugg-text">Que tal começar criando sua primeira formulação? <b>Posso te guiar</b> na escolha de ingredientes e hidrocolóides.</p>
               <Link href="/formular" className="sugg-cta">Começar formulação <ArrowRight size={14} strokeWidth={2} /></Link>
+            </>
+          ) : troubled > 0 ? (
+            <>
+              <p className="sugg-text">Você tem <b>{troubled} {troubled === 1 ? 'experimento' : 'experimentos'}</b> com falha ou resultado parcial. Vamos analisar o diagnóstico juntas?</p>
+              <Link href="/experimentos" className="sugg-cta">Acessar diagnóstico <ArrowRight size={14} strokeWidth={2} /></Link>
             </>
           ) : pending > 0 ? (
             <>
