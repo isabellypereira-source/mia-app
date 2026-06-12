@@ -181,16 +181,10 @@ export default function ParametrosPage() {
         }),
       })
       const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
       let texto = ''
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          for (const line of decoder.decode(value).split('\n')) {
-            if (line.startsWith('0:')) { try { texto += JSON.parse(line.slice(2)) } catch { /* skip */ } }
-          }
-        }
+        const { readStreamText } = await import('@/lib/ai/stream-utils')
+        texto = await readStreamText(reader)
         if (sugestaoRef.current) setSugestaoPonteira(texto)
       }
     } catch { /* ignore */ }

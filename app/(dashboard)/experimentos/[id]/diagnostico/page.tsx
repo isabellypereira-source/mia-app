@@ -177,25 +177,19 @@ export default function DiagnosticoPage({ params }: { params: Promise<{ id: stri
         body: JSON.stringify({ messages: apiMessages, plainText: true, skipRag }),
       })
       const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
       let acc = ''
       if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          for (const line of decoder.decode(value).split('\n')) {
-            if (line.startsWith('0:')) {
-              try { acc += JSON.parse(line.slice(2)) } catch { /* skip */ }
-            }
-          }
-          // Split current accumulated text by SEP and render as separate bubbles
+        const { readStreamText } = await import('@/lib/ai/stream-utils')
+        // update incremental UI as chunks arrive
+        await readStreamText(reader, (chunk) => {
+          acc += chunk
           const parts = acc.split(SEP)
           working = [
             ...visibleAfterUser,
             ...parts.map(p => ({ role: 'assistant' as const, content: p.trim() })),
           ]
           setMsgs(working)
-        }
+        })
       }
     } catch {
       setMsgs(prev => prev.map((m, i) => i === prev.length - 1 ? { ...m, content: 'Erro ao conectar com a MIA. Tente novamente.' } : m))
