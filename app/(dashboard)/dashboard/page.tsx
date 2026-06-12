@@ -1,358 +1,327 @@
 'use client'
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  Sparkles, FlaskConical, SlidersHorizontal, TestTube2,
-  MessageSquare, ArrowRight, BookOpen, Library,
-  Lightbulb, Microscope, FileDown, Wifi, WifiOff, ChevronRight,
+  Play,
+  ArrowRight,
+  Plus,
+  SlidersHorizontal,
+  MessageSquare,
+  Download,
+  Sparkles,
+  BookOpen,
 } from 'lucide-react'
-import { useAgentConnected } from '@/lib/hooks/useAgentConnected'
 
-interface Formulacao { id: string; nome: string; created_at: string }
+type ContinueFormulation = { id: string; nome: string | null; updated_at: string }
+type ActivityItem = {
+  ts: string
+  type: 'form_created' | 'form_updated' | 'exp_created'
+  name: string | null
+  result?: string | null
+}
+type Summary = {
+  continueFormulation: ContinueFormulation | null
+  weekStats: {
+    formCount: number
+    expCount: number
+    topIngredients: { name: string; count: number }[]
+  }
+  activity: ActivityItem[]
+  totalForms: number
+  pendingExperiment: number
+}
 
-const DICAS_MIA = [
-  'Xantana a 0,5% combinada com goma guar a 0,3% cria sinergia estrutural — yield stress até 40% maior que cada uma isolada.',
-  'Para pastas proteicas plant-based, HPMC a 2% garante gelificação térmica reversível: flui na seringa fria e estrutura com calor.',
-  'Altura de camada ótima = 50–80% do diâmetro do bico. Para 0,8 mm, use 0,4–0,65 mm para máxima adesão entre camadas.',
-  'Gelatinize o amido antes de adicionar o hidrocolóide — estruturas de amido pré-formadas melhoram a rede do gel final.',
-  'Bolhas de ar são inimigo nº 1 da extrusão. Centrifugue o material a 500 rpm por 2 min antes de encher o cartucho.',
-  'Infill aberto (20–30%) → textura crocante após cocção. Infill fechado (80–100%) → textura macia e mastigável.',
-  'Para diagnóstico de colapso, verifique primeiro o yield stress: se τ₀ < 50 Pa, a estrutura não sustenta o próprio peso.',
-]
-
-const ACOES = [
-  { href: '/formular',     icon: FlaskConical,      label: 'Nova Formulação',     desc: 'Gere com IA ou crie manualmente',  color: '#054a37', accent: '#abd032' },
-  { href: '/parametros',   icon: SlidersHorizontal, label: 'Calcular Parâmetros', desc: 'G-code e parâmetros otimizados',   color: '#196454', accent: '#abd032' },
-  { href: '/experimentos', icon: TestTube2,          label: 'Experimentos',        desc: 'Log de impressão + diagnóstico',   color: '#abd032', accent: '#054a37' },
-  { href: '/chat',         icon: MessageSquare,     label: 'Chat com MIA',        desc: 'Consulta direta à IA',            color: '#000000', accent: '#abd032' },
-]
-
-const WORKFLOW = [
-  { label: 'Formular',       href: '/formular',       n: '01', icon: FlaskConical },
-  { label: 'Formulações',    href: '/formulacoes',    n: '02', icon: BookOpen },
-  { label: 'Parâmetros',     href: '/parametros',     n: '03', icon: SlidersHorizontal },
-  { label: 'Experimentos',   href: '/experimentos',   n: '04', icon: TestTube2 },
-  { label: 'Caracterização', href: '/caracterizacao', n: '05', icon: Microscope },
-  { label: 'Protocolos',     href: '/protocolos',     n: '06', icon: FileDown },
-]
-
-function formatarData(iso: string) {
+function formatRel(iso: string): string {
   const d = new Date(iso)
-  const diff = Math.floor((Date.now() - d.getTime()) / 86400000)
-  if (diff === 0) return 'hoje'
-  if (diff === 1) return 'ontem'
-  if (diff < 7) return `há ${diff} dias`
-  return d.toLocaleDateString('pt-BR')
+  const diff = Date.now() - d.getTime()
+  const min = Math.floor(diff / 60_000)
+  const h = Math.floor(diff / 3_600_000)
+  const day = Math.floor(diff / 86_400_000)
+  if (min < 1) return 'agora'
+  if (min < 60) return `há ${min} min`
+  if (h < 24) return `há ${h} ${h === 1 ? 'hora' : 'horas'}`
+  if (day === 1) return 'Ontem'
+  if (day < 7) return `há ${day} dias`
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
 }
 
-// Contador animado
-function Counter({ to, suffix = '' }: { to: number; suffix?: string }) {
-  const [v, setV] = useState(0)
-  const ran = useRef(false)
-  useEffect(() => {
-    if (ran.current) return
-    ran.current = true
-    const dur = 1400
-    const start = performance.now()
-    const tick = (now: number) => {
-      const p = Math.min((now - start) / dur, 1)
-      const ease = 1 - Math.pow(1 - p, 3)
-      setV(Math.round(ease * to))
-      if (p < 1) requestAnimationFrame(tick)
-    }
-    requestAnimationFrame(tick)
-  }, [to])
-  return <>{v}{suffix}</>
-}
-
-// Hook de reveal por IntersectionObserver
-function useReveal() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [vis, setVis] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect() } }, { threshold: 0.1 })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-  return { ref, vis }
-}
-
-function RevealSection({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
-  const { ref, vis } = useReveal()
-  return (
-    <div ref={ref} className={className} style={{
-      opacity: vis ? 1 : 0,
-      transform: vis ? 'translateY(0)' : 'translateY(28px)',
-      transition: `opacity 0.6s ease ${delay}ms, transform 0.6s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
-    }}>
-      {children}
-    </div>
-  )
+function activityText(item: ActivityItem) {
+  switch (item.type) {
+    case 'form_created':
+      return <>Você criou a formulação <b>{item.name || 'sem nome'}</b>.</>
+    case 'form_updated':
+      return <>Você atualizou <b>{item.name || 'sem nome'}</b>.</>
+    case 'exp_created':
+      return <>Você registrou um experimento de <b>{item.name || 'sem nome'}</b>.</>
+  }
 }
 
 export default function DashboardPage() {
-  const { connected: agentConnected, lastSeen: agentLastSeen, loading: agentLoading } = useAgentConnected()
-  const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [hoveredAction, setHoveredAction] = useState<string | null>(null)
-  const dica = useMemo(() => DICAS_MIA[Math.floor(Math.random() * DICAS_MIA.length)], [])
+  const [data, setData] = useState<Summary | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/formulacoes').then(r => r.json()).then(d => setFormulacoes(d || [])).finally(() => setCarregando(false))
+    fetch('/api/dashboard/summary')
+      .then(r => r.json())
+      .then((d: Summary) => setData(d))
+      .finally(() => setLoading(false))
   }, [])
+
+  const cont = data?.continueFormulation
+  const stats = data?.weekStats
+  const acts = data?.activity || []
+  const pending = data?.pendingExperiment || 0
+  const totalForms = data?.totalForms || 0
 
   return (
     <>
-      <style>{`
-        @keyframes shimmer-line {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(200%); }
-        }
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.8); }
-        }
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-16px); }
-        }
-        .action-card { transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), box-shadow 0.25s ease, background 0.25s ease; }
-        .action-card:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 48px rgba(5,74,55,0.15); }
-        .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(5,74,55,0.1); }
-        .workflow-step { transition: background 0.2s, color 0.2s, transform 0.2s; }
-        .workflow-step:hover { background: #054a37 !important; color: #fff1d9 !important; transform: translateY(-2px); }
-        .workflow-step:hover span { color: #abd032 !important; }
-        .recent-row { transition: background 0.15s, padding-left 0.2s; }
-        .recent-row:hover { background: rgba(5,74,55,0.05) !important; padding-left: 20px !important; }
-      `}</style>
+      <style>{CSS}</style>
 
-      <div className="h-full overflow-y-auto" style={{ background: '#fff1d9' }}>
-
-        {/* ── HERO ──────────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden" style={{ background: '#054a37' }}>
-          {/* Orbs */}
-          <div className="absolute top-[-30%] right-[-5%] w-96 h-96 rounded-full pointer-events-none"
-            style={{ background: 'rgba(171,208,50,0.12)', filter: 'blur(64px)', animation: 'float-slow 8s ease-in-out infinite' }} />
-          <div className="absolute bottom-[-20%] left-[30%] w-64 h-64 rounded-full pointer-events-none"
-            style={{ background: 'rgba(25,100,84,0.4)', filter: 'blur(48px)', animation: 'float-slow 6s ease-in-out infinite reverse' }} />
-
-          <div className="relative z-10 max-w-5xl mx-auto px-8 py-10">
-            <div className="flex items-start justify-between gap-6 flex-wrap">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#abd032', animation: 'pulse-dot 2s ease-in-out infinite' }} />
-                  <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'rgba(171,208,50,0.7)' }}>
-                    Morphê Foods · The Living Lab
-                  </span>
-                </div>
-                <h1 className="font-black mb-3 leading-none" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', color: '#fff1d9', letterSpacing: '-0.03em' }}>
-                  Olá! A <span style={{ color: '#abd032' }}>MIA</span> está pronta.
-                </h1>
-                <p className="text-sm max-w-lg leading-relaxed" style={{ color: 'rgba(255,241,217,0.6)' }}>
-                  Sua assistente de impressão 3D de alimentos — de hidrocolóides a G-code.
-                </p>
-              </div>
-
-              {/* Status badges */}
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
-                  style={{ background: 'rgba(171,208,50,0.12)', border: '1px solid rgba(171,208,50,0.2)' }}>
-                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#abd032', animation: 'pulse-dot 2s ease-in-out infinite' }} />
-                  <span className="text-xs font-bold" style={{ color: '#abd032' }}>MIA Online</span>
-                </div>
-                {!agentLoading && (
-                  agentConnected ? (
-                    <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
-                      style={{ background: 'rgba(255,241,217,0.08)', border: '1px solid rgba(255,241,217,0.12)' }}>
-                      <Wifi size={12} style={{ color: '#abd032' }} />
-                      <span className="text-xs" style={{ color: 'rgba(255,241,217,0.7)' }}>Slicer conectado</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 rounded-xl px-4 py-2.5"
-                      style={{ background: 'rgba(255,241,217,0.04)', border: '1px solid rgba(255,241,217,0.08)' }}>
-                      <WifiOff size={12} style={{ color: 'rgba(255,241,217,0.3)' }} />
-                      <span className="text-xs" style={{ color: 'rgba(255,241,217,0.3)' }}>Slicer desconectado</span>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-
-            {/* Stats inline */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-              {[
-                { n: formulacoes.length, s: '', label: 'Formulações', loading: carregando },
-                { n: 6, s: '', label: 'Protocolos' },
-                { n: 99, s: '%', label: 'Precisão' },
-                { n: 1, s: '', label: agentConnected ? 'Slicer ativo' : 'Modelos IA' },
-              ].map(({ n, s, label, loading }) => (
-                <div key={label} className="stat-card rounded-2xl px-5 py-4 cursor-default"
-                  style={{ background: 'rgba(255,241,217,0.06)', border: '1px solid rgba(255,241,217,0.1)' }}>
-                  <p className="font-black text-2xl mb-0.5" style={{ color: '#abd032' }}>
-                    {loading ? '—' : <Counter to={n} suffix={s} />}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,241,217,0.4)' }}>{label}</p>
-                </div>
-              ))}
-            </div>
+      {/* CONTINUE */}
+      {cont ? (
+        <div className="continue">
+          <div className="badge-icon"><Play size={26} strokeWidth={1.8} /></div>
+          <div className="info">
+            <div className="eyebrow">Continue de onde parou</div>
+            <h2>{cont.nome || 'Formulação sem nome'}</h2>
+            <div className="meta">Última edição {formatRel(cont.updated_at)}.</div>
           </div>
+          <Link href={`/formulacoes`} className="cta">
+            Retomar <ArrowRight size={16} strokeWidth={2} />
+          </Link>
+        </div>
+      ) : (
+        <div className="continue">
+          <div className="badge-icon"><Sparkles size={26} strokeWidth={1.8} /></div>
+          <div className="info">
+            <div className="eyebrow">Começo do trabalho</div>
+            <h2>Crie sua primeira formulação.</h2>
+            <div className="meta">A MIA te orienta da hipótese ao protocolo.</div>
+          </div>
+          <Link href="/formular" className="cta">
+            Começar <ArrowRight size={16} strokeWidth={2} />
+          </Link>
+        </div>
+      )}
+
+      {/* RESUMO DA SEMANA */}
+      <div className="section-title">Resumo desta semana</div>
+      <div className="stats">
+        <div className="stat">
+          <div className="label">Formulações criadas</div>
+          <div className="value">{loading ? '—' : String(stats?.formCount ?? 0).padStart(2, '0')}</div>
+          <div className="delta">nos últimos 7 dias</div>
+        </div>
+        <div className="stat">
+          <div className="label">Experimentos registrados</div>
+          <div className="value">{loading ? '—' : String(stats?.expCount ?? 0).padStart(2, '0')}</div>
+          <div className="delta">nos últimos 7 dias</div>
+        </div>
+        <div className="stat">
+          <div className="label">Ingredientes mais usados</div>
+          {loading ? (
+            <div className="value">—</div>
+          ) : stats?.topIngredients?.length ? (
+            <ul className="ing-list">
+              {stats.topIngredients.map(i => (
+                <li key={i.name}>
+                  <span className="ing-name">{i.name}</span>
+                  <span className="ing-count">{i.count}×</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="empty">Adicione ingredientes às suas formulações para ver os mais usados.</div>
+          )}
+        </div>
+      </div>
+
+      {/* ATALHOS */}
+      <div className="section-title">Atalhos</div>
+      <div className="quick">
+        <Link href="/formular" className="qcard">
+          <div className="iconbox"><Plus size={20} strokeWidth={1.8} /></div>
+          <div><h3>Nova formulação</h3><p>Comece do zero ou peça à MIA uma sugestão inicial.</p></div>
+        </Link>
+        <Link href="/parametros" className="qcard">
+          <div className="iconbox"><SlidersHorizontal size={20} strokeWidth={1.8} /></div>
+          <div><h3>Parametrizar processo</h3><p>Calcule velocidade, temperatura e altura de camada.</p></div>
+        </Link>
+        <Link href="/chat" className="qcard">
+          <div className="iconbox"><MessageSquare size={20} strokeWidth={1.8} /></div>
+          <div><h3>Conversar com a MIA</h3><p>Tire dúvidas, interprete dados, discuta hipóteses.</p></div>
+        </Link>
+        <Link href="/exportar" className="qcard">
+          <div className="iconbox"><Download size={20} strokeWidth={1.8} /></div>
+          <div><h3>Exportar ficha técnica</h3><p>Documento estruturado com formulação e processo.</p></div>
+        </Link>
+      </div>
+
+      {/* TIMELINE + SUGESTÃO */}
+      <div className="two-col">
+        <div className="panel">
+          <h3>Atividade recente <Link href="/formulacoes">Ver tudo</Link></h3>
+          {loading ? (
+            <div className="empty-panel">Carregando…</div>
+          ) : acts.length === 0 ? (
+            <div className="empty-panel">Suas ações aparecem aqui assim que começar a usar a MIA.</div>
+          ) : acts.map((item, i) => (
+            <div key={i} className="tl-item">
+              <div className="tl-dot" />
+              <div className="tl-time">{formatRel(item.ts)}</div>
+              <div className="tl-body">{activityText(item)}</div>
+            </div>
+          ))}
         </div>
 
-        <div className="max-w-5xl mx-auto px-8 py-8 space-y-6">
+        <div className="panel suggestion">
+          <h3>Sugestão da MIA <Link href="/chat">Conversar</Link></h3>
+          <div className="sugg-icon"><Sparkles size={24} strokeWidth={1.8} /></div>
+          {loading ? (
+            <p className="sugg-text">Lendo seu trabalho recente…</p>
+          ) : totalForms === 0 ? (
+            <>
+              <p className="sugg-text">Que tal começar criando sua primeira formulação? <b>Posso te guiar</b> na escolha de ingredientes e hidrocolóides.</p>
+              <Link href="/formular" className="sugg-cta">Começar formulação <ArrowRight size={14} strokeWidth={2} /></Link>
+            </>
+          ) : pending > 0 ? (
+            <>
+              <p className="sugg-text">Você tem <b>{pending} {pending === 1 ? 'formulação' : 'formulações'}</b> {pending === 1 ? 'sem experimento registrado' : 'sem experimentos registrados'}. Que tal documentar uma impressão agora?</p>
+              <Link href="/experimentos" className="sugg-cta">Registrar experimento <ArrowRight size={14} strokeWidth={2} /></Link>
+            </>
+          ) : (
+            <>
+              <p className="sugg-text">Todas as suas formulações têm experimentos registrados. <b>Bom trabalho.</b> Que tal explorar uma nova matriz ou hidrocolóide?</p>
+              <Link href="/chat" className="sugg-cta">Conversar com a MIA <ArrowRight size={14} strokeWidth={2} /></Link>
+            </>
+          )}
+        </div>
+      </div>
 
-          {/* ── AÇÕES RÁPIDAS ────────────────────────────────────────── */}
-          <RevealSection>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-black text-xl" style={{ color: '#054a37', letterSpacing: '-0.02em' }}>Ações rápidas</h2>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {ACOES.map(({ href, icon: Icon, label, desc, color, accent }) => {
-                const hovered = hoveredAction === href
-                return (
-                  <Link key={href} href={href}
-                    onMouseEnter={() => setHoveredAction(href)}
-                    onMouseLeave={() => setHoveredAction(null)}
-                    className="action-card flex flex-col justify-between p-5 rounded-2xl min-h-[148px]"
-                    style={{
-                      background: hovered ? color : '#fff',
-                      border: `1.5px solid ${hovered ? color : 'rgba(5,74,55,0.08)'}`,
-                    }}>
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                      style={{ background: hovered ? `${accent}22` : `${color}12` }}>
-                      <Icon size={18} style={{ color: hovered ? accent : color }} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm mb-1 leading-tight"
-                        style={{ color: hovered ? (color === '#abd032' ? '#054a37' : '#fff1d9') : '#054a37' }}>
-                        {label}
-                      </p>
-                      <p className="text-[11px] leading-snug"
-                        style={{ color: hovered ? (color === '#abd032' ? 'rgba(5,74,55,0.6)' : 'rgba(255,241,217,0.55)') : 'rgba(5,74,55,0.4)' }}>
-                        {desc}
-                      </p>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
-          </RevealSection>
-
-          {/* ── FORMULAÇÕES + DICA ──────────────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-
-            {/* Formulações recentes */}
-            <RevealSection className="lg:col-span-3" delay={50}>
-              <div className="rounded-2xl overflow-hidden h-full"
-                style={{ background: '#fff', border: '1.5px solid rgba(5,74,55,0.08)' }}>
-                <div className="flex items-center justify-between px-5 py-4"
-                  style={{ borderBottom: '1px solid rgba(5,74,55,0.06)' }}>
-                  <h2 className="font-black text-base" style={{ color: '#054a37', letterSpacing: '-0.02em' }}>Formulações recentes</h2>
-                  <Link href="/formulacoes" className="flex items-center gap-1 text-xs font-bold transition-opacity hover:opacity-60"
-                    style={{ color: '#abd032' }}>
-                    Ver todas <ChevronRight size={12} />
-                  </Link>
-                </div>
-
-                <div className="p-2">
-                  {carregando ? (
-                    <div className="space-y-1 p-3">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="h-10 rounded-xl animate-pulse" style={{ background: 'rgba(5,74,55,0.04)' }} />
-                      ))}
-                    </div>
-                  ) : formulacoes.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                        style={{ background: 'rgba(171,208,50,0.1)' }}>
-                        <BookOpen size={20} style={{ color: '#abd032' }} />
-                      </div>
-                      <p className="text-sm font-bold mb-1" style={{ color: '#054a37' }}>Nenhuma formulação ainda</p>
-                      <p className="text-xs mb-5" style={{ color: 'rgba(5,74,55,0.4)' }}>Crie sua primeira com a MIA</p>
-                      <Link href="/formular"
-                        className="text-xs font-bold px-5 py-2.5 rounded-xl transition-all hover:opacity-90"
-                        style={{ background: '#054a37', color: '#fff1d9' }}>
-                        Criar formulação →
-                      </Link>
-                    </div>
-                  ) : (
-                    formulacoes.slice(0, 6).map(f => (
-                      <Link key={f.id} href="/formulacoes"
-                        className="recent-row flex items-center justify-between px-4 py-3 rounded-xl"
-                        style={{ background: 'transparent', paddingLeft: 16 }}>
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: 'rgba(171,208,50,0.12)' }}>
-                            <FlaskConical size={11} style={{ color: '#abd032' }} />
-                          </div>
-                          <span className="text-sm font-medium truncate" style={{ color: '#054a37' }}>{f.nome}</span>
-                        </div>
-                        <span className="text-[11px] flex-shrink-0 ml-3" style={{ color: 'rgba(5,74,55,0.35)' }}>
-                          {formatarData(f.created_at)}
-                        </span>
-                      </Link>
-                    ))
-                  )}
-                </div>
-              </div>
-            </RevealSection>
-
-            {/* Dica da MIA */}
-            <RevealSection className="lg:col-span-2" delay={100}>
-              <div className="rounded-2xl p-6 h-full flex flex-col"
-                style={{ background: '#054a37', minHeight: 220 }}>
-                <div className="flex items-center gap-2 mb-5">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(171,208,50,0.15)' }}>
-                    <Lightbulb size={13} style={{ color: '#abd032' }} />
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(171,208,50,0.6)' }}>
-                    Dica da MIA
-                  </span>
-                </div>
-                <p className="text-sm leading-relaxed flex-1" style={{ color: 'rgba(255,241,217,0.8)' }}>{dica}</p>
-                <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(171,208,50,0.12)' }}>
-                  <Link href="/chat" className="flex items-center gap-1.5 text-xs font-bold transition-opacity hover:opacity-70"
-                    style={{ color: '#abd032' }}>
-                    <Sparkles size={11} /> Perguntar à MIA
-                  </Link>
-                </div>
-              </div>
-            </RevealSection>
-          </div>
-
-          {/* ── FLUXO DE TRABALHO ────────────────────────────────────── */}
-          <RevealSection delay={150}>
-            <div className="rounded-2xl p-6" style={{ background: '#fff', border: '1.5px solid rgba(5,74,55,0.08)' }}>
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-black text-base" style={{ color: '#054a37', letterSpacing: '-0.02em' }}>Fluxo de trabalho</h2>
-                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'rgba(5,74,55,0.3)' }}>
-                  6 etapas
-                </span>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                {WORKFLOW.map(({ label, href, n, icon: Icon }, i, arr) => (
-                  <div key={href} className="flex items-center gap-2">
-                    <Link href={href}
-                      className="workflow-step flex items-center gap-2 px-4 py-2.5 rounded-xl"
-                      style={{ background: 'rgba(5,74,55,0.05)', color: '#054a37' }}>
-                      <span className="text-[10px] font-black" style={{ color: '#abd032' }}>{n}</span>
-                      <Icon size={12} />
-                      <span className="text-xs font-bold">{label}</span>
-                    </Link>
-                    {i < arr.length - 1 && (
-                      <ArrowRight size={10} style={{ color: 'rgba(5,74,55,0.2)' }} className="flex-shrink-0" />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </RevealSection>
-
+      {/* BASE DE CONHECIMENTO */}
+      <div className="learned">
+        <div className="iconbox"><BookOpen size={22} strokeWidth={1.8} /></div>
+        <div className="txt">
+          <div className="eyebrow">Base de conhecimento</div>
+          <p>A MIA está conectada à literatura científica curada pela Morphê Foods. Use o chat para consultar protocolos, artigos e referências aplicadas às suas formulações.</p>
         </div>
       </div>
     </>
   )
 }
+
+const CSS = `
+  .continue{
+    display:flex;align-items:center;gap:22px;
+    background:var(--surface-glass-strong);
+    border:1px solid var(--border-glass-strong);
+    backdrop-filter:blur(20px);
+    border-radius:22px;padding:22px 26px;
+  }
+  .continue .badge-icon{
+    width:56px;height:56px;border-radius:16px;
+    background:var(--icon-tint);
+    display:grid;place-items:center;color:var(--accent-em);
+    flex-shrink:0;
+  }
+  .continue .info{flex:1;min-width:0}
+  .continue .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px}
+  .continue h2{margin:0;font-size:21px;color:var(--text-main);font-weight:600;letter-spacing:-.01em}
+  .continue .meta{font-size:13px;color:var(--text-muted);margin-top:6px}
+  .continue .cta{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:var(--accent-text-on);
+    padding:11px 22px;border-radius:999px;
+    text-decoration:none;font-size:14px;font-weight:600;flex-shrink:0;
+    transition:transform .15s, box-shadow .25s;
+  }
+  .continue .cta:hover{transform:translateY(-1px);box-shadow:0 14px 28px -10px var(--accent)}
+
+  .section-title{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-faint);margin:28px 0 12px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .stat{
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    border-radius:18px;padding:18px 20px;
+    backdrop-filter:blur(16px);
+    min-height:130px;
+  }
+  .stat .label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px}
+  .stat .value{font-family:var(--font-serif),serif;font-style:italic;font-size:42px;color:var(--accent-em);line-height:1}
+  .stat .delta{font-size:12px;color:var(--text-muted);margin-top:6px}
+  .stat .empty{font-size:12.5px;color:var(--text-faint);line-height:1.4;margin-top:4px}
+  .ing-list{list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:6px}
+  .ing-list li{display:flex;align-items:center;justify-content:space-between;font-size:14px;color:var(--text-main)}
+  .ing-list .ing-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
+  .ing-list .ing-count{font-family:var(--font-serif),serif;font-style:italic;font-size:18px;color:var(--accent-em)}
+
+  .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .qcard{
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    border-radius:18px;padding:20px;
+    text-decoration:none;color:var(--text-main);
+    transition:.2s;cursor:pointer;
+    backdrop-filter:blur(16px);
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .qcard:hover{background:var(--surface-glass-strong);border-color:var(--accent);transform:translateY(-3px)}
+  .qcard .iconbox{width:42px;height:42px;border-radius:12px;background:var(--icon-tint);display:grid;place-items:center;color:var(--accent-em)}
+  .qcard h3{margin:0 0 4px;font-size:14.5px;font-weight:600;color:var(--text-main)}
+  .qcard p{margin:0;font-size:12.5px;color:var(--text-faint);line-height:1.4}
+
+  .two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px}
+  .panel{
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    border-radius:20px;padding:22px;
+    backdrop-filter:blur(16px);
+  }
+  .panel h3{margin:0 0 16px;font-size:14px;font-weight:600;color:var(--text-main);display:flex;justify-content:space-between;align-items:center}
+  .panel h3 a{font-size:11.5px;text-transform:uppercase;letter-spacing:.14em;color:var(--accent-em);text-decoration:none;font-weight:600}
+  .panel h3 a:hover{opacity:.75}
+  .empty-panel{font-size:13px;color:var(--text-faint);padding:18px 0;text-align:center;line-height:1.5}
+  .tl-item{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--border-glass)}
+  .tl-item:last-child{border-bottom:none}
+  .tl-time{font-size:11.5px;color:var(--text-faint);min-width:70px;padding-top:2px;letter-spacing:.02em}
+  .tl-body{font-size:13.5px;color:var(--text-muted);line-height:1.45;flex:1}
+  .tl-body b{color:var(--text-main);font-weight:600}
+  .tl-dot{width:8px;height:8px;border-radius:50%;background:var(--accent-em);margin-top:7px;flex-shrink:0}
+
+  .suggestion{display:flex;flex-direction:column}
+  .suggestion .sugg-icon{
+    width:48px;height:48px;border-radius:14px;
+    background:var(--icon-tint);color:var(--accent-em);
+    display:grid;place-items:center;margin-bottom:14px;
+  }
+  .suggestion .sugg-text{margin:0 0 18px;font-size:14.5px;line-height:1.5;color:var(--text-muted);flex:1}
+  .suggestion .sugg-text b{color:var(--text-main);font-weight:600}
+  .suggestion .sugg-cta{
+    display:inline-flex;align-items:center;gap:8px;
+    color:var(--accent-em);font-size:13.5px;font-weight:600;
+    text-decoration:none;
+  }
+  .suggestion .sugg-cta:hover{opacity:.75}
+
+  .learned{
+    margin-top:18px;
+    display:flex;align-items:center;gap:18px;
+    background:var(--surface-glass);
+    border:1px solid var(--border-glass);
+    border-radius:20px;padding:18px 22px;
+    backdrop-filter:blur(16px);
+  }
+  .learned .iconbox{
+    width:46px;height:46px;border-radius:14px;background:var(--icon-tint);
+    display:grid;place-items:center;color:var(--accent-em);flex-shrink:0;
+  }
+  .learned .txt{flex:1;min-width:0}
+  .learned .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px}
+  .learned p{margin:0;color:var(--text-muted);font-size:13.5px;line-height:1.45}
+
+  @media (max-width:1100px){
+    .stats{grid-template-columns:1fr 1fr}
+    .quick{grid-template-columns:1fr 1fr}
+    .two-col{grid-template-columns:1fr}
+  }
+`

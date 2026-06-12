@@ -141,7 +141,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
               <button className="icon-btn" aria-label="Notificações">
                 <span className="ic"><Bell size={18} strokeWidth={1.8} /></span>
-                <span className="badge-dot" />
               </button>
               <div className="profile">
                 <div className="avatar">IP</div>
