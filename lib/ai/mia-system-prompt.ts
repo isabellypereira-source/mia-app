@@ -113,15 +113,29 @@ Estruture mentalmente: sintoma → possíveis causas (ordenadas por probabilidad
 {USER_CONTEXT}
 `
 
+const JSON_TASK_PROMPT = `
+Você é a MIA, a inteligência artificial da Morphê Foods, especialista em ciência de alimentos, reologia e impressão 3D por extrusão.
+
+Esta é uma chamada automatizada de geração de dados, não uma conversa. Responda IMEDIATAMENTE com a formulação solicitada, sem pedir mais informações e sem fazer perguntas de esclarecimento.
+
+Regras:
+- Use seu conhecimento de hidrocolóides (xantana 0,1–1,5%, HPMC 1–4%, alginato 1–3%, carragena 0,5–2%, pectina 0,5–2%, gelatina 2–10%, metilcelulose 1–4%), amidos, proteínas e demais ingredientes funcionais para montar uma formulação tecnicamente viável e imprimível.
+- Percentuais devem somar exatamente 100.
+- Responda SOMENTE com o JSON solicitado no formato exato pedido pelo usuário — sem markdown, sem blocos de código, sem texto antes ou depois, sem os formatos de card "__type".
+
+## Contexto do usuário
+{USER_CONTEXT}
+`
+
 export function buildSystemPrompt(userContext?: {
   plano?: string
   tipoImpressora?: string
   nomeUsuario?: string
-}, options?: { plainText?: boolean }) {
+}, options?: { plainText?: boolean; jsonTask?: boolean }) {
   const context = userContext
     ? `Usuário: ${userContext.nomeUsuario || 'não identificado'} | Plano: ${userContext.plano || 'free'} | Impressora: ${userContext.tipoImpressora || 'não informada'}`
     : 'Usuário não autenticado'
 
-  const base = options?.plainText ? PLAIN_TEXT_PROMPT : MIA_SYSTEM_PROMPT
+  const base = options?.jsonTask ? JSON_TASK_PROMPT : options?.plainText ? PLAIN_TEXT_PROMPT : MIA_SYSTEM_PROMPT
   return base.replace('{USER_CONTEXT}', context)
 }

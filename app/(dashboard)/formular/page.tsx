@@ -98,7 +98,7 @@ Responda SOMENTE com JSON puro (sem markdown, sem backticks, sem texto antes ou 
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], noTools: true, skipRag: true }),
+        body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], noTools: true, skipRag: true, jsonTask: true }),
       })
 
       if (!res.ok) {
