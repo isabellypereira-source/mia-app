@@ -612,21 +612,8 @@ Retorne APENAS um JSON no formato exato (sem texto adicional):
             </div>
           </div>
 
-          {!isWizard && modo !== 'validar' && (
-            <button onClick={validarFormulacao} disabled={validando || !ingredientes.some(i => i.nome.trim())}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              style={{ background: '#003223', color: 'white' }}>
-              <Sparkles size={14} /> {validando ? 'Validando...' : 'Validar com MIA'}
-            </button>
-          )}
-
-          {modo === 'validar' && agentConnected && (
-            <button onClick={gerarSTLHandler} disabled={stlLoading || !ingredientes.some(i => i.nome.trim())}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-display font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              style={{ background: '#003223', color: 'white' }}>
-              <Zap size={14} /> {stlLoading ? 'Gerando...' : 'Gerar STL 3D'}
-            </button>
-          )}
+          {/* "Validar com MIA" e "Gerar STL 3D" temporariamente removidos.
+              Voltaremos a esses fluxos quando estiverem prontos. */}
         </div>
       </div>
     )
