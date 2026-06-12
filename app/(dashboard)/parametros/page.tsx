@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
-  ArrowLeft, ArrowRight, CheckCircle, Download, Sparkles, SlidersHorizontal, Info,
+  ArrowLeft, ArrowRight, Check, Download, Sparkles, SlidersHorizontal, Info, Box, Square,
 } from 'lucide-react'
 import {
   SYRINGES, MACHINES, calcEPerMm,
@@ -12,7 +12,7 @@ import {
 
 const ShapePreview = dynamic(
   () => import('@/components/parametros/ShapePreview'),
-  { ssr: false, loading: () => <div className="flex items-center justify-center h-[280px] text-xs text-[#58413c]">Carregando...</div> },
+  { ssr: false, loading: () => <div className="flex items-center justify-center h-[280px] text-xs" style={{ color: 'var(--text-faint)' }}>Carregando...</div> },
 )
 
 // ---------------------------------------------------------------------------
@@ -81,7 +81,7 @@ function FillPreview({ id, size = 90 }: { id: string; size?: number }) {
       <svg viewBox={`0 0 ${s} ${s * 0.76}`} className="w-full h-full">
         {radii.map((r, i) => (
           <ellipse key={r} cx={s / 2} cy={s * 0.38} rx={r} ry={r * 0.72}
-            fill="none" stroke="#003223" strokeWidth="1.5" opacity={0.9 - i * 0.18} />
+            fill="none" style={{ stroke: 'var(--text-main)' }} strokeWidth="1.5" opacity={0.9 - i * 0.18} />
         ))}
       </svg>
     )
@@ -91,8 +91,8 @@ function FillPreview({ id, size = 90 }: { id: string; size?: number }) {
     const vLines = [10, 20, 30, 40, 50, 60, 70, 80]
     return (
       <svg viewBox="0 0 90 68" className="w-full h-full">
-        {hLines.map(y => <line key={`h${y}`} x1={6} y1={y} x2={84} y2={y} stroke="#003223" strokeWidth="1.5" opacity="0.7" />)}
-        {vLines.map(x => <line key={`v${x}`} x1={x} y1={6} x2={x} y2={62} stroke="#7c9b8e" strokeWidth="1.5" opacity="0.45" />)}
+        {hLines.map(y => <line key={`h${y}`} x1={6} y1={y} x2={84} y2={y} style={{ stroke: 'var(--text-main)' }} strokeWidth="1.5" opacity="0.7" />)}
+        {vLines.map(x => <line key={`v${x}`} x1={x} y1={6} x2={x} y2={62} style={{ stroke: 'var(--text-muted)' }} strokeWidth="1.5" opacity="0.45" />)}
       </svg>
     )
   }
@@ -109,7 +109,7 @@ function FillPreview({ id, size = 90 }: { id: string; size?: number }) {
   return (
     <svg viewBox="0 0 90 76" className="w-full h-full" style={{ overflow: 'hidden' }}>
       {hexes.map(([cx, cy]) => (
-        <path key={`${cx}-${cy}`} d={hex(cx, cy)} fill="none" stroke="#003223" strokeWidth="1.5" opacity="0.65" />
+        <path key={`${cx}-${cy}`} d={hex(cx, cy)} fill="none" style={{ stroke: 'var(--text-main)' }} strokeWidth="1.5" opacity="0.65" />
       ))}
     </svg>
   )
@@ -271,27 +271,28 @@ export default function ParametrosPage() {
   }
 
   // ---------------------------------------------------------------------------
-  // Progress bar
+  // Step bar (padrão visual do /formular)
   // ---------------------------------------------------------------------------
 
   const progressSteps = PASSOS.filter(p => p !== 'resultado')
 
-  function ProgressBar() {
+  function StepBar() {
     if (passo === 'resultado') return null
     return (
-      <div className="flex items-center mb-8">
+      <div className="param-steps">
         {progressSteps.map((p, i) => {
+          const num = i + 1
           const done = passoIdx > i
           const active = passo === p
           return (
-            <div key={p} className="flex items-center flex-1">
-              {i > 0 && <div className={`h-px flex-1 mx-1 ${done ? 'bg-[#003223]' : 'bg-[#e5d9c1]'}`} />}
-              <div className="flex flex-col items-center gap-0.5">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 transition-colors ${done || active ? 'bg-[#003223] text-white' : 'bg-[#e5d9c1] text-[#bfc9c2]'}`}>
-                  {done ? <CheckCircle size={12} /> : i + 1}
+            <div key={p} className="param-step-wrap">
+              <div className="param-step-col">
+                <div className={`param-step-dot ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
+                  {done ? <Check size={14} strokeWidth={2.5} /> : num}
                 </div>
-                <span className={`text-[9px] font-medium hidden sm:block ${active ? 'text-[#003223]' : 'text-[#bfc9c2]'}`}>{PASSO_LABEL[p]}</span>
+                <span className={`param-step-label ${active ? 'active' : ''} ${done ? 'done' : ''}`}>{PASSO_LABEL[p]}</span>
               </div>
+              {i < progressSteps.length - 1 && <div className={`param-step-line ${done ? 'done' : ''}`} />}
             </div>
           )
         })}
@@ -301,13 +302,11 @@ export default function ParametrosPage() {
 
   function NavButtons({ disableNext = false }: { disableNext?: boolean }) {
     return (
-      <div className="flex justify-between mt-8">
-        <button onClick={voltar} disabled={passoIdx === 0}
-          className="flex items-center gap-2 text-sm text-[#58413c] hover:text-[#211b0c] disabled:opacity-30 disabled:cursor-not-allowed px-4 py-2 rounded-lg border border-[#e5d9c1] transition-colors">
+      <div className="param-footer">
+        <button onClick={voltar} disabled={passoIdx === 0} className="param-back">
           <ArrowLeft size={14} /> Voltar
         </button>
-        <button onClick={avancar} disabled={disableNext}
-          className="flex items-center gap-2 bg-[#003223] hover:bg-[#004d35] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+        <button onClick={avancar} disabled={disableNext} className="param-next">
           {passo === 'definicao' ? 'Ver resultado' : 'Próximo'} <ArrowRight size={14} />
         </button>
       </div>
@@ -319,27 +318,35 @@ export default function ParametrosPage() {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="h-full overflow-y-auto" style={{ background: '#fff8f1' }}>
-      <div className="section-alt border-b border-[#e5d9c1] px-8 py-5">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <SlidersHorizontal size={18} className="text-[#003223]" /> Parâmetros de Impressão
-        </h1>
-        <p className="text-xs text-[#58413c] mt-0.5">Configure passo a passo e exporte para a impressora BioedTech.</p>
+    <div className="h-full overflow-y-auto param-page">
+      <style>{PARAM_CSS}</style>
+
+      <div className="param-header">
+        <h1><SlidersHorizontal size={18} /> Parâmetros de Impressão</h1>
+        <p>Configure passo a passo e exporte para a impressora BioedTech.</p>
       </div>
 
-      <div className="max-w-2xl mx-auto px-8 py-8">
-        <ProgressBar />
+      <div className="param-root">
+        <StepBar />
 
         {/* ── 1. Formato ── */}
         {passo === 'formato' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Qual é o formato da peça?</h2>
-            <p className="text-xs text-[#58413c] mb-5">Cilindro e Cubo são paramétricos. Os demais carregam modelos 3D.</p>
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            <div className="param-head">
+              <h2>Qual é o <em>formato</em> da peça?</h2>
+              <p>Cilindro e Cubo são paramétricos. Os demais carregam modelos 3D prontos.</p>
+            </div>
+            <div className="shape-grid">
               {FORMATOS.map(f => (
                 <button key={f.id} onClick={() => setFormato(f.id)}
-                  className={`p-3 rounded-xl border text-left transition-all ${formato === f.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                  <p className="text-xs font-medium leading-snug">{f.label}</p>
+                  className={`shape-card ${formato === f.id ? 'active' : ''}`}>
+                  {formato === f.id && <span className="shape-check"><Check size={13} strokeWidth={2.5} /></span>}
+                  <div className="shape-box">
+                    <div className="shape-box-inner">
+                      {f.stl ? <Box size={20} /> : <Square size={20} />}
+                    </div>
+                  </div>
+                  <p className="shape-label">{f.label}</p>
                 </button>
               ))}
             </div>
@@ -350,48 +357,56 @@ export default function ParametrosPage() {
         {/* ── 2. Tamanho ── */}
         {passo === 'tamanho' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Dimensões da peça</h2>
-            {isStl ? (
-              <>
-                <p className="text-xs text-[#58413c] mb-5">Ajuste a escala do modelo 3D.</p>
-                <div className="space-y-4">
+            <div className="param-head">
+              <h2>Defina o <em>tamanho</em></h2>
+              <p>{isStl ? 'Ajuste a escala do modelo 3D e veja o resultado abaixo.' : (formato === 'cubo' ? 'Defina o lado do cubo.' : 'Defina o diâmetro e a altura.')}</p>
+            </div>
+
+            <div className="param-size-layout">
+              <div className="param-size-controls">
+                {isStl ? (
                   <div>
-                    <div className="flex justify-between mb-1.5">
-                      <label className="text-xs font-medium text-[#211b0c]">Escala</label>
-                      <span className="text-xs font-semibold text-[#003223]">{Math.round(stlScale * 100)}%</span>
+                    <div className="param-field-row">
+                      <label>Escala</label>
+                      <span className="param-field-value">{Math.round(stlScale * 100)}%</span>
                     </div>
                     <input type="range" min={0.25} max={3} step={0.05} value={stlScale}
                       onChange={e => setStlScale(parseFloat(e.target.value))}
-                      className="w-full accent-[#003223]" />
-                    <div className="flex justify-between text-[10px] text-[#bfc9c2] mt-0.5">
+                      className="param-slider" />
+                    <div className="param-slider-ticks">
                       <span>25%</span><span>100%</span><span>300%</span>
                     </div>
                   </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-xs text-[#58413c] mb-5">
-                  {formato === 'cubo' ? 'Defina o lado do cubo.' : 'Defina o diâmetro e a altura.'}
-                </p>
-                <div className="flex gap-4">
-                  {formato === 'cubo' ? (
-                    <Field label="Lado (mm)">
-                      <NumInput value={largura} onChange={v => { setLargura(v); setAltura(v) }} min={5} />
+                ) : formato === 'cubo' ? (
+                  <Field label="Lado (mm)">
+                    <NumInput value={largura} onChange={v => { setLargura(v); setAltura(v) }} min={5} />
+                  </Field>
+                ) : (
+                  <div className="param-field-pair">
+                    <Field label="Diâmetro (mm)">
+                      <NumInput value={largura} onChange={setLargura} min={5} />
                     </Field>
-                  ) : (
-                    <>
-                      <Field label="Diâmetro (mm)">
-                        <NumInput value={largura} onChange={setLargura} min={5} />
-                      </Field>
-                      <Field label="Altura (mm)">
-                        <NumInput value={altura} onChange={setAltura} min={1} />
-                      </Field>
-                    </>
-                  )}
+                    <Field label="Altura (mm)">
+                      <NumInput value={altura} onChange={setAltura} min={1} />
+                    </Field>
+                  </div>
+                )}
+              </div>
+
+              <div className="param-preview">
+                <div className="param-preview-head">
+                  <span>{formatoSpec?.label}</span>
+                  <span className="param-preview-hint">Arraste · Scroll</span>
                 </div>
-              </>
-            )}
+                <ShapePreview
+                  formato={formato as 'cilindro' | 'cubo'}
+                  diametro={larguraN}
+                  altura={alturaN}
+                  stlPath={formatoSpec?.stl ?? undefined}
+                  stlScale={isStl ? stlScale : 1}
+                />
+              </div>
+            </div>
             <NavButtons />
           </div>
         )}
@@ -399,17 +414,19 @@ export default function ParametrosPage() {
         {/* ── 3. Preenchimento ── */}
         {passo === 'preenchimento' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Padrão de preenchimento</h2>
-            <p className="text-xs text-[#58413c] mb-5">Define como o material é depositado em cada camada.</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="param-head">
+              <h2>Padrão de <em>preenchimento</em></h2>
+              <p>Define como o material é depositado em cada camada.</p>
+            </div>
+            <div className="param-fill-grid">
               {PREENCHIMENTOS.map(p => (
                 <button key={p.id} onClick={() => setPreenchimento(p.id)}
-                  className={`p-3 rounded-xl border text-left transition-all ${preenchimento === p.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                  <div className="w-full aspect-[4/3] mb-2 rounded-lg bg-[#fff8f1] border border-[#e5d9c1] flex items-center justify-center p-2">
+                  className={`aplic-card ${preenchimento === p.id ? 'active' : ''}`}>
+                  <div className="param-fill-preview">
                     <FillPreview id={p.id} />
                   </div>
-                  <p className="text-xs font-medium">{p.label}</p>
-                  <p className="text-[10px] text-[#58413c] mt-0.5 leading-snug">{p.desc}</p>
+                  <p className="aplic-nome">{p.label}</p>
+                  <p className="aplic-desc">{p.desc}</p>
                 </button>
               ))}
             </div>
@@ -420,32 +437,30 @@ export default function ParametrosPage() {
         {/* ── 4. Equipamento ── */}
         {passo === 'equipamento' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Equipamento</h2>
-            <p className="text-xs text-[#58413c] mb-5">Selecione a impressora BioedTech e a seringa montada.</p>
-
-            <div className="mb-5">
-              <p className="text-xs font-medium text-[#211b0c] mb-2">Impressora</p>
-              <div className="grid grid-cols-2 gap-2">
-                {MACHINES.map(m => (
-                  <button key={m.id} onClick={() => setMachine(m.id as MachineId)}
-                    className={`p-3 rounded-xl border text-left transition-all ${machine === m.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                    <p className="text-sm font-semibold">{m.label}</p>
-                    <p className="text-xs text-[#58413c] mt-0.5">BioedTech</p>
-                  </button>
-                ))}
-              </div>
+            <div className="param-head">
+              <h2>Selecione o <em>equipamento</em></h2>
+              <p>Escolha a impressora BioedTech e a seringa montada.</p>
             </div>
 
-            <div>
-              <p className="text-xs font-medium text-[#211b0c] mb-2">Seringa</p>
-              <div className="grid grid-cols-2 gap-3">
-                {SYRINGES.map(s => (
-                  <button key={s.volume_ml} onClick={() => setSeringa(s.volume_ml as 10 | 60)}
-                    className={`p-4 rounded-xl border text-left transition-all ${seringa === s.volume_ml ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                    <p className="text-2xl font-bold text-[#003223]">{s.volume_ml}<span className="text-sm font-normal ml-0.5">mL</span></p>
-                  </button>
-                ))}
-              </div>
+            <p className="param-subhead">Impressora</p>
+            <div className="param-fill-grid" style={{ marginBottom: 28 }}>
+              {MACHINES.map(m => (
+                <button key={m.id} onClick={() => setMachine(m.id as MachineId)}
+                  className={`aplic-card ${machine === m.id ? 'active' : ''}`}>
+                  <p className="aplic-nome">{m.label}</p>
+                  <p className="aplic-desc">BioedTech</p>
+                </button>
+              ))}
+            </div>
+
+            <p className="param-subhead">Seringa</p>
+            <div className="param-fill-grid">
+              {SYRINGES.map(s => (
+                <button key={s.volume_ml} onClick={() => setSeringa(s.volume_ml as 10 | 60)}
+                  className={`aplic-card ${seringa === s.volume_ml ? 'active' : ''}`}>
+                  <p className="param-syringe-vol">{s.volume_ml}<span>mL</span></p>
+                </button>
+              ))}
             </div>
             <NavButtons />
           </div>
@@ -454,37 +469,34 @@ export default function ParametrosPage() {
         {/* ── 5. Ponteira ── */}
         {passo === 'ponteira' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Ponteira</h2>
-            <p className="text-xs text-[#58413c] mb-5">As cores correspondem às tampas das seringas com luerlock.</p>
+            <div className="param-head">
+              <h2>Escolha a <em>ponteira</em></h2>
+              <p>As cores correspondem às tampas das seringas com luerlock.</p>
+            </div>
 
             {/* Sugestão da MIA via formulação */}
-            <div className="mb-5 p-3 bg-[#003223]/5 border border-[#003223]/10 rounded-xl">
-              <p className="text-xs font-semibold text-[#003223] mb-2 flex items-center gap-1.5">
-                <Sparkles size={12} /> Sugestão da MIA
-              </p>
-              <label className="text-xs text-[#58413c] block mb-1.5">Selecione sua formulação</label>
-              <select value={formulacaoId} onChange={e => handleFormulacaoChange(e.target.value)}
-                className="w-full bg-white border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-1 focus:ring-[#003223]/20">
+            <div className="param-mia-box">
+              <p className="param-mia-title"><Sparkles size={12} /> Sugestão da MIA</p>
+              <label className="param-mia-label">Selecione sua formulação</label>
+              <select value={formulacaoId} onChange={e => handleFormulacaoChange(e.target.value)} className="param-select">
                 <option value="">Sem formulação / pular sugestão</option>
                 {formulacoes.map(f => <option key={f.id} value={f.id}>{f.nome}</option>)}
               </select>
-              {loadingSugestao && (
-                <p className="text-xs text-[#58413c] italic">Analisando formulação...</p>
-              )}
+              {loadingSugestao && <p className="param-mia-loading">Analisando formulação...</p>}
               {sugestaoPonteira && !loadingSugestao && (
-                <div className="flex gap-1.5 mt-1">
-                  <Info size={12} className="text-[#003223] flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-[#003223] leading-relaxed">{sugestaoPonteira}</p>
+                <div className="param-mia-suggestion">
+                  <Info size={12} />
+                  <p>{sugestaoPonteira}</p>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="param-tip-grid">
               {PONTEIRAS.map(p => (
                 <button key={p.value} onClick={() => setPonteira(p.value)}
-                  className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${ponteira === p.value ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                  <div className={`w-4 h-4 rounded-full flex-shrink-0 ${p.cor}`} />
-                  <p className="text-sm font-medium">{p.label} <span className="text-xs text-[#58413c] font-normal">· {p.corLabel}</span></p>
+                  className={`aplic-card param-tip-card ${ponteira === p.value ? 'active' : ''}`}>
+                  <div className={`param-tip-dot ${p.cor}`} />
+                  <p className="param-tip-label">{p.label} <span>· {p.corLabel}</span></p>
                 </button>
               ))}
             </div>
@@ -495,25 +507,26 @@ export default function ParametrosPage() {
         {/* ── 6. Definição ── */}
         {passo === 'definicao' && (
           <div>
-            <h2 className="text-base font-semibold mb-1">Definição de impressão</h2>
-            <p className="text-xs text-[#58413c] mb-5">Determina o nível de detalhe e a velocidade.</p>
+            <div className="param-head">
+              <h2>Nível de <em>definição</em></h2>
+              <p>Determina o nível de detalhe e a velocidade de impressão.</p>
+            </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-5">
+            <div className="param-fill-grid" style={{ marginBottom: 28 }}>
               {QUALIDADES.map(q => (
                 <button key={q.id} onClick={() => setQualidade(q.id)}
-                  className={`p-4 rounded-xl border text-left transition-all ${qualidade === q.id ? 'border-[#003223] bg-[rgba(0,50,35,0.06)] ring-1 ring-[#003223]/20' : 'border-[#e5d9c1] bg-[#fff2da] hover:border-[#003223]/30'}`}>
-                  <p className="text-sm font-semibold">{q.label}</p>
-                  <p className="text-xs text-[#58413c] mt-1 leading-snug">{q.desc}</p>
+                  className={`aplic-card ${qualidade === q.id ? 'active' : ''}`}>
+                  <p className="aplic-nome">{q.label}</p>
+                  <p className="aplic-desc">{q.desc}</p>
                 </button>
               ))}
             </div>
 
             <Field label="Temperatura (opcional)">
-              <div className="flex items-center gap-2">
+              <div className="param-temp-row">
                 <input type="number" value={temperatura} onChange={e => setTemperatura(e.target.value)}
-                  placeholder="ex: 60"
-                  className="w-28 bg-white border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
-                <span className="text-xs text-[#58413c]">°C — vazio = ambiente</span>
+                  placeholder="ex: 60" className="param-input param-temp-input" />
+                <span className="param-temp-hint">°C — vazio = ambiente</span>
               </div>
             </Field>
 
@@ -524,22 +537,21 @@ export default function ParametrosPage() {
         {/* ── Resultado ── */}
         {passo === 'resultado' && (
           <div>
-            <div className="flex items-center justify-between mb-5">
+            <div className="param-result-head">
               <div>
-                <h2 className="text-base font-semibold">Configuração pronta</h2>
-                <p className="text-xs text-[#58413c]">{formatoSpec?.label}{formulacaoNome ? ` · ${formulacaoNome}` : ''}</p>
+                <h2>Configuração <em>pronta</em></h2>
+                <p>{formatoSpec?.label}{formulacaoNome ? ` · ${formulacaoNome}` : ''}</p>
               </div>
-              <button onClick={() => setPasso('formato')}
-                className="text-xs text-[#58413c] hover:text-[#211b0c] flex items-center gap-1 border border-[#e5d9c1] px-3 py-1.5 rounded-lg transition-colors">
-                <ArrowLeft size={11} /> Refazer
+              <button onClick={() => setPasso('formato')} className="param-back">
+                <ArrowLeft size={13} /> Refazer
               </button>
             </div>
 
             {/* Viewer 3D */}
-            <div className="mb-4 bg-white border border-[#e5d9c1] rounded-2xl overflow-hidden">
-              <div className="px-4 py-2.5 border-b border-[#e5d9c1] flex justify-between items-center">
-                <span className="text-xs font-medium">{formatoSpec?.label}</span>
-                <span className="text-xs text-[#58413c]">Arraste · Scroll</span>
+            <div className="param-card param-result-viewer">
+              <div className="param-preview-head">
+                <span>{formatoSpec?.label}</span>
+                <span className="param-preview-hint">Arraste · Scroll</span>
               </div>
               <ShapePreview
                 formato={formato as 'cilindro' | 'cubo'}
@@ -551,9 +563,9 @@ export default function ParametrosPage() {
             </div>
 
             {/* Parâmetros */}
-            <div className="bg-white border border-[#e5d9c1] rounded-2xl p-4 mb-4">
-              <h3 className="text-xs font-semibold mb-3">Parâmetros</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+            <div className="param-card">
+              <h3 className="param-card-title">Parâmetros</h3>
+              <div className="param-meta-grid">
                 {[
                   ['Ponteira', `${ponteira} mm`],
                   ['Altura de camada', `${layerHeight} mm`],
@@ -563,21 +575,19 @@ export default function ParametrosPage() {
                   ['Temperatura', temperatura ? `${temperatura}°C` : 'Ambiente'],
                   ...(formulacaoNome ? [['Formulação', formulacaoNome]] : []),
                 ].map(([label, val]) => (
-                  <div key={label} className="bg-[#fff8f1] border border-[#e5d9c1] rounded-lg p-2.5">
-                    <p className="text-[#58413c] mb-0.5">{label}</p>
-                    <p className="font-semibold text-[#003223]">{val}</p>
+                  <div key={label} className="param-meta-item">
+                    <p className="param-meta-label">{label}</p>
+                    <p className="param-meta-value">{val}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="flex flex-wrap gap-2 mt-4">
-                <button onClick={exportarIni}
-                  className="flex items-center gap-1.5 text-xs text-[#58413c] hover:text-[#211b0c] border border-[#e5d9c1] px-3 py-1.5 rounded-lg transition-colors">
-                  <Download size={11} /> Config PrusaSlicer (.ini)
+              <div className="param-result-actions">
+                <button onClick={exportarIni} className="param-back">
+                  <Download size={13} /> Config PrusaSlicer (.ini)
                 </button>
-                <button onClick={abrirNoPrusaSlicer}
-                  className="flex items-center gap-1.5 text-xs bg-[#003223] hover:bg-[#004d35] text-white px-3 py-1.5 rounded-lg transition-colors">
-                  <Download size={11} /> STL + Abrir PrusaSlicer
+                <button onClick={abrirNoPrusaSlicer} className="param-next">
+                  <Download size={13} /> STL + Abrir PrusaSlicer
                 </button>
               </div>
             </div>
@@ -594,8 +604,8 @@ export default function ParametrosPage() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label className="text-xs font-medium text-[#211b0c] block mb-1.5">{label}</label>
+    <div className="param-field">
+      <label>{label}</label>
       {children}
     </div>
   )
@@ -610,7 +620,272 @@ function NumInput({ value, onChange, min, max, step }: {
 }) {
   return (
     <input type="number" value={value} onChange={e => onChange(e.target.value)}
-      min={min} max={max} step={step ?? '1'}
-      className="w-full bg-white border border-[#e5d9c1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#003223]/30" />
+      min={min} max={max} step={step ?? '1'} className="param-input" />
   )
 }
+
+// ---------------------------------------------------------------------------
+// Estilos
+// ---------------------------------------------------------------------------
+
+const PARAM_CSS = `
+  .param-page{color:var(--text-main)}
+
+  .param-header{
+    border-bottom:1px solid var(--border-glass);
+    padding:18px 32px;
+  }
+  .param-header h1{
+    font-size:18px;font-weight:600;margin:0;
+    display:flex;align-items:center;gap:8px;
+    color:var(--text-main);
+  }
+  .param-header p{font-size:12.5px;color:var(--text-muted);margin:4px 0 0}
+
+  .param-root{
+    width:100%;max-width:1100px;margin:0 auto;
+    padding:24px 32px 48px;
+  }
+
+  /* ── Step bar ─────────────────────────────────────── */
+  .param-steps{
+    display:flex;align-items:flex-start;
+    padding:4px 8px 22px;
+    border-bottom:1px solid var(--border-glass);
+    margin-bottom:32px;
+  }
+  .param-step-wrap{display:flex;align-items:flex-start;flex:1;gap:10px}
+  .param-step-col{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:90px}
+  .param-step-dot{
+    width:34px;height:34px;border-radius:50%;
+    display:grid;place-items:center;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    color:var(--text-muted);
+    font-weight:600;font-size:13px;
+    transition:.25s;backdrop-filter:blur(10px);
+  }
+  .param-step-dot.done{background:var(--accent-em);color:var(--accent-text-on);border-color:transparent}
+  .param-step-dot.active{background:var(--accent);color:var(--accent-text-on);border-color:transparent;box-shadow:0 0 0 5px var(--icon-tint)}
+  .param-step-label{font-size:12px;color:var(--text-faint);font-weight:500;letter-spacing:.01em}
+  .param-step-label.active{color:var(--text-main);font-weight:600}
+  .param-step-label.done{color:var(--text-muted)}
+  .param-step-line{
+    flex:1;height:1.5px;margin-top:17px;border-radius:2px;
+    background:repeating-linear-gradient(90deg, var(--border-glass-strong) 0 6px, transparent 6px 12px);
+  }
+  .param-step-line.done{background:var(--accent-em)}
+
+  /* ── Head ─────────────────────────────────────────── */
+  .param-head{margin-bottom:26px;max-width:680px}
+  .param-head h2{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:clamp(26px,3vw,38px);line-height:1.1;letter-spacing:-.015em;
+    color:var(--text-main);margin:0 0 8px;
+  }
+  .param-head h2 em{font-style:italic;color:var(--accent-em);font-family:inherit}
+  .param-head p{color:var(--text-muted);font-size:14.5px;line-height:1.55;margin:0}
+  .param-subhead{font-size:12.5px;font-weight:600;color:var(--text-faint);text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px}
+
+  /* ── Footer ───────────────────────────────────────── */
+  .param-footer{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-top:24px;border-top:1px solid var(--border-glass);
+    margin-top:32px;
+  }
+  .param-back{
+    display:inline-flex;align-items:center;gap:6px;
+    background:transparent;border:1px solid var(--border-glass-strong);cursor:pointer;
+    color:var(--text-muted);font-family:inherit;font-size:13px;font-weight:500;
+    padding:9px 16px;border-radius:999px;transition:.15s;
+  }
+  .param-back:hover{background:var(--hover-tint);color:var(--text-main)}
+  .param-back:disabled{opacity:.35;cursor:not-allowed}
+  .param-next{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--accent);color:var(--accent-text-on);
+    border:none;cursor:pointer;
+    padding:12px 26px;border-radius:999px;
+    font-family:inherit;font-size:14px;font-weight:600;
+    transition:transform .15s, box-shadow .25s;
+  }
+  .param-next:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 30px -10px var(--accent)}
+  .param-next:disabled{opacity:.45;cursor:not-allowed}
+
+  /* ── Shape grid (formato) — quadrados grandes com quadrado interno ── */
+  .shape-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));
+    gap:14px;
+  }
+  .shape-card{
+    position:relative;
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:18px;padding:16px 10px;
+    cursor:pointer;transition:.2s;
+    font-family:inherit;color:var(--text-main);
+    backdrop-filter:blur(16px);
+  }
+  .shape-card:hover{transform:translateY(-3px);border-color:var(--accent-em);box-shadow:0 18px 38px -16px rgba(0,0,0,.28)}
+  .shape-card.active{border-color:var(--accent);background:var(--icon-tint)}
+  .shape-check{
+    position:absolute;top:10px;right:10px;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--accent);color:var(--accent-text-on);
+    display:grid;place-items:center;
+  }
+  .shape-box{
+    width:100%;aspect-ratio:1;
+    border-radius:14px;
+    background:var(--surface-glass);
+    border:1.5px solid var(--border-glass);
+    display:grid;place-items:center;
+    transition:.2s;
+  }
+  .shape-card.active .shape-box{border-color:var(--accent-em);background:var(--icon-tint)}
+  .shape-box-inner{
+    width:56%;height:56%;
+    border-radius:9px;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    display:grid;place-items:center;
+    color:var(--accent-em);
+    transition:.2s;
+  }
+  .shape-card.active .shape-box-inner{border-color:var(--accent);color:var(--accent)}
+  .shape-label{margin:0;font-size:13px;font-weight:500;text-align:center;line-height:1.3}
+
+  /* ── Tamanho / preview ────────────────────────────── */
+  .param-size-layout{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+  .param-size-controls{
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:18px;padding:22px;
+    backdrop-filter:blur(16px);
+  }
+  .param-field-row{display:flex;justify-content:space-between;margin-bottom:10px}
+  .param-field-row label{font-size:13px;font-weight:500;color:var(--text-main)}
+  .param-field-value{font-size:13px;font-weight:700;color:var(--accent-em)}
+  .param-slider{width:100%;accent-color:var(--accent)}
+  .param-slider-ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--text-faint);margin-top:4px}
+  .param-field-pair{display:flex;gap:16px}
+  .param-field{flex:1}
+  .param-field label{font-size:13px;font-weight:500;color:var(--text-main);display:block;margin-bottom:8px}
+
+  .param-preview{
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:18px;overflow:hidden;
+    backdrop-filter:blur(16px);
+  }
+  .param-preview-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;border-bottom:1px solid var(--border-glass);
+    font-size:12.5px;font-weight:500;color:var(--text-main);
+  }
+  .param-preview-hint{color:var(--text-faint);font-weight:400}
+
+  /* ── Generic fill/equipment/quality grid ─────────────── */
+  .param-fill-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .aplic-card{
+    position:relative;text-align:left;
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:18px;padding:18px;
+    cursor:pointer;transition:.2s;
+    backdrop-filter:blur(16px);
+    font-family:inherit;color:var(--text-main);
+  }
+  .aplic-card:hover{transform:translateY(-3px);border-color:var(--accent-em);box-shadow:0 18px 38px -16px rgba(0,0,0,.28)}
+  .aplic-card.active{border-color:var(--accent);background:var(--icon-tint)}
+  .aplic-nome{margin:0 0 4px;font-size:14.5px;font-weight:600;color:var(--text-main)}
+  .aplic-desc{margin:0;font-size:12.5px;line-height:1.5;color:var(--text-muted)}
+  .param-fill-preview{
+    width:100%;aspect-ratio:4/3;margin-bottom:10px;border-radius:12px;
+    background:var(--surface-glass);border:1px solid var(--border-glass);
+    display:flex;align-items:center;justify-content:center;padding:8px;
+  }
+  .param-syringe-vol{margin:0;font-size:24px;font-weight:700;color:var(--accent-em)}
+  .param-syringe-vol span{font-size:13px;font-weight:400;margin-left:3px;color:var(--text-muted)}
+
+  /* ── MIA suggestion box ──────────────────────────── */
+  .param-mia-box{
+    margin-bottom:24px;padding:16px;border-radius:16px;
+    background:var(--icon-tint);border:1px solid var(--border-glass-strong);
+  }
+  .param-mia-title{
+    font-size:12.5px;font-weight:600;color:var(--accent-em);
+    display:flex;align-items:center;gap:6px;margin:0 0 10px;
+  }
+  .param-mia-label{font-size:12.5px;color:var(--text-muted);display:block;margin-bottom:6px}
+  .param-select{
+    width:100%;background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);color:var(--text-main);
+    border-radius:10px;padding:9px 12px;font-size:13.5px;margin-bottom:8px;
+    font-family:inherit;
+  }
+  .param-mia-loading{font-size:12.5px;color:var(--text-muted);font-style:italic;margin:0}
+  .param-mia-suggestion{display:flex;gap:6px;margin-top:4px}
+  .param-mia-suggestion svg{color:var(--accent-em);flex-shrink:0;margin-top:2px}
+  .param-mia-suggestion p{font-size:12.5px;color:var(--text-main);line-height:1.55;margin:0}
+
+  /* ── Ponteira tips ──────────────────────────────────── */
+  .param-tip-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .param-tip-card{display:flex;align-items:center;gap:12px}
+  .param-tip-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0}
+  .param-tip-label{margin:0;font-size:14px;font-weight:500;color:var(--text-main)}
+  .param-tip-label span{font-size:12.5px;color:var(--text-muted);font-weight:400}
+
+  /* ── Inputs ─────────────────────────────────────────── */
+  .param-input{
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    color:var(--text-main);border-radius:10px;
+    padding:10px 14px;font-size:14px;font-family:inherit;
+  }
+  .param-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--icon-tint)}
+  .param-temp-row{display:flex;align-items:center;gap:10px}
+  .param-temp-input{width:110px}
+  .param-temp-hint{font-size:12.5px;color:var(--text-muted)}
+
+  /* ── Resultado ────────────────────────────────────── */
+  .param-result-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+  .param-result-head h2{
+    font-family:var(--font-serif),serif;font-style:italic;font-weight:400;
+    font-size:clamp(24px,2.6vw,32px);margin:0 0 4px;color:var(--text-main);
+  }
+  .param-result-head h2 em{color:var(--accent-em);font-style:italic;font-family:inherit}
+  .param-result-head p{font-size:13px;color:var(--text-muted);margin:0}
+  .param-card{
+    background:var(--surface-glass-strong);
+    border:1.5px solid var(--border-glass-strong);
+    border-radius:18px;padding:18px;margin-bottom:16px;
+    backdrop-filter:blur(16px);
+  }
+  .param-result-viewer{padding:0;overflow:hidden}
+  .param-card-title{font-size:13px;font-weight:600;margin:0 0 14px;color:var(--text-main)}
+  .param-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:12.5px}
+  .param-meta-item{
+    background:var(--surface-glass);border:1px solid var(--border-glass);
+    border-radius:12px;padding:10px 12px;
+  }
+  .param-meta-label{color:var(--text-faint);margin:0 0 4px}
+  .param-meta-value{font-weight:600;color:var(--accent-em);margin:0}
+  .param-result-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+
+  @media (max-width:900px){
+    .param-size-layout{grid-template-columns:1fr}
+    .param-fill-grid{grid-template-columns:1fr 1fr}
+    .param-meta-grid{grid-template-columns:1fr 1fr}
+    .param-tip-grid{grid-template-columns:1fr}
+  }
+  @media (max-width:640px){
+    .param-root{padding:18px 16px}
+    .param-step-col{min-width:48px}
+    .param-step-label{display:none}
+    .shape-grid{grid-template-columns:repeat(3,1fr)}
+    .param-fill-grid{grid-template-columns:1fr}
+    .param-meta-grid{grid-template-columns:1fr 1fr}
+  }
+`
