@@ -88,7 +88,7 @@ Especificações:
 - Tendências nutricionais: ${tendLabel}
 - Ingredientes base desejados: ${ingLabel}
 
-IMPORTANTE: A formulação deve ter entre 5 e 10 ingredientes com percentuais que somem 100%.
+IMPORTANTE: A formulação deve ter no mínimo 2 ingredientes (use mais se for tecnicamente necessário) com percentuais que somem 100%.
 Use funções válidas: Estruturante, Hidrocolóide, Plastificante, Emulsificante, Aromatizante, Corante, Conservante, Proteína, Lipídio, Carboidrato, Líquidos, Outro.
 
 Responda SOMENTE com JSON puro (sem markdown, sem backticks, sem texto antes ou depois):
