@@ -10,11 +10,11 @@ import { NextRequest } from 'next/server'
 export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
-  const { messages, userContext, noTools, plainText } = await req.json()
-  console.log('[MIA] route hit | model:', process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gemini-flash-latest', '| noTools:', noTools, '| plain:', !!plainText, '| msgs:', messages?.length)
+  const { messages, userContext, noTools, plainText, skipRag } = await req.json()
+  console.log('[MIA] route hit | model:', process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gemini-flash-latest', '| noTools:', noTools, '| plain:', !!plainText, '| skipRag:', !!skipRag, '| msgs:', messages?.length)
 
   const lastMessage = messages[messages.length - 1]?.content ?? ''
-  const ragContext = await retrieveContext(lastMessage)
+  const ragContext = skipRag ? '' : await retrieveContext(lastMessage)
 
   const systemPrompt = buildSystemPrompt(userContext, { plainText: !!plainText })
   const systemWithRag = ragContext

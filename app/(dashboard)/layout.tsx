@@ -25,7 +25,7 @@ const NAV = [
   { href: '/formular',       Icon: FlaskConical,     label: 'Formular',       tagline: 'Comece sua próxima formulação' },
   { href: '/formulacoes',    Icon: BookOpen,         label: 'Formulações',    tagline: 'Suas criações, versões e histórico' },
   { href: '/parametros',     Icon: SlidersHorizontal,label: 'Parâmetros',     tagline: 'Calibre o processo para a sua formulação' },
-  { href: '/experimentos',   Icon: TestTube2,        label: 'Experimentos',   tagline: 'Onde a teoria encontra a impressora' },
+  { href: '/experimentos',   Icon: TestTube2,        label: 'Experimentos',   tagline: 'Mantenha cada impressão anotada e organizada' },
   { href: '/caracterizacao', Icon: Microscope,       label: 'Caracterização', tagline: 'Meça, analise e documente' },
   { href: '/protocolos',     Icon: FileText,         label: 'Protocolos',     tagline: 'Métodos validados, prontos para usar' },
   { href: '/biblioteca',     Icon: Library,          label: 'Biblioteca',     tagline: 'Conhecimento curado sobre impressão 3D de alimentos' },
