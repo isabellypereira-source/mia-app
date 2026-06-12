@@ -1,7 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import { FlaskConical, ChevronRight, X, Download, ShieldCheck, BarChart3, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -78,7 +79,9 @@ function calcularNutri(ingredientes: Ingrediente[]): NutriInfo {
   }
 }
 
-export default function FormulacoesPage() {
+function FormulacoesInner() {
+  const params = useSearchParams()
+  const q = params.get('q')?.toLowerCase().trim() || ''
   const [formulacoes, setFormulacoes] = useState<Formulacao[]>([])
   const [loading, setLoading] = useState(true)
   const [selecionada, setSelecionada] = useState<Formulacao | null>(null)
@@ -90,6 +93,14 @@ export default function FormulacoesPage() {
       .then(r => r.json())
       .then(data => { setFormulacoes(data || []); setLoading(false) })
   }, [])
+
+  const visiveis = useMemo(() => {
+    if (!q) return formulacoes
+    return formulacoes.filter(f => {
+      if (f.nome?.toLowerCase().includes(q)) return true
+      return f.ingredientes?.some(i => i.nome?.toLowerCase().includes(q) || i.funcao?.toLowerCase().includes(q))
+    })
+  }, [formulacoes, q])
 
   async function excluirFormulacao(id: string) {
     if (!confirm('Excluir esta formulação?')) return
@@ -122,7 +133,11 @@ export default function FormulacoesPage() {
         <div className="flex items-center justify-between p-5 pb-4 border-b border-[#e5d9c1]">
           <div>
             <h1 className="text-base font-bold">Formulações</h1>
-            <p className="text-xs text-[#58413c] mt-0.5">{formulacoes.length} salvas</p>
+            <p className="text-xs text-[#58413c] mt-0.5">
+              {q
+                ? `${visiveis.length} ${visiveis.length === 1 ? 'resultado' : 'resultados'} para "${q}"`
+                : `${formulacoes.length} salvas`}
+            </p>
           </div>
           <Link
             href="/formular"
@@ -144,7 +159,7 @@ export default function FormulacoesPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {formulacoes.map(f => {
+            {visiveis.map(f => {
               const isActive = selecionada?.id === f.id
               return (
                 <div key={f.id} className={`bg-white rounded-2xl shadow-tonal p-3.5 transition-all ${isActive ? '!border-[#e5d9c1]' : ''}`} style={isActive ? {boxShadow:'0 0 0 2px #003223'} : {}}>
@@ -290,5 +305,13 @@ export default function FormulacoesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function FormulacoesPage() {
+  return (
+    <Suspense fallback={null}>
+      <FormulacoesInner />
+    </Suspense>
   )
 }

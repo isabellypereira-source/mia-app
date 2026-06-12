@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import {
   Home,
@@ -50,8 +50,17 @@ const WELCOME_PHRASES = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [phrase, setPhrase] = useState(WELCOME_PHRASES[0])
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const q = searchTerm.trim()
+    if (!q) return
+    router.push(`/formulacoes?q=${encodeURIComponent(q)}`)
+  }
 
   useEffect(() => {
     const stored = (typeof window !== 'undefined' && localStorage.getItem('mia-theme')) as 'dark' | 'light' | null
@@ -128,10 +137,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
             </div>
             <div className="head-right">
-              <div className="search">
+              <form className="search" onSubmit={onSearchSubmit}>
                 <span className="ic"><Search size={16} strokeWidth={2} /></span>
-                <input placeholder="Buscar formulação, ingrediente, protocolo…" />
-              </div>
+                <input
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  placeholder="Buscar formulação, ingrediente, protocolo…"
+                  type="search"
+                />
+              </form>
               <button
                 className="icon-btn"
                 aria-label="Alternar tema"
@@ -180,7 +194,10 @@ const DASH_CSS = `
     --header-bg:rgba(255,241,217,.04);
     --header-border:rgba(255,241,217,.08);
     --hover-tint:rgba(255,241,217,.12);
+    --accent:var(--lime);
+    --accent-text-on:var(--green-deep);
     --accent-em:var(--lime);
+    --icon-tint:rgba(171,208,50,.18);
 
     position:fixed;inset:0;
     font-family:var(--font-sans),system-ui,sans-serif;color:var(--text-main);
@@ -204,7 +221,10 @@ const DASH_CSS = `
     --header-bg:rgba(255,255,255,.5);
     --header-border:rgba(5,74,55,.1);
     --hover-tint:rgba(5,74,55,.08);
+    --accent:var(--orange);
+    --accent-text-on:#fff;
     --accent-em:var(--orange);
+    --icon-tint:rgba(250,85,40,.14);
   }
   .dash-root *{box-sizing:border-box}
 
@@ -333,6 +353,131 @@ const DASH_CSS = `
   .dash-root .profile .info .rl{font-size:11px;color:var(--text-faint);margin-top:3px}
 
   .dash-root .content{padding:34px 36px;color:var(--text-main);overflow:auto;flex:1}
+
+  /* ─── global overrides for legacy pages ──────────────────────────────
+     Forces all white/cream solid surfaces inside the dashboard to become
+     glass and adapts text colors to the active theme.
+  */
+  .dash-root .content > .h-full,
+  .dash-root .content > div[class*="bg-["],
+  .dash-root .content [class*="bg-[#fff"],
+  .dash-root .content [class*="bg-[#fdf"],
+  .dash-root .content [class*="bg-[#fef"]{
+    background:transparent !important;
+  }
+  .dash-root .content .bg-white{
+    background:var(--surface-glass-strong) !important;
+    border:1px solid var(--border-glass-strong);
+    color:var(--text-main);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+  }
+  .dash-root .content .shadow-tonal,
+  .dash-root .content .shadow-tonal-lg,
+  .dash-root .content .card-depth{
+    box-shadow:0 24px 50px -24px rgba(0,0,0,.25);
+  }
+  .dash-root .content [class*="border-[#e5d9c1]"],
+  .dash-root .content [class*="border-[#"],
+  .dash-root .content .border{
+    border-color:var(--border-glass) !important;
+  }
+  .dash-root .content [class*="text-[#58413c]"],
+  .dash-root .content [class*="text-[#707974]"],
+  .dash-root .content [class*="text-[#bfc9c2]"]{
+    color:var(--text-muted) !important;
+  }
+  .dash-root .content [class*="text-[#003223]"],
+  .dash-root .content [class*="text-[#054a37]"],
+  .dash-root .content [class*="text-[#211b0c]"]{
+    color:var(--text-main) !important;
+  }
+  .dash-root .content [class*="text-[#fff1d9]"]{
+    color:var(--text-main) !important;
+  }
+  .dash-root .content [style*="background: #fff"],
+  .dash-root .content [style*="background:#fff"],
+  .dash-root .content [style*="background-color: #fff"],
+  .dash-root .content [style*="background: rgba(255"],
+  .dash-root .content [style*="background: white"],
+  .dash-root .content [style*="background: #003223"],
+  .dash-root .content [style*="background: #054a37"]{
+    background:var(--surface-glass-strong) !important;
+    border-color:var(--border-glass-strong) !important;
+    backdrop-filter:blur(16px);
+  }
+  .dash-root .content .section-alt{
+    background:transparent !important;
+  }
+  .dash-root .content input,
+  .dash-root .content textarea,
+  .dash-root .content select{
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    color:var(--text-main) !important;
+  }
+  .dash-root .content input::placeholder,
+  .dash-root .content textarea::placeholder{
+    color:var(--text-faint) !important;
+  }
+  .dash-root .content table{background:transparent}
+  .dash-root .content thead tr,
+  .dash-root .content thead th{
+    background:var(--surface-glass) !important;
+    color:var(--text-main);
+    border-bottom:1px solid var(--border-glass-strong);
+  }
+  .dash-root .content tbody tr{
+    border-bottom:1px solid var(--border-glass);
+  }
+  .dash-root .content tbody tr:hover{background:var(--surface-glass)}
+  .dash-root .content td,
+  .dash-root .content th{color:var(--text-main)}
+  .dash-root .content .btn-primary{
+    background:var(--accent) !important;
+    color:var(--accent-text-on) !important;
+    border:none !important;
+  }
+  .dash-root .content .btn-outline{
+    background:transparent !important;
+    color:var(--text-main) !important;
+    border:1.5px solid var(--text-main) !important;
+  }
+  .dash-root .content .btn-ghost{
+    background:var(--surface-glass) !important;
+    color:var(--text-main) !important;
+    border:1px solid var(--border-glass) !important;
+  }
+  .dash-root .content .input-premium{
+    background:var(--surface-glass) !important;
+    border:1px solid var(--border-glass-strong) !important;
+    color:var(--text-main) !important;
+  }
+  .dash-root .content .tab-pill-active{
+    background:var(--accent) !important;
+    color:var(--accent-text-on) !important;
+  }
+  .dash-root .content .tab-pill-inactive{
+    background:var(--surface-glass) !important;
+    color:var(--text-muted) !important;
+  }
+  .dash-root .content .badge-pill,
+  .dash-root .content .badge-lime{
+    background:var(--icon-tint) !important;
+    color:var(--accent-em) !important;
+    border:1px solid var(--border-glass-strong) !important;
+  }
+  .dash-root .content .divider-gradient{
+    background:linear-gradient(90deg,transparent,var(--border-glass-strong),transparent) !important;
+  }
+  .dash-root .content .nav-item{
+    color:var(--text-muted) !important;
+    background:transparent !important;
+  }
+  .dash-root .content .nav-item-active{
+    background:var(--accent) !important;
+    color:var(--accent-text-on) !important;
+  }
 
   @media (max-width:1180px){
     .dash-root .profile .info{display:none}
