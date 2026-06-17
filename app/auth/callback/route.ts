@@ -13,6 +13,10 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) return NextResponse.redirect(`${origin}${next}`)
+    // Falha de PKCE (ex: link aberto em outro navegador/dispositivo) → erro explicativo
+    return NextResponse.redirect(
+      `${origin}/auth/error?msg=Seu+link+foi+aberto+em+um+navegador+diferente+do+cadastro.+Abra+o+link+no+mesmo+navegador+ou+solicite+um+novo.`
+    )
   }
 
   if (tokenHash && type) {
@@ -23,5 +27,7 @@ export async function GET(request: Request) {
     if (!error) return NextResponse.redirect(`${origin}${next}`)
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback`)
+  return NextResponse.redirect(
+    `${origin}/auth/error?msg=Seu+link+de+confirmação+é+inválido+ou+já+expirou.+Solicite+um+novo.`
+  )
 }
