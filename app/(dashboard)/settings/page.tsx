@@ -150,7 +150,7 @@ export default function SettingsPage() {
               <label>Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                 required placeholder="seu@email.com" autoComplete="email" />
-              <span className="prof-hint">Se alterar, um link de confirmação será enviado para o novo endereço.</span>
+              <span className="prof-hint">Pode ser necessário confirmar o novo endereço por email.</span>
             </div>
 
             <div className="prof-row2">
