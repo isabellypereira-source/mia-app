@@ -1,6 +1,7 @@
 import { streamText } from 'ai'
 import { google } from '@ai-sdk/google'
 import { anthropic } from '@ai-sdk/anthropic'
+import { createGroq } from '@ai-sdk/groq'
 import { buildSystemPrompt } from '@/lib/ai/mia-system-prompt'
 import { miaTools } from '@/lib/ai/tools'
 import { retrieveContext } from '@/lib/ai/rag'
@@ -11,7 +12,6 @@ export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   const { messages, userContext, noTools, plainText, skipRag, jsonTask } = await req.json()
-  console.log('[MIA] route hit | model:', process.env.ANTHROPIC_API_KEY ? 'anthropic' : 'gemini-flash-latest', '| noTools:', noTools, '| plain:', !!plainText, '| jsonTask:', !!jsonTask, '| skipRag:', !!skipRag, '| msgs:', messages?.length)
 
   const lastMessage = messages[messages.length - 1]?.content ?? ''
   const ragContext = skipRag ? '' : await retrieveContext(lastMessage)
@@ -21,10 +21,17 @@ export async function POST(req: NextRequest) {
     ? `${systemPrompt}\n\n## Contexto da base de conhecimento relevante:\n${ragContext}`
     : systemPrompt
 
-  // Gemini por padrão (gratuito). Claude como fallback opcional se ANTHROPIC_API_KEY existir.
-  const model = process.env.ANTHROPIC_API_KEY
-    ? anthropic('claude-haiku-4-5-20251001')
-    : google('gemini-2.0-flash')
+  // Prioridade: Anthropic → Groq → Google
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let model: any
+  if (process.env.ANTHROPIC_API_KEY) {
+    model = anthropic('claude-haiku-4-5-20251001')
+  } else if (process.env.GROQ_API_KEY) {
+    const groq = createGroq({ apiKey: process.env.GROQ_API_KEY })
+    model = groq('llama-3.3-70b-versatile')
+  } else {
+    model = google('gemini-2.0-flash')
+  }
 
   const result = await streamText({
     model,
