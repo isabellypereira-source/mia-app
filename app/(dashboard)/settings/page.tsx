@@ -61,12 +61,19 @@ export default function SettingsPage() {
   async function salvarPerfil(e: React.FormEvent) {
     e.preventDefault()
     setSavingProfile(true)
-    const { error } = await supabase.auth.updateUser({ data: { nome, tel, cargo, empresa } })
+    const { data: { user: current } } = await supabase.auth.getUser()
+    const emailChanged = email !== (current?.email ?? '')
+    const payload: Parameters<typeof supabase.auth.updateUser>[0] = { data: { nome, tel, cargo, empresa } }
+    if (emailChanged) payload.email = email
+    const { error } = await supabase.auth.updateUser(payload)
     setSavingProfile(false)
-    showToast(error
-      ? { type: 'err', msg: 'Erro ao salvar. Tente novamente.' }
-      : { type: 'ok', msg: 'Perfil atualizado com sucesso.' }
-    )
+    if (error) {
+      showToast({ type: 'err', msg: 'Erro ao salvar. Tente novamente.' })
+    } else if (emailChanged) {
+      showToast({ type: 'ok', msg: 'Confirmação enviada para o novo email. Verifique sua caixa de entrada.' })
+    } else {
+      showToast({ type: 'ok', msg: 'Perfil atualizado com sucesso.' })
+    }
   }
 
   async function salvarSenha(e: React.FormEvent) {
@@ -141,8 +148,9 @@ export default function SettingsPage() {
 
             <div className="prof-field">
               <label>Email</label>
-              <input type="email" value={email} disabled
-                className="prof-disabled" title="O email não pode ser alterado aqui" />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                required placeholder="seu@email.com" autoComplete="email" />
+              <span className="prof-hint">Se alterar, um link de confirmação será enviado para o novo endereço.</span>
             </div>
 
             <div className="prof-row2">
@@ -290,6 +298,7 @@ const PROF_CSS = `
     outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--icon-tint);
   }
   .prof-field input::placeholder{color:var(--text-faint)}
+  .prof-hint{font-size:11.5px;color:var(--text-faint);margin-top:-2px}
   .prof-disabled{opacity:.45;cursor:not-allowed}
 
   .prof-actions{margin-top:6px;display:flex;justify-content:flex-end}
