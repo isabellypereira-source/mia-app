@@ -18,6 +18,8 @@ const CARGOS = [
   'Professor(a)',
   'Aluno(a) de graduação',
   'Aluno(a) de pós-graduação',
+  'Nutricionista',
+  'Chef de cozinha',
   'Técnico(a) de laboratório',
   'Profissional da indústria',
   'Empreendedor(a)',
