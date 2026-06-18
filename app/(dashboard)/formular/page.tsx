@@ -108,13 +108,17 @@ Responda SOMENTE com JSON puro (sem markdown, sem backticks, sem texto antes ou 
       }
 
       const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
       let texto = ''
       if (reader) {
-        const { readStreamText } = await import('@/lib/ai/stream-utils')
-        texto = await readStreamText(reader)
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          for (const line of decoder.decode(value, { stream: true }).split('\n')) {
+            if (line.startsWith('0:')) { try { texto += JSON.parse(line.slice(2)) } catch { /* skip */ } }
+          }
+        }
       }
-
-      console.log('[MIA] Raw response text:', texto.slice(0, 500))
 
       const cleaned = texto.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
       const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
