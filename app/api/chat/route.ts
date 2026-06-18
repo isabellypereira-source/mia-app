@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
       const { anthropic } = await import('@ai-sdk/anthropic')
       model = anthropic('claude-haiku-4-5-20251001')
     } else if (process.env.GROQ_API_KEY) {
-      const { createGroq } = await import('@ai-sdk/groq')
-      const groqClient = createGroq({ apiKey: process.env.GROQ_API_KEY })
+      const { createOpenAI } = await import('@ai-sdk/openai')
+      const groqClient = createOpenAI({ baseURL: 'https://api.groq.com/openai/v1', apiKey: process.env.GROQ_API_KEY })
       model = groqClient('llama-3.3-70b-versatile')
     } else {
       const { google } = await import('@ai-sdk/google')
