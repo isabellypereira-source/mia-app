@@ -80,17 +80,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      const meta = (data.user?.user_metadata || {}) as { nome?: string; gender?: string; cargo?: string }
+      const meta = (data.user?.user_metadata || {}) as { nome?: string; gender?: string; cargo?: string; empresa?: string }
       const email = data.user?.email || ''
       const nomeRaw = meta.nome?.trim() || email.split('@')[0] || 'Pesquisador(a)'
       const primeiroNome = nomeRaw.split(/\s+/)[0]
       const g = detectGender(nomeRaw, meta.gender)
       const iniciais = nomeRaw.split(/\s+/).slice(0, 2).map(s => s[0]?.toUpperCase() || '').join('') || 'U'
+      const cargoLabel = [meta.cargo, meta.empresa].filter(Boolean).join(' · ') || 'Pesquisador(a) · Morphê'
       setUser({
         nome: primeiroNome,
         greet: greetingFor(g),
         iniciais,
-        cargo: meta.cargo || 'Pesquisador(a) · Morphê',
+        cargo: cargoLabel,
       })
     })
   }, [])
